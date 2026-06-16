@@ -1,12 +1,22 @@
-import { defineConfig, mergeConfig } from "vitest/config";
-import base from "./vitest.config";
+import { defineConfig } from "vitest/config";
+import {
+  createRepoAliases,
+  dedupeWebVite,
+  utilsAliasKeys,
+} from "../config/aliases";
 
-export default mergeConfig(
-  base,
-  defineConfig({
-    test: {
-      include: ["src/**/*.integration.test.ts"],
-      exclude: ["src/**/*.test.ts"],
-    },
-  }),
-);
+/** Integration tests only — do not merge with vitest.config (merged globs exclude all files). */
+export default defineConfig({
+  test: {
+    environment: "happy-dom",
+    execArgv: ["--disable-warning=ExperimentalWarning"],
+    globals: true,
+    setupFiles: ["./setupTests.ts"],
+    include: ["src/**/*.integration.test.ts"],
+    exclude: ["**/dist/**", "**/node_modules/**"],
+  },
+  resolve: {
+    alias: createRepoAliases(utilsAliasKeys),
+    dedupe: [...dedupeWebVite],
+  },
+});
