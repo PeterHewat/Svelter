@@ -1,0 +1,215 @@
+# Create one production GitHub release + deploy the full stack.
+# Rollback / redeploy an older tag: use the Deploy workflow instead.
+#
+# Order: validate → CI verify → staging/E2E verify → tag/release → deploy
+#
+# USAGE: Actions → Release → Run workflow (from main)
+
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: read
+  pull-requests: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: Validate & verify CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate repository state
+        run: |
+          set -euo pipefail
+
+          echo "🔍 Validating repository state..."
+
+          if [ "${{ github.ref_name }}" != "main" ]; then
+            echo "❌ Releases must be created from main branch (currently on: ${{ github.ref_name }})"
+            exit 1
+          fi
+
+          if ! git diff --quiet HEAD; then
+            echo "❌ Working directory has uncommitted changes:"
+            git status --porcelain
+            exit 1
+          fi
+
+          git fetch origin main --quiet
+          LOCAL_SHA=$(git rev-parse HEAD)
+          REMOTE_SHA=$(git rev-parse origin/main)
+
+          if [ "$LOCAL_SHA" != "$REMOTE_SHA" ]; then
+            echo "❌ Local main branch is not up to date with origin/main"
+            echo "   Local:  $LOCAL_SHA"
+            echo "   Remote: $REMOTE_SHA"
+            echo "   Please pull latest changes first"
+            exit 1
+          fi
+
+          echo "✅ Repository state is valid"
+
+      - name: Verify CI succeeded for this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          SHA="${{ github.sha }}"
+          REPO="${{ github.repository }}"
+
+          if gh run list --commit "$SHA" --workflow ci.yml --json conclusion \
+            | jq -e 'any(.[]; .conclusion == "success")' >/dev/null; then
+            echo "✅ CI succeeded for commit ${SHA}"
+            exit 0
+          fi
+
+          PR_NUMBER=$(gh api "repos/${REPO}/commits/${SHA}/pulls" --jq '.[0].number // empty')
+          if [ -z "$PR_NUMBER" ]; then
+            echo "❌ No successful ci.yml for ${SHA} and no merged PR to verify."
+            echo "   CI runs on pull requests only — merge via PR with green checks, or push to main is blocked."
+            gh run list --commit "$SHA" --workflow ci.yml --limit 5 || true
+            exit 1
+          fi
+
+          PR_STATE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json state,mergeCommit --jq '.state')
+          MERGE_OID=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json mergeCommit --jq '.mergeCommit.oid // empty')
+          if [ "$PR_STATE" != "MERGED" ]; then
+            echo "❌ Associated PR #${PR_NUMBER} is not merged (state: ${PR_STATE})."
+            exit 1
+          fi
+          if [ "$MERGE_OID" != "$SHA" ]; then
+            echo "❌ PR #${PR_NUMBER} merge commit (${MERGE_OID}) does not match release commit ${SHA}."
+            exit 1
+          fi
+
+          if gh pr checks "$PR_NUMBER" --repo "$REPO" --json name,state \
+            | jq -e 'any(.[]; .name == "CI required" and .state == "SUCCESS")' >/dev/null; then
+            echo "✅ CI required passed on merged PR #${PR_NUMBER} for commit ${SHA}"
+            exit 0
+          fi
+
+          echo "❌ CI required did not pass on merged PR #${PR_NUMBER}."
+          gh pr checks "$PR_NUMBER" --repo "$REPO" || true
+          exit 1
+
+      - name: Verify Staging (Convex + E2E) succeeded for this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          SHA="${{ github.sha }}"
+
+          if gh run list --commit "$SHA" --workflow staging.yml --json conclusion \
+            | jq -e 'any(.[]; .conclusion == "success")' >/dev/null; then
+            echo "✅ Staging (Convex dev + E2E) succeeded for commit ${SHA}"
+            exit 0
+          fi
+
+          echo "❌ No successful staging.yml run for commit ${SHA}."
+          echo "   Merge to main must complete Staging (Convex + E2E) before releasing."
+          gh run list --commit "$SHA" --workflow staging.yml --limit 5 || true
+          exit 1
+
+  create-release:
+    needs: gate
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      summary_url: ${{ steps.release.outputs.summary_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          git --version || { echo "❌ Git not found"; exit 1; }
+          gh --version || { echo "❌ GitHub CLI not found"; exit 1; }
+
+          # shellcheck source=scripts/lib/release-tags.sh
+          source scripts/lib/release-tags.sh
+
+          STAMP=$(release_timestamp_utc)
+          NEW_TAG=$(release_tag "$STAMP")
+          LATEST_TAG=$(latest_release_tag)
+
+          echo "🚀 Release configuration:"
+          echo "  Stamp (UTC): $STAMP"
+          echo "  Tag: $NEW_TAG"
+          if [ -n "$LATEST_TAG" ]; then
+            echo "  Previous: $LATEST_TAG"
+          else
+            echo "  Previous: (first production release)"
+          fi
+          echo ""
+
+          if git rev-parse "$NEW_TAG" >/dev/null 2>&1; then
+            echo "❌ Tag already exists: $NEW_TAG (wait one second and re-run, or use Deploy to redeploy an existing tag)"
+            exit 1
+          fi
+
+          NOTES_ARGS=()
+          if [ -n "$LATEST_TAG" ]; then
+            NOTES_ARGS=(--notes-start-tag "$LATEST_TAG")
+          fi
+
+          echo "📦 Creating GitHub release $NEW_TAG..."
+          SUCCESS=false
+          for attempt in {1..3}; do
+            if timeout 60 gh release create "$NEW_TAG" \
+              --title "Release $STAMP" \
+              --generate-notes \
+              "${NOTES_ARGS[@]}" \
+              2>/tmp/gh_release_error.log; then
+              SUCCESS=true
+              break
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "   ⚠️  Attempt $attempt failed, retrying in 5 seconds..."
+              cat /tmp/gh_release_error.log || true
+              sleep 5
+            fi
+          done
+
+          if [ "$SUCCESS" != "true" ]; then
+            echo "❌ Failed to create release $NEW_TAG (after 3 attempts)"
+            cat /tmp/gh_release_error.log || true
+            exit 1
+          fi
+
+          echo "✅ Created release $NEW_TAG"
+          echo "🔗 https://github.com/${{ github.repository }}/releases/tag/$NEW_TAG"
+          echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+          echo "summary_url=https://github.com/${{ github.repository }}/releases" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy ${{ needs.create-release.outputs.tag }}
+    needs: [gate, create-release]
+    if: |
+      always() &&
+      needs.gate.result == 'success' &&
+      needs.create-release.result == 'success' &&
+      needs.create-release.outputs.tag != ''
+    uses: ./.github/workflows/deploy.yml
+    with:
+      tag: ${{ needs.create-release.outputs.tag }}
+    secrets: inherit

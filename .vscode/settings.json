@@ -1,0 +1,86 @@
+{
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.rulers": [100],
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.suggestSelection": "first",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[svelte]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "css.lint.unknownAtRules": "ignore",
+  "scss.lint.unknownAtRules": "ignore",
+  "files.associations": {
+    "*.mdc": "markdown"
+    // "*.tsx": "typescript",
+  },
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "files.eol": "\n",
+  "files.exclude": {
+    "**/.DS_Store": true,
+    "**/.svelte-kit": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/node_modules": true
+  },
+  "search.exclude": {
+    "**/.svelte-kit": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/node_modules": true,
+    "**/convex/_generated": true
+  },
+  "html.format.wrapAttributes": "force-expand-multiline",
+  "js/ts.updateImportsOnFileMove.enabled": "always",
+  "npm.packageManager": "bun",
+  "npm.scriptRunner": "bun",
+  "npm.exclude": ["**/.claude/**", "**/.agents/**"],
+  "i18n-ally.localesPaths": ["apps/web/src/locales"],
+  "i18n-ally.sourceLanguage": "en",
+  "i18n-ally.keystyle": "nested",
+  "i18n-ally.sortKeys": true,
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "text": "Follow CONTRIBUTING.md: imperative subject, max 50 characters, no trailing period"
+    },
+    {
+      "text": "Separate subject from body with a blank line; wrap body at 72 characters"
+    },
+    {
+      "text": "Explain what and why in the body, not how"
+    }
+  ]
+
+}

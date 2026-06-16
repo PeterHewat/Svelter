@@ -1,0 +1,241 @@
+# Setup automation
+
+What `bun run setup` automates, what stays manual, and dashboard URLs for fallbacks.
+
+**Related:** [getting-started.md](./getting-started.md), [environments.md](./environments.md), [ci-cd.md](./ci-cd.md)
+
+## Wizard behavior
+
+- **Idempotent** (safe to re-run anytime): should not duplicate Clerk apps, corrupt [`.svelter/setup.json`](../.svelter/setup.json), or worsen secret placement. Interrupted runs resume; create-or-skip steps skip when already done. Prompts still run (with saved defaults); optional sync steps (GitHub secrets, Vercel) run again only when you confirm them.
+- **Interactive** (local TTY): prompts run each time; previous answers from `.svelter/setup.json` are defaults (Enter keeps them).
+- **Non-TTY** (CI, piped stdin): skip prompts; use existing `.svelter/setup.json` and env only. GitHub Actions secret sync, Vercel bootstrap, and production bootstrap require an interactive TTY — or pass `--sync-secrets` when `gh` / `VERCEL_TOKEN` are already authenticated.
+- Dashboard URLs appear as clickable links in setup output. **Follow up** steps are deferred checklists (setup keeps going); **ACTION REQUIRED** only when setup pauses and exits (e.g. Convex link incomplete).
+
+Step-by-step summary: [getting-started.md](./getting-started.md#2-setup-wizard-bun-run-setup).
+
+## Config persistence
+
+### `.svelter/setup.json` (local, no secrets)
+
+Gitignored in the template repo — created on first `bun run setup`. Stores identity defaults, Vercel project IDs, and which bootstrap steps already ran so re-runs stay idempotent. **Fork maintainers** who want non-interactive CI (`--sync-secrets`) can commit theirs after setup: `git add -f .svelter/setup.json`.
+
+```json
+{
+  "productName": "My App",
+  "productTagLine": "Short marketing tagline",
+  "apexDomain": "example.com",
+  "github": {
+    "org": "acme",
+    "repo": "my-app",
+    "syncedSecrets": {
+      "repo": true,
+      "production": true,
+      "vercel": true
+    }
+  },
+  "vercel": {
+    "synced": true,
+    "dnsConfigured": true,
+    "orgId": "team_…",
+    "projectIdWeb": "prj_…",
+    "projectIdMarketing": "prj_…",
+    "projectNameWeb": "my-app-web",
+    "projectNameMarketing": "my-app-marketing"
+  },
+  "removeMitLicense": true
+}
+```
+
+- `github.syncedSecrets.repo` — repository secrets for PR CI / E2E (dev Convex + Clerk).
+- `github.syncedSecrets.vercel` — repository secrets for Vercel deploy workflows.
+- `github.syncedSecrets.production` — GitHub **production** environment secrets for `release-*` releases.
+- `vercel.synced` — Vercel projects, env vars, and domains configured (not a GitHub sync step).
+- `vercel.dnsConfigured` — registrar nameservers confirmed when an apex domain is set.
+
+Also writes `packages/config/product.ts`, rebrands `README.md` when forking from the template, and optionally replaces MIT [`LICENSE`](../LICENSE).
+
+### Secrets (never in `.svelter/`)
+
+| Location                        | Contents                                                 |
+| ------------------------------- | -------------------------------------------------------- |
+| `apps/web/.env.local`           | `PUBLIC_*`, `CLERK_SECRET_KEY`, `E2E_USER_EMAIL`         |
+| Root `.env.local`               | `CONVEX_DEPLOYMENT`, optional `CONVEX_DEPLOY_KEY`        |
+| `.svelter/clerk-production.env` | Clerk Production keys from `clerk env pull` (gitignored) |
+| GitHub Actions secrets          | CI and deploy keys                                       |
+| Vercel project env              | `PUBLIC_*` per environment                               |
+
+---
+
+## Automated vs manual
+
+### Still manual or checklist-only
+
+| Area                     | Today                                                                                                                                   |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Account signup / billing | Convex, Clerk, Vercel, GitHub dashboards                                                                                                |
+| Convex first link        | Setup runs `convex dev --once` (OAuth in the same terminal); sets Clerk issuer and re-pushes                                            |
+| Clerk app creation       | [Clerk CLI](https://clerk.com/docs/cli) (`clerk apps create`, `clerk env pull`) when authenticated; dashboard fallback                  |
+| Clerk JWT template       | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual dashboard fallback on failure                                          |
+| Clerk allowed origins    | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual PATCH fallback on failure                                              |
+| Apex domain              | Optional in identity wizard (Enter to skip). Re-run setup to add a domain later.                                                        |
+| DNS at registrar         | When apex is set: setup prints Vercel nameserver instructions and **pauses** until you confirm (stored as `vercel.dnsConfigured`)       |
+| E2E test user            | Wizard defaults `e2e.test@{apex}` when apex is set, else `e2e.test@example.com`; creates user via Clerk API and writes `E2E_USER_EMAIL` |
+| Org GitHub policies      | Branch protection, required reviewers — outside setup                                                                                   |
+
+### Feasibility summary
+
+| Category    | Examples                                                                                                                              |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Script**  | `PRODUCT_NAME`, `.env.local`, `convex env set`, deploy keys, `gh secret set`, Vercel env via API, Clerk JWT template + origins        |
+| **Guided**  | Clerk CLI `env pull` or paste keys, inline Convex link, Vercel import, DNS, E2E user                                                  |
+| **Manual**  | Account signup, registrar nameserver change (when apex is set), Clerk auth methods, `release-*` release approval, org GitHub policies |
+| **Blocked** | Clerk setup without CLI login or dashboard access                                                                                     |
+
+---
+
+## Platform URLs
+
+Placeholders: `{org}`, `{repo}`, `{apex}`, `{vercel-team}`, `{vercel-web-project}`, `{vercel-marketing-project}`.
+
+**Derived hostnames** from apex `example.com`: see [environments.md](./environments.md#domains-and-dns).
+
+| Surface   | Staging (merge to `main`) | Production (Release) |
+| --------- | ------------------------- | -------------------- |
+| Web       | `preview.example.com`     | `example.com`        |
+| Marketing | `preview.www.example.com` | `www.example.com`    |
+
+### Clerk
+
+| Step                          | URL                                                                         |
+| ----------------------------- | --------------------------------------------------------------------------- |
+| Sign in / home                | [dashboard.clerk.com](https://dashboard.clerk.com)                          |
+| Create application            | [dashboard.clerk.com/apps](https://dashboard.clerk.com/apps)                |
+| API keys (Development)        | [API keys](https://dashboard.clerk.com/last-active?path=api-keys)           |
+| API keys (Production)         | Same path; switch instance to Production                                    |
+| JWT templates → Convex preset | [JWT templates](https://dashboard.clerk.com/last-active?path=jwt-templates) |
+| Allowed origins (Development) | `PATCH /v1/instance` with `sk_test_…` (setup does this automatically)       |
+| Integrations → Convex         | [Integrations](https://dashboard.clerk.com/last-active?path=integrations)   |
+
+After the app exists, setup pulls or prompts for `PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`, derives `CLERK_JWT_ISSUER_DOMAIN`, and uploads it to Convex before the first successful function push. If Convex linking provisions a deployment before the issuer is set, setup detects the linked deployment, sets the env var, and retries the push automatically.
+
+### Convex
+
+| Step                    | URL                                                                                          |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| Dashboard               | [dashboard.convex.dev](https://dashboard.convex.dev)                                         |
+| Login (CLI)             | `bunx convex login`                                                                          |
+| Link / dev deployment   | `bun run dev:convex`                                                                         |
+| Dev deployment settings | [Deployment settings](https://dashboard.convex.dev/t/{team}/{project}/{deployment}/settings) |
+| Environment variables   | …/settings/environment-variables                                                             |
+| Deploy keys             | …/settings/deploy-keys                                                                       |
+
+When linked + Clerk issuer known, setup runs:
+
+```bash
+bunx convex env set CLERK_JWT_ISSUER_DOMAIN "https://your-app.clerk.accounts.dev"
+bunx convex deployment token create github-ci --save-env
+```
+
+### Vercel
+
+| Step                       | URL                                                              |
+| -------------------------- | ---------------------------------------------------------------- |
+| Dashboard                  | [vercel.com/dashboard](https://vercel.com/dashboard)             |
+| Account tokens             | [vercel.com/account/tokens](https://vercel.com/account/tokens)   |
+| Import Git repository      | [vercel.com/new](https://vercel.com/new)                         |
+| Web project settings       | [Project settings](https://vercel.com/{team}/{project}/settings) |
+| Marketing project settings | Same pattern (root dir `apps/marketing`)                         |
+| Monorepo link (CLI alpha)  | `vercel link --repo`                                             |
+
+### GitHub
+
+| Step            | URL                                                                            |
+| --------------- | ------------------------------------------------------------------------------ |
+| Actions secrets | [Repository secrets](https://github.com/{org}/{repo}/settings/secrets/actions) |
+| Environments    | [Environments](https://github.com/{org}/{repo}/settings/environments)          |
+| CLI auth        | `gh auth login -s repo,workflow` (setup requests both scopes)                  |
+
+Setup creates the **`production`** environment via `gh api` when your token has `repo` + `workflow`. If creation fails with Forbidden, confirm scopes with `gh auth status` and run `gh auth refresh -h github.com -s repo,workflow`.
+
+---
+
+## CLI prerequisites
+
+| Tool   | Login                            |
+| ------ | -------------------------------- |
+| `gh`   | `gh auth login -s repo,workflow` |
+| Convex | `bunx convex login`              |
+| Vercel | `bunx vercel login`              |
+| Clerk  | `bunx clerk auth login`          |
+
+Setup probes these at the start of each interactive run. Missing tools fall back to printed dashboard URLs; you can continue in manual mode.
+
+---
+
+## Setup flow
+
+```mermaid
+flowchart TD
+  start[bun run setup] --> cli[CLI prerequisites gh convex vercel clerk]
+  cli --> identity[Prompt product name + optional apex domain]
+  identity --> scaffold[Copy .env.local if missing]
+  scaffold --> clerk[Clerk CLI or dashboard keys]
+  clerk --> convex{Convex linked?}
+  convex -->|no| convexLink[convex dev --once OAuth link]
+  convex -->|yes| sync[sync Clerk issuer + PUBLIC_CONVEX_URL]
+  convexLink --> sync
+  sync --> codegen[generate.ts + agent skills]
+  codegen --> readiness[readiness report]
+  readiness --> ci{Push GitHub secrets?}
+  ci -->|yes| ghSecrets[gh secret set from local env]
+  ci -->|no| done[Exit 0 or 1]
+  ghSecrets --> vercel{Vercel token?}
+  vercel -->|yes| vercelBootstrap[Vercel env + project IDs]
+  vercel -->|no| checklist[Print Vercel + DNS checklist]
+  vercelBootstrap --> prod{Configure production?}
+  prod -->|yes| prodSecrets[gh secret set --env production + clerk deploy]
+  prod -->|no| done
+  prodSecrets --> done
+  checklist --> done
+```
+
+---
+
+## CLI reference
+
+```bash
+# Identity + readiness wizard (re-run anytime; Enter keeps previous answers)
+bun run setup
+
+# Non-interactive secret sync (requires gh auth + local env; skips confirm prompts)
+bun run setup -- --sync-secrets
+
+# Convex (repo-pinned — bunx)
+bun run dev:convex
+bunx convex env set CLERK_JWT_ISSUER_DOMAIN "https://….clerk.accounts.dev"
+bunx convex deployment token create github-ci --save-env
+
+# GitHub (global gh)
+gh auth login -s repo,workflow
+gh secret set CONVEX_DEPLOY_KEY < deploy-key.txt
+gh secret set PUBLIC_CONVEX_URL --body "https://….convex.cloud"
+
+# Vercel (repo-pinned — bunx)
+bunx vercel login
+bunx vercel link --repo
+bunx vercel env add PUBLIC_CONVEX_URL development
+
+# Clerk (repo-pinned — bunx)
+bunx clerk auth login
+bunx clerk env pull --file .env.local   # from apps/web
+bunx clerk deploy                        # provision Production
+```
+
+---
+
+## Security
+
+- Never log secret values; mask in prompts (`pk_test_…`, `sk_test_…`).
+- Deploy keys and `CLERK_SECRET_KEY` only in `.env.local`, GitHub Secrets, or Vercel env — never in `.svelter/setup.json` or git.
+- `gh secret set` and `vercel env add` read from stdin or env vars, not echo.
+- Preview/dev share Clerk test users and Convex dev — never prod credentials in repository secrets ([environments.md](./environments.md)).

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "paths": {
+      "@repo/env-core/env": ["./packages/env-core/src/env.ts"],
+      "@repo/utils": ["./packages/utils/src/index.ts"],
+      "@repo/utils/env": ["./packages/utils/src/env.ts"],
+      "@repo/utils/theme": ["./packages/utils/src/theme.ts"],
+      "@repo/utils/i18n": ["./packages/utils/src/i18n.ts"],
+      "@repo/utils/storage": ["./packages/utils/src/storage.ts"],
+      "@repo/ui-svelte": ["./packages/ui-svelte/src/index.ts"],
+      "@repo/test-utils": ["./packages/test-utils/src/index.ts"],
+      "@repo/test-utils/convex-svelte-setup": [
+        "./packages/test-utils/src/mocks/convex-svelte-setup.ts"
+      ],
+      "@repo/config/aliases": ["./packages/config/aliases.ts"],
+      "@repo/config/product": ["./packages/config/product.ts"],
+      "@repo/config/env-placeholders": [
+        "./packages/config/env-placeholders.ts"
+      ],
+      "@convex/api": ["./convex/_generated/api.js"],
+      "@convex/dataModel": ["./convex/_generated/dataModel.d.ts"]
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "recommendations": [
+    "antfu.goto-alias",
+    "bierner.markdown-mermaid",
+    "bradlc.vscode-tailwindcss",
+    "christian-kohler.npm-intellisense",
+    "davidanson.vscode-markdownlint",
+    "dbaeumer.vscode-eslint",
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode",
+    "getconvex.convex-vscode",
+    "github.vscode-github-actions",
+    "github.vscode-pull-request-github",
+    "lokalise.i18n-ally",
+    "ms-playwright.playwright",
+    "pflannery.vscode-versionlens",
+    "redhat.vscode-yaml",
+    "svelte.svelte-vscode",
+    "yoavbls.pretty-ts-errors",
+  ]
+}

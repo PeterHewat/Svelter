@@ -1,0 +1,99 @@
+# Distribution / packaging
+build/
+build-deploy/
+build-compiled/
+dist/
+dist-ssr/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Node.js dependencies
+node_modules/
+
+# Local tool caches
+.cache/
+
+# SvelteKit
+.svelte-kit/
+.vercel/
+
+# IDEs
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.code-workspace
+
+# IDE - Intellij
+.idea/*
+!.idea/codeStyles/Project.xml
+!.idea/externalDependencies.xml
+.idea/codeStyles/*
+!.idea/codeStyles/
+!.idea/codeStyles/Project.xml
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/commit_message_prompt.txt
+.history/*
+
+# MacOS
+.DS_Store
+Thumbs.db
+
+# Environment variables (keep *.example templates)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Docker
+docker-compose.override.yml
+
+# Codegen (run `bun scripts/generate.ts` or `bun run typecheck` / `test`)
+convex/_generated/
+
+# Convex local backend (from `convex dev --once` without cloud login)
+.convex/
+
+# Setup-local metadata (keep templates; ignore local env paste files)
+.svelter/setup.json
+.svelter/*.env
+
+# Agent skills installed by setup (Convex: `bunx convex ai-files install`)
+.agents/skills/convex
+.agents/skills/convex-*
+.agents/skills/clerk-*
+.claude/skills/convex
+.claude/skills/convex-*
+.claude/skills/clerk-*
+skills-lock.json
+
+# Test results
+test-results/
+coverage/
+playwright-report/
+.vitest-reports/
+
+# SSL certificates
+cert.pem
+key.pem
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bun-debug.log*
+
+# Vim
+*.swp
+*.swo
+*~
