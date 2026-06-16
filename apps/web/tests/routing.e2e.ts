@@ -20,8 +20,11 @@ test.describe("Routing", () => {
   test("login opens auth modal", async ({ page }) => {
     await page.goto("/login");
     await expect(page).toHaveURL("/");
-    await expect(page.getByRole("dialog")).toBeVisible();
-    await expect(page.getByRole("tab", { name: /sign in/i })).toBeVisible();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(
+      dialog.getByRole("heading", { name: /sign in/i }),
+    ).toBeVisible();
   });
 
   test("tasks link opens auth modal without navigating", async ({ page }) => {

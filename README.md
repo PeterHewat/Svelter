@@ -1,12 +1,12 @@
 # Svelter
 
 [![CI](https://img.shields.io/github/actions/workflow/status/PeterHewat/Svelter/ci.yml?branch=main)](https://github.com/PeterHewat/Svelter/actions/workflows/ci.yml)
-[![Bun](https://img.shields.io/badge/Bun-000?style=flat&logo=bun&logoColor=fff)](https://bun.sh/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff)](https://www.typescriptlang.org/)
-[![Svelte](https://img.shields.io/badge/Svelte-FF3E00?logo=svelte&logoColor=fff)](https://svelte.dev/)
-[![Tailwind](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?logo=tailwindcss&logoColor=fff)](https://tailwindcss.com/)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-FF3E00?logo=svelte&logoColor=fff)](https://svelte.dev/docs/kit)
 [![Convex](https://img.shields.io/badge/Convex-EE342F?logo=convex&logoColor=fff)](https://convex.dev/)
+[![Clerk](https://img.shields.io/badge/Clerk-6C47FF?logo=clerk&logoColor=fff)](https://clerk.com/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-06B6D4?logo=tailwindcss&logoColor=fff)](https://tailwindcss.com/)
+[![Bun](https://img.shields.io/badge/Bun-000?style=flat&logo=bun&logoColor=fff)](https://bun.sh/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 **Svelter** is a production-shaped **Bun monorepo template** for teams shipping a **product web app** (SvelteKit SPA), a **marketing site** (SvelteKit SSG), and a **Convex + Clerk** backend—with shared packages, per-surface CI/CD, and agent-first conventions (`AGENTS.md`).
