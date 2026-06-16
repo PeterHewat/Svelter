@@ -1,0 +1,35 @@
+{
+  "name": "@repo/marketing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Marketing site (SvelteKit SSG)",
+  "scripts": {
+    "dev": "vite dev --port 4321",
+    "build": "vite build && rm -rf build/_app/immutable/chunks build/_app/immutable/entry build/_app/immutable/nodes build/_app/version.json",
+    "preview": "vite preview",
+    "prepare": "svelte-kit sync || echo ''",
+    "lint": "eslint .",
+    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "@repo/config": "workspace:*",
+    "@repo/tokens": "workspace:*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.0",
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/kit": "^2.65.1",
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@tailwindcss/vite": "^4.3.1",
+    "svelte": "^5.56.3",
+    "svelte-check": "^4.6.0",
+    "tailwindcss": "^4.3.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16"
+  }
+}

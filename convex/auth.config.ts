@@ -1,0 +1,17 @@
+import type { AuthConfig } from "convex/server";
+
+/**
+ * Clerk JWT validation for Convex.
+ *
+ * Set `CLERK_JWT_ISSUER_DOMAIN` on each Convex deployment (Clerk Frontend API URL).
+ *
+ * @see https://docs.convex.dev/auth/clerk
+ */
+export default {
+  providers: [
+    {
+      domain: process.env.CLERK_JWT_ISSUER_DOMAIN!,
+      applicationID: "convex",
+    },
+  ],
+} satisfies AuthConfig;

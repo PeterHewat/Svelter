@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "chrome",
+      "request": "launch",
+      "skipFiles": ["${workspaceFolder}/node_modules/**/*.js"],
+      "name": "Debug Web App",
+      "url": "http://localhost:5173/",
+      "webRoot": "${workspaceFolder}/apps/web/src"
+    },
+    {
+      "command": "bun run --filter @repo/web dev",
+      "name": "Web Dev Server",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
+      "command": "bun run --filter @repo/marketing dev",
+      "name": "Marketing Dev Server",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
+      "command": "bun run dev:convex",
+      "name": "Convex Dev Server",
+      "request": "launch",
+      "type": "node-terminal"
+    }
+  ]
+}

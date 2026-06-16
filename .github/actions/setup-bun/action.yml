@@ -1,0 +1,28 @@
+name: Setup Bun
+description: Install Bun and workspace dependencies with lockfile cache (CI skips lifecycle scripts).
+
+runs:
+  using: composite
+  steps:
+    - uses: oven-sh/setup-bun@v2
+      id: setup-bun
+      with:
+        bun-version-file: .bun-version
+
+    - name: Cache Bun dependencies
+      uses: actions/cache@v5
+      id: bun-cache
+      with:
+        path: |
+          node_modules
+          ~/.bun/install/cache
+        key: bun-deps-${{ runner.os }}-${{ steps.setup-bun.outputs.bun-revision }}-${{ hashFiles('bun.lock', '.bun-version') }}
+        restore-keys: |
+          bun-deps-${{ runner.os }}-${{ steps.setup-bun.outputs.bun-revision }}-
+          bun-deps-${{ runner.os }}-
+
+    - name: Install dependencies
+      shell: bash
+      env:
+        HUSKY: "0"
+      run: bun install --frozen-lockfile --ignore-scripts

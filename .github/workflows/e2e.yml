@@ -1,0 +1,125 @@
+name: E2E
+
+# Manual Playwright or reusable from staging.yml (main) / release gate. See docs/ci-cd.md#e2e-tests-playwright
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_web:
+        description: Run @repo/web Playwright suite
+        required: true
+        default: true
+        type: boolean
+      run_marketing:
+        description: Run @repo/marketing Playwright suite
+        required: true
+        default: true
+        type: boolean
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to checkout (defaults to caller ref)
+        required: false
+        type: string
+      run_web:
+        description: Run @repo/web Playwright suite
+        required: false
+        type: boolean
+        default: true
+      run_marketing:
+        description: Run @repo/marketing Playwright suite
+        required: false
+        type: boolean
+        default: true
+      require_full_web_e2e:
+        description: Fail when web E2E secrets are missing (release gate; no UI-only fallback)
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.run_id }}
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  NODE_VERSION: "24"
+
+jobs:
+  web-e2e:
+    name: Web
+    runs-on: ubuntu-latest
+    if: inputs.run_web
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: ./.github/actions/setup-bun
+      - name: Resolve E2E mode
+        id: e2e
+        env:
+          PUBLIC_CONVEX_URL: ${{ secrets.PUBLIC_CONVEX_URL }}
+          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+          REQUIRE_FULL_WEB_E2E: ${{ inputs.require_full_web_e2e }}
+        run: bun scripts/validate-e2e-secrets.ts >> "$GITHUB_OUTPUT"
+      - name: Codegen
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.e2e.outputs.ui_only }}" = "true" ]; then
+            exit 0
+          fi
+          if [ -z "${CONVEX_DEPLOY_KEY:-}" ]; then
+            echo "::error::Full web E2E (tasks) requires CONVEX_DEPLOY_KEY for convex/_generated. See docs/ci-cd.md#repository-secrets"
+            exit 1
+          fi
+          bun scripts/generate-convex.ts
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium
+      - name: Run Playwright tests
+        env:
+          PUBLIC_CONVEX_URL: ${{ secrets.PUBLIC_CONVEX_URL }}
+          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+          PLAYWRIGHT_UI_ONLY: ${{ steps.e2e.outputs.ui_only == 'true' && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.e2e.outputs.ui_only }}" = "true" ]; then
+            export PUBLIC_CONVEX_URL="${PUBLIC_CONVEX_URL:-https://test-project.convex.cloud}"
+          fi
+          bun run --filter @repo/web e2e
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-web
+          path: apps/web/playwright-report/
+          retention-days: 7
+
+  marketing-e2e:
+    name: Marketing
+    runs-on: ubuntu-latest
+    if: inputs.run_marketing
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: ./.github/actions/setup-bun
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium
+      - name: Run Playwright tests
+        run: bun run --filter @repo/marketing e2e
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-marketing
+          path: apps/marketing/playwright-report/
+          retention-days: 7

@@ -1,0 +1,117 @@
+# Deploy a production release tag — Convex, web, and marketing.
+#
+# USAGE: Actions → Deploy → tag release-yyyy-MM-dd-HH-mm-ss (UTC)
+#        or workflow_call from release.yml
+#
+# SECRETS: GitHub production environment — see docs/environments.md
+
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Release tag release-yyyy-MM-dd-HH-mm-ss (UTC)"
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag release-yyyy-MM-dd-HH-mm-ss (UTC)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  parse-release:
+    runs-on: ubuntu-latest
+    outputs:
+      stamp: ${{ steps.parse.outputs.stamp }}
+      tag: ${{ steps.parse.outputs.tag }}
+    steps:
+      - name: Parse release tag
+        id: parse
+        run: |
+          set -euo pipefail
+          TAG="${{ inputs.tag || github.event.inputs.tag }}"
+          echo "Parsing tag: $TAG"
+          if [[ "$TAG" =~ ^release-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2})$ ]]; then
+            echo "stamp=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Invalid tag. Expected release-yyyy-MM-dd-HH-mm-ss (UTC)"
+            exit 1
+          fi
+
+  deploy-convex:
+    needs: parse-release
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.parse-release.outputs.tag }}
+      - uses: ./.github/actions/setup-bun
+      - name: Deploy Convex
+        uses: ./.github/actions/deploy-convex
+        with:
+          convex_deploy_key: ${{ secrets.CONVEX_DEPLOY_KEY }}
+
+  deploy-web:
+    needs: [parse-release, deploy-convex]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.parse-release.outputs.tag }}
+      - uses: ./.github/actions/setup-bun
+      - name: Deploy web
+        uses: ./.github/actions/deploy-web-vercel
+        with:
+          convex_deploy_key: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          vercel_token: ${{ secrets.VERCEL_TOKEN }}
+          vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel_project_id: ${{ secrets.VERCEL_WEB_PROJECT_ID }}
+          public_convex_url: ${{ secrets.PUBLIC_CONVEX_URL }}
+          vercel_pull_environment: production
+          vercel_prod_flag: "true"
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-build-${{ needs.parse-release.outputs.stamp }}-prod
+          path: apps/web/dist/
+          retention-days: 30
+
+  deploy-marketing:
+    needs: [parse-release, deploy-convex]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.parse-release.outputs.tag }}
+      - uses: ./.github/actions/setup-bun
+      - name: Deploy marketing
+        uses: ./.github/actions/deploy-marketing-vercel
+        with:
+          vercel_token: ${{ secrets.VERCEL_TOKEN }}
+          vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel_project_id: ${{ secrets.VERCEL_MARKETING_PROJECT_ID }}
+          vercel_pull_environment: production
+          vercel_prod_flag: "true"
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: marketing-build-${{ needs.parse-release.outputs.stamp }}-prod
+          path: apps/marketing/dist/
+          retention-days: 30

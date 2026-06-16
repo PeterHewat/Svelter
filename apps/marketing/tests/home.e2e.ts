@@ -1,0 +1,30 @@
+import { expect, test } from "@playwright/test";
+import { SITE_NAME, SITE_TAGLINE } from "../src/lib/site";
+
+test.describe("Marketing Home Page", () => {
+  test("should load the home page with correct title", async ({ page }) => {
+    await page.goto("/");
+    await expect(page).toHaveTitle(`${SITE_NAME} - ${SITE_TAGLINE}`);
+  });
+
+  test("should display the hero section", async ({ page }) => {
+    await page.goto("/");
+    await expect(
+      page.getByRole("heading", {
+        name: new RegExp(`build faster with ${SITE_NAME}`, "i"),
+      }),
+    ).toBeVisible();
+    await expect(page.getByText(/production-ready monorepo/i)).toBeVisible();
+  });
+
+  test("should have correct meta description", async ({ page }) => {
+    await page.goto("/");
+    const description = page.locator('head > meta[name="description"]').first();
+    await expect(description).toHaveAttribute("content", /monorepo template/i);
+  });
+
+  test("should navigate to the blog page", async ({ page }) => {
+    await page.goto("/blog");
+    await expect(page.getByRole("heading", { name: /blog/i })).toBeVisible();
+  });
+});

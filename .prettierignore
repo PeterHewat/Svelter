@@ -1,0 +1,39 @@
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Dependencies
+node_modules/
+
+# Generated files
+convex/_generated/
+.convex/
+.agents/skills/convex/
+.agents/skills/convex-*/
+skills-lock.json
+*.min.js
+*.min.css
+
+# Package manager
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+
+# IDE
+.idea/
+.vscode/
+
+# Coverage
+coverage/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Misc
+.DS_Store
+*.log
+results.sarif
