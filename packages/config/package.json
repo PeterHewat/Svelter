@@ -10,7 +10,8 @@
     "./env-placeholders": "./env-placeholders.ts",
     "./validate-domain": "./validate-domain.ts",
     "./hostnames": "./hostnames.ts",
-    "./e2e-auth": "./e2e-auth.ts"
+    "./e2e-auth": "./e2e-auth.ts",
+    "./clerk-csp": "./clerk-csp.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
