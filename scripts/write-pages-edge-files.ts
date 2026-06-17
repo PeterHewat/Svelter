@@ -1,7 +1,10 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console -- CLI usage message */
 /**
- * Writes Cloudflare Pages `_headers` and (web only) `_redirects` into app build output.
+ * Writes Cloudflare Pages `_headers` into app build output.
+ *
+ * Web SPA routing uses `index.html` fallback + Cloudflare Pages built-in SPA
+ * mode (no `_redirects` — `/* /200.html 200` loops on Pages).
  *
  * @example
  * bun scripts/write-pages-edge-files.ts web
@@ -12,14 +15,13 @@ import { resolve } from "node:path";
 import {
   marketingPagesHeadersFile,
   webPagesHeadersFile,
-  webSpaRedirectsFile,
 } from "../packages/config/pages-edge";
 
 type Surface = "web" | "marketing";
 
-const SURFACES: Record<Surface, { buildDir: string; spa: boolean }> = {
-  web: { buildDir: "apps/web/build", spa: true },
-  marketing: { buildDir: "apps/marketing/build", spa: false },
+const SURFACES: Record<Surface, { buildDir: string }> = {
+  web: { buildDir: "apps/web/build" },
+  marketing: { buildDir: "apps/marketing/build" },
 };
 
 /**
@@ -36,9 +38,6 @@ export function writePagesEdgeFiles(root: string, surface: Surface): void {
     resolve(outDir, "_headers"),
     surface === "web" ? webPagesHeadersFile() : marketingPagesHeadersFile(),
   );
-  if (spec.spa) {
-    writeFileSync(resolve(outDir, "_redirects"), webSpaRedirectsFile());
-  }
 }
 
 const surfaceArg = process.argv[2]?.trim();

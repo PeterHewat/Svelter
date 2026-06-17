@@ -66,7 +66,7 @@ Keep domain registration at your registrar. Add the apex as a **Cloudflare zone*
 | `example.com`, `www.example.com` (when apex configured)              | Same Release deploy — also served on custom domains attached in setup   |
 | `staging.{slug}-web.pages.dev`, `staging.{slug}-marketing.pages.dev` | **Merge to `main`** → Staging workflow → deploy with `--branch=staging` |
 
-`PUBLIC_*` values are baked at **build time in CI** — no Pages dashboard env drift. SPA fallback and security headers live in `apps/*/build/_redirects` and `_headers` (generated at build).
+`PUBLIC_*` values are baked at **build time in CI** — no Pages dashboard env drift. Security headers live in `apps/*/build/_headers` (generated at build). Web SPA routing uses `index.html` fallback and Cloudflare Pages built-in SPA mode (no `_redirects`).
 
 **Auth stack by URL (web app sign-in):**
 
