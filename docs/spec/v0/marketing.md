@@ -13,4 +13,4 @@
 ## Out of scope (starter)
 
 - CMS beyond sample blog post
-- Localized marketing routes
+- [x] Localized marketing routes (`/[lang]/`, prerendered per locale)

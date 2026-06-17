@@ -1,20 +1,26 @@
 <script lang="ts">
   import "../app.css";
+  import { PRODUCT_NAME } from "@repo/config/product";
+  import { SiteFooter } from "@repo/ui-svelte";
+  import { siteMainContainerClass } from "@repo/utils/chrome";
   import { setupConvex } from "convex-svelte";
-  import { ClerkProvider } from "svelte-clerk/client";
-  import { clerkAppearance, ui } from "$lib/clerk-ui";
   import { initializeTheme } from "@repo/utils/theme";
   import { onMount } from "svelte";
+  import ClerkDeferredLayout from "$lib/components/clerk-deferred-layout.svelte";
+  import AppHeader from "$lib/components/app-header.svelte";
   import { isAuthEnabled, isBackendEnabled } from "$lib/backend";
   import { loadWebEnv } from "$lib/web-env";
-  import AppHeader from "$lib/components/app-header.svelte";
-  import ConvexClerkSync from "$lib/components/convex-clerk-sync.svelte";
-  import AuthModal from "$lib/components/auth-modal.svelte";
+  import { useTranslation } from "$lib/i18n";
   import "$lib/i18n";
 
   let { children } = $props();
 
+  const { t } = useTranslation();
   const env = loadWebEnv();
+  const year = new Date().getFullYear();
+  const copyright = $derived(
+    t("footer.copyright", { year, name: PRODUCT_NAME }),
+  );
 
   if (isBackendEnabled() && env.convexUrl) {
     setupConvex(env.convexUrl);
@@ -29,29 +35,19 @@
 </script>
 
 <svelte:head>
-  <title>Svelter</title>
+  <title>{PRODUCT_NAME}</title>
 </svelte:head>
 
 {#if isAuthEnabled() && env.clerkPublishableKey}
-  <ClerkProvider
-    publishableKey={env.clerkPublishableKey}
-    {ui}
-    appearance={clerkAppearance}
-  >
-    <ConvexClerkSync />
-    <div class="flex min-h-screen flex-col">
-      <AppHeader />
-      <main class="container mx-auto flex-1 px-4 py-8 pt-20">
-        {@render children()}
-      </main>
-      <AuthModal />
-    </div>
-  </ClerkProvider>
+  <ClerkDeferredLayout publishableKey={env.clerkPublishableKey} {copyright}>
+    {@render children()}
+  </ClerkDeferredLayout>
 {:else}
   <div class="flex min-h-screen flex-col">
-    <AppHeader />
-    <main class="container mx-auto flex-1 px-4 py-8 pt-20">
+    <AppHeader mode="anonymous" />
+    <main class={siteMainContainerClass}>
       {@render children()}
     </main>
+    <SiteFooter {copyright} />
   </div>
 {/if}

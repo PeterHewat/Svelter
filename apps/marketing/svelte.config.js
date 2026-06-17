@@ -11,7 +11,7 @@ const config = {
       strict: true,
     }),
     prerender: {
-      entries: ["*", "/blog", "/blog/hello-world"],
+      entries: ["*"],
     },
   },
 };

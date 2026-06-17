@@ -93,6 +93,9 @@ const nl: TranslationDictionary = {
     toggleComplete: "Markeer «{{title}}» als voltooid",
     delete: "Verwijder «{{title}}»",
   },
+  footer: {
+    copyright: "© {{year}} {{name}}",
+  },
   errors: {
     notFound: "Pagina niet gevonden",
     notFoundHint: "De opgevraagde pagina bestaat niet.",

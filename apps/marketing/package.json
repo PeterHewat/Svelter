@@ -20,6 +20,8 @@
   "dependencies": {
     "@repo/config": "workspace:*",
     "@repo/tokens": "workspace:*",
+    "@repo/ui-svelte": "workspace:*",
+    "@repo/utils": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

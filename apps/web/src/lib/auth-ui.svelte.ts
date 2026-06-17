@@ -1,6 +1,8 @@
 /**
  * Global auth modal state (login / sign-up in a dialog).
  */
+import { requestClerkLoad } from "$lib/clerk-load.svelte";
+
 export type AuthModalAnchor = {
   /** Viewport offset from the top to the panel (below the trigger). */
   top: number;
@@ -40,6 +42,7 @@ export function setAuthModalAnchor(el: HTMLElement | null): void {
  * @param redirectTo - Optional post-login destination
  */
 export function openAuthModal(redirectTo?: string): void {
+  requestClerkLoad();
   authModal.open = true;
   authModal.redirectTo = redirectTo ?? null;
 }

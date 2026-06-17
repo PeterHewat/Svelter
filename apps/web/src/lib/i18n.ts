@@ -1,32 +1,10 @@
 import type { FlattenKeys } from "@repo/utils";
-import {
-  initializeI18n,
-  registerTranslations,
-  t as translate,
-  useI18nStore,
-  type Locale,
-} from "@repo/utils/i18n";
-import de from "./locales/de";
+import { initializeI18n, t as translate, useI18nStore } from "@repo/utils/i18n";
 import en from "./locales/en";
-import es from "./locales/es";
-import fr from "./locales/fr";
-import it from "./locales/it";
-import nl from "./locales/nl";
-import pl from "./locales/pl";
-import pt from "./locales/pt";
-import ru from "./locales/ru";
+import "./locale-loader";
 
 export type TranslationKey = FlattenKeys<typeof en>;
 
-registerTranslations("en", en);
-registerTranslations("es", es);
-registerTranslations("fr", fr);
-registerTranslations("de", de);
-registerTranslations("pt", pt);
-registerTranslations("it", it);
-registerTranslations("nl", nl);
-registerTranslations("pl", pl);
-registerTranslations("ru", ru);
 initializeI18n();
 
 /**
@@ -35,7 +13,7 @@ initializeI18n();
 export function t(
   key: string,
   variables?: Record<string, string | number>,
-  locale?: Locale,
+  locale?: Parameters<typeof translate>[2],
 ): string {
   return translate(key, variables, locale);
 }

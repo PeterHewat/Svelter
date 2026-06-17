@@ -92,6 +92,9 @@ const fr: TranslationDictionary = {
     toggleComplete: "Marquer « {{title}} » comme terminée",
     delete: "Supprimer « {{title}} »",
   },
+  footer: {
+    copyright: "© {{year}} {{name}}",
+  },
   errors: {
     notFound: "Page introuvable",
     notFoundHint: "La page demandée n'existe pas.",

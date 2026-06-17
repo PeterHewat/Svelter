@@ -1,6 +1,6 @@
 # @repo/marketing
 
-SvelteKit **SSG** marketing site (`adapter-static`, `csr: false`). Pre-rendered HTML at build time — no runtime server.
+SvelteKit **SSG** marketing site (`adapter-static`, `csr: false`). Pre-rendered HTML at build time — no runtime server. Locales live under `/[lang]/` (e.g. `/en`, `/fr/blog`). With JavaScript, `/init.js` redirects `/` to the stored locale (`i18n` localStorage, same as the web app), else the browser language, else `en`; without JavaScript, `/` is a language hub with links to every locale. Theme follows `prefers-color-scheme` in CSS; `/init.js` applies stored overrides and wires the toggle (Zustand-compatible `theme` localStorage).
 
 ## Dev
 

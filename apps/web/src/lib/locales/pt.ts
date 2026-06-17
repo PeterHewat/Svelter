@@ -91,6 +91,9 @@ const pt: TranslationDictionary = {
     toggleComplete: "Marcar «{{title}}» como concluída",
     delete: "Eliminar «{{title}}»",
   },
+  footer: {
+    copyright: "© {{year}} {{name}}",
+  },
   errors: {
     notFound: "Página não encontrada",
     notFoundHint: "A página que solicitou não existe.",

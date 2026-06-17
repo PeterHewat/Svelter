@@ -3,7 +3,7 @@
   import BackendSetup from "$lib/components/backend-setup.svelte";
   import { openAuthModal } from "$lib/auth-ui.svelte";
   import { isAuthEnabled } from "$lib/backend";
-  import { focusRing } from "$lib/focus";
+  import { focusRing } from "@repo/utils/focus";
 
   const { t } = useTranslation();
 </script>

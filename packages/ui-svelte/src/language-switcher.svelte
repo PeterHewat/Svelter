@@ -1,6 +1,11 @@
 <script lang="ts">
   import { cn } from "@repo/utils";
   import {
+    languageSwitcherBaseClass,
+    languageSwitcherSelectClass,
+    languageSwitcherSizes,
+  } from "@repo/utils/chrome";
+  import {
     SUPPORTED_LOCALES,
     useI18nStore,
     type Locale,
@@ -20,11 +25,7 @@
     ariaLabel = "Select language",
   }: Props = $props();
 
-  const wrapperSizeClasses = {
-    sm: "h-8 gap-1.5 px-2 text-sm",
-    md: "h-10 gap-2 px-3 text-base",
-    lg: "h-12 gap-2 px-4 text-lg",
-  };
+  const wrapperSizeClasses = languageSwitcherSizes;
 
   const iconSizeClasses = {
     sm: "h-4 w-4",
@@ -48,15 +49,7 @@
   }
 </script>
 
-<div
-  class={cn(
-    "border-border bg-background text-foreground inline-flex items-center rounded-md border",
-    "hover:bg-secondary hover:text-secondary-foreground",
-    "focus-within:ring-ring focus-within:ring-2",
-    wrapperSizeClasses[size],
-    className,
-  )}
->
+<div class={cn(languageSwitcherBaseClass, wrapperSizeClasses[size], className)}>
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -80,10 +73,7 @@
     name="locale"
     value={locale}
     onchange={handleChange}
-    class={cn(
-      "text-foreground min-w-0 cursor-pointer appearance-none border-0 bg-transparent",
-      "focus:outline-none",
-    )}
+    class={languageSwitcherSelectClass}
     aria-label={ariaLabel}
   >
     {#each Object.keys(SUPPORTED_LOCALES) as loc (loc)}
