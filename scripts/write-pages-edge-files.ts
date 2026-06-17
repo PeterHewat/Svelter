@@ -12,6 +12,7 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { clerkFapiOriginFromPublishableKey } from "../packages/config/clerk-csp";
 import {
   marketingPagesHeadersFile,
   webPagesHeadersFile,
@@ -34,9 +35,14 @@ export function writePagesEdgeFiles(root: string, surface: Surface): void {
   const spec = SURFACES[surface];
   const outDir = resolve(root, spec.buildDir);
   mkdirSync(outDir, { recursive: true });
+  const clerkFapiOrigin = clerkFapiOriginFromPublishableKey(
+    process.env.PUBLIC_CLERK_PUBLISHABLE_KEY ?? "",
+  );
   writeFileSync(
     resolve(outDir, "_headers"),
-    surface === "web" ? webPagesHeadersFile() : marketingPagesHeadersFile(),
+    surface === "web"
+      ? webPagesHeadersFile({ clerkFapiOrigin })
+      : marketingPagesHeadersFile(),
   );
 }
 

@@ -1,7 +1,9 @@
 /** Shared security headers for Cloudflare Pages `_headers`. */
 
-export const WEB_CONTENT_SECURITY_POLICY =
-  "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.convex.cloud wss://*.convex.cloud https://*.convex.site; frame-ancestors 'none'; base-uri 'self'; form-action 'self'";
+import { buildWebContentSecurityPolicy } from "./clerk-csp";
+
+/** Default web CSP (staging/dev Clerk hosts via `*.clerk.accounts.dev` wildcards). */
+export const WEB_CONTENT_SECURITY_POLICY = buildWebContentSecurityPolicy();
 
 const BASE_SECURITY_HEADERS = [
   "X-Content-Type-Options: nosniff",
@@ -11,12 +13,22 @@ const BASE_SECURITY_HEADERS = [
 
 /**
  * Cloudflare Pages `_headers` body for the product web SPA.
+ *
+ * @param options.clerkFapiOrigin - Clerk Frontend API origin for production custom domains
  */
-export function webPagesHeadersFile(): string {
+export function webPagesHeadersFile(options?: {
+  clerkFapiOrigin?: string | null;
+}): string {
+  const csp =
+    options?.clerkFapiOrigin != null
+      ? buildWebContentSecurityPolicy({
+          clerkFapiOrigin: options.clerkFapiOrigin,
+        })
+      : WEB_CONTENT_SECURITY_POLICY;
   const lines = [
     "/*",
     ...BASE_SECURITY_HEADERS.map((h) => `  ${h}`),
-    `  Content-Security-Policy: ${WEB_CONTENT_SECURITY_POLICY}`,
+    `  Content-Security-Policy: ${csp}`,
     "",
   ];
   return lines.join("\n");
