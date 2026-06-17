@@ -92,6 +92,9 @@ const ru: TranslationDictionary = {
     toggleComplete: "Отметить «{{title}}» выполненной",
     delete: "Удалить «{{title}}»",
   },
+  footer: {
+    copyright: "© {{year}} {{name}}",
+  },
   errors: {
     notFound: "Страница не найдена",
     notFoundHint: "Запрошенная страница не существует.",

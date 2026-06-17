@@ -22,6 +22,8 @@ const utilsSubpathTargets = {
   "@repo/utils/theme": "packages/utils/src/theme.ts",
   "@repo/utils/i18n": "packages/utils/src/i18n.ts",
   "@repo/utils/storage": "packages/utils/src/storage.ts",
+  "@repo/utils/focus": "packages/utils/src/focus.ts",
+  "@repo/utils/chrome": "packages/utils/src/chrome.ts",
 } as const;
 
 export type RepoAliasKey = keyof typeof aliasTargets;
@@ -67,6 +69,12 @@ export const webAliasKeys = [
   "@repo/test-utils",
   "@convex/api",
   "@convex/dataModel",
+] as const satisfies readonly RepoAliasKey[];
+
+/** Aliases used by `apps/marketing` (Vite). */
+export const marketingAliasKeys = [
+  "@repo/utils",
+  "@repo/ui-svelte",
 ] as const satisfies readonly RepoAliasKey[];
 
 /** Aliases used by `packages/ui-svelte` Vitest. */

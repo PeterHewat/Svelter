@@ -33,6 +33,16 @@
       "types": "./src/storage.ts",
       "import": "./src/storage.ts",
       "default": "./src/storage.ts"
+    },
+    "./focus": {
+      "types": "./src/focus.ts",
+      "import": "./src/focus.ts",
+      "default": "./src/focus.ts"
+    },
+    "./chrome": {
+      "types": "./src/chrome.ts",
+      "import": "./src/chrome.ts",
+      "default": "./src/chrome.ts"
     }
   },
   "scripts": {

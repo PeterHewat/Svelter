@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from "@repo/utils";
+  import { iconButtonClass } from "@repo/utils/chrome";
   import { useThemeStore, type ResolvedTheme } from "@repo/utils/theme";
   import { onMount } from "svelte";
 
@@ -41,9 +42,6 @@
     lg: "h-6 w-6",
   };
 
-  const focusRing =
-    "focus-visible:ring-ring focus:outline-none focus-visible:ring-2";
-
   function toggle() {
     store.getState().setMode(nextMode);
   }
@@ -51,13 +49,7 @@
 
 <button
   type="button"
-  class={cn(
-    "border-border bg-background text-foreground inline-flex cursor-pointer items-center justify-center rounded-md border",
-    "hover:bg-secondary hover:text-secondary-foreground",
-    focusRing,
-    sizeClasses[size],
-    className,
-  )}
+  class={cn(iconButtonClass(), sizeClasses[size], className)}
   onclick={toggle}
   aria-label="Switch to {targetLabel} theme."
   title="Switch to {targetLabel}"

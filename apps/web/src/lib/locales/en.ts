@@ -94,6 +94,9 @@ const en = {
     toggleComplete: "Mark “{{title}}” complete",
     delete: "Delete “{{title}}”",
   },
+  footer: {
+    copyright: "© {{year}} {{name}}",
+  },
   errors: {
     notFound: "Page not found",
     notFoundHint: "The page you requested does not exist.",

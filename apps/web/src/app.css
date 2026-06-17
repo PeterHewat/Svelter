@@ -2,6 +2,8 @@
 @import "tailwindcss";
 
 @source "../../../packages/ui-svelte/src/**/*.svelte";
+@source "../../../packages/utils/src/chrome.ts";
+@source "../../../packages/utils/src/focus.ts";
 
 @theme {
   --color-background: hsl(var(--background));
@@ -13,6 +15,8 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 }
@@ -22,7 +26,8 @@ body {
 }
 
 @layer base {
-  a:focus-visible {
+  a:focus-visible,
+  button:focus-visible {
     @apply ring-ring rounded-sm ring-2 outline-none;
   }
 }

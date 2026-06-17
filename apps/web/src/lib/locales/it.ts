@@ -91,6 +91,9 @@ const it: TranslationDictionary = {
     toggleComplete: "Segna «{{title}}» come completata",
     delete: "Elimina «{{title}}»",
   },
+  footer: {
+    copyright: "© {{year}} {{name}}",
+  },
   errors: {
     notFound: "Pagina non trovata",
     notFoundHint: "La pagina richiesta non esiste.",

@@ -1,11 +1,13 @@
 # Svelter
 
-[![CI](https://img.shields.io/github/actions/workflow/status/PeterHewat/Svelter/ci.yml?branch=main)](https://github.com/PeterHewat/Svelter/actions/workflows/ci.yml)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-FF3E00?logo=svelte&logoColor=fff)](https://svelte.dev/docs/kit)
 [![Convex](https://img.shields.io/badge/Convex-EE342F?logo=convex&logoColor=fff)](https://convex.dev/)
 [![Clerk](https://img.shields.io/badge/Clerk-6C47FF?logo=clerk&logoColor=fff)](https://clerk.com/)
 [![Tailwind](https://img.shields.io/badge/Tailwind-06B6D4?logo=tailwindcss&logoColor=fff)](https://tailwindcss.com/)
 [![Bun](https://img.shields.io/badge/Bun-000?style=flat&logo=bun&logoColor=fff)](https://bun.sh/)
+
+[![CI](https://img.shields.io/github/actions/workflow/status/PeterHewat/Svelter/ci.yml?label=CI)](https://github.com/PeterHewat/Svelter/actions/workflows/ci.yml)
+[![Staging](https://img.shields.io/github/actions/workflow/status/PeterHewat/Svelter/staging.yml?branch=main&label=Staging)](https://github.com/PeterHewat/Svelter/actions/workflows/staging.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
