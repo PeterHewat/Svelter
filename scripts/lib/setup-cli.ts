@@ -1,4 +1,6 @@
 /* eslint-disable no-console -- CLI wizard */
+import { bunWorkspaceCliInstallHint, ghInstallHint } from "./cli-install-hints";
+import { isWranglerAuthenticated } from "./cloudflare-auth";
 import { promptConfirm } from "./prompt";
 import { isGhAuthenticated, isGhInstalled } from "./gh-secrets";
 import { readSpawnPipe } from "./spawn-io";
@@ -23,26 +25,9 @@ export type SetupCliContext = {
   manualMode: boolean;
   gh: CliToolState;
   convex: CliToolState;
-  vercel: CliToolState;
+  wrangler: CliToolState;
   clerk: CliToolState;
 };
-
-/** @see https://cli.github.com/manual/gh_auth_login */
-const GH_INSTALL_HINT =
-  "Install GitHub CLI: https://cli.github.com/manual/ (macOS: `brew install gh`)";
-
-/** Pinned npm CLIs — install via `bun install`, invoke via `bunx`. */
-const BUNX_CLI_INSTALL_HINT =
-  "Run `bun install` at the repo root (CLI is a devDependency)";
-
-/** @see https://docs.convex.dev/cli */
-const CONVEX_INSTALL_HINT = `${BUNX_CLI_INSTALL_HINT} — docs: https://docs.convex.dev/cli`;
-
-/** @see https://vercel.com/docs/cli */
-const VERCEL_INSTALL_HINT = `${BUNX_CLI_INSTALL_HINT} — docs: https://vercel.com/docs/cli`;
-
-/** @see https://clerk.com/docs/cli */
-const CLERK_INSTALL_HINT = `${BUNX_CLI_INSTALL_HINT} — docs: https://clerk.com/docs/cli`;
 
 /**
  * Returns whether a spawn error means the executable is missing from PATH.
@@ -113,9 +98,9 @@ export function parseCliVersion(stdout: string): string | undefined {
   if (ghMatch?.[1]) {
     return ghMatch[1];
   }
-  const vercelMatch = trimmed.match(/Vercel CLI\s+(\S+)/i);
-  if (vercelMatch?.[1]) {
-    return vercelMatch[1];
+  const wranglerMatch = trimmed.match(/wrangler\s+(\S+)/i);
+  if (wranglerMatch?.[1]) {
+    return wranglerMatch[1];
   }
   const clerkMatch = trimmed.match(/clerk(?: CLI)?\s+v?(\d+\.\S+)/i);
   if (clerkMatch?.[1]) {
@@ -154,7 +139,7 @@ async function probeVersion(
  * Probes a repo-pinned CLI invoked via `bunx` (devDependency in root `package.json`).
  *
  * @param root - Repository root
- * @param binary - CLI binary name (`convex`, `vercel`, `clerk`)
+ * @param binary - CLI binary name (`convex`, `wrangler`, `clerk`)
  */
 async function probeBunxWorkspaceCli(
   root: string,
@@ -193,7 +178,7 @@ async function probeGh(): Promise<CliToolState> {
     return {
       installed: false,
       authenticated: false,
-      installHint: GH_INSTALL_HINT,
+      installHint: ghInstallHint(),
       command: ["gh"],
     };
   }
@@ -203,7 +188,7 @@ async function probeGh(): Promise<CliToolState> {
     installed: true,
     version,
     authenticated,
-    installHint: GH_INSTALL_HINT,
+    installHint: ghInstallHint(),
     command: ["gh"],
   };
 }
@@ -219,7 +204,10 @@ async function probeConvex(root: string): Promise<CliToolState> {
     return {
       installed: false,
       authenticated: false,
-      installHint: CONVEX_INSTALL_HINT,
+      installHint: bunWorkspaceCliInstallHint(
+        "convex",
+        "https://docs.convex.dev/cli",
+      ),
       command: resolved.command,
     };
   }
@@ -227,35 +215,38 @@ async function probeConvex(root: string): Promise<CliToolState> {
     installed: true,
     version: resolved.version,
     authenticated: await isConvexAuthenticated(resolved.command, root),
-    installHint: CONVEX_INSTALL_HINT,
+    installHint: bunWorkspaceCliInstallHint(
+      "convex",
+      "https://docs.convex.dev/cli",
+    ),
     command: resolved.command,
   };
 }
 
 /**
- * Returns Vercel CLI availability (repo `bunx vercel`) and auth status.
+ * Returns Wrangler CLI availability (repo `bunx wrangler`) and auth status.
  *
  * @param root - Repository root
  */
-async function probeVercel(root: string): Promise<CliToolState> {
-  const resolved = await probeBunxWorkspaceCli(root, "vercel");
+async function probeWrangler(root: string): Promise<CliToolState> {
+  const resolved = await probeBunxWorkspaceCli(root, "wrangler");
+  const installHint = bunWorkspaceCliInstallHint(
+    "wrangler",
+    "https://developers.cloudflare.com/workers/wrangler/",
+  );
   if (!resolved.installed) {
     return {
       installed: false,
-      authenticated: Boolean(process.env.VERCEL_TOKEN?.trim()),
-      installHint: VERCEL_INSTALL_HINT,
+      authenticated: Boolean(process.env.CLOUDFLARE_API_TOKEN?.trim()),
+      installHint,
       command: resolved.command,
     };
   }
-  const tokenFromEnv = Boolean(process.env.VERCEL_TOKEN?.trim());
-  const whoami = tokenFromEnv
-    ? { ok: true }
-    : await runCapture([...resolved.command, "whoami"], { cwd: root });
   return {
     installed: true,
     version: resolved.version,
-    authenticated: whoami.ok,
-    installHint: VERCEL_INSTALL_HINT,
+    authenticated: await isWranglerAuthenticated(root),
+    installHint,
     command: resolved.command,
   };
 }
@@ -271,7 +262,10 @@ async function probeClerk(root: string): Promise<CliToolState> {
     return {
       installed: false,
       authenticated: false,
-      installHint: CLERK_INSTALL_HINT,
+      installHint: bunWorkspaceCliInstallHint(
+        "clerk",
+        "https://clerk.com/docs/cli",
+      ),
       command: resolved.command,
     };
   }
@@ -282,7 +276,10 @@ async function probeClerk(root: string): Promise<CliToolState> {
     installed: true,
     version: resolved.version,
     authenticated: whoami.ok,
-    installHint: CLERK_INSTALL_HINT,
+    installHint: bunWorkspaceCliInstallHint(
+      "clerk",
+      "https://clerk.com/docs/cli",
+    ),
     command: resolved.command,
   };
 }
@@ -376,18 +373,15 @@ export async function runSetupCliPrerequisites(
 ): Promise<SetupCliContext> {
   console.log("CLI prerequisites");
   console.log(
-    "  Checking tools (`gh` global; Convex/Vercel/Clerk via `bunx` from devDependencies)…\n",
+    "  Checking tools (`gh` global; Convex/Wrangler/Clerk via `bunx` from devDependencies)…\n",
   );
 
   let gh = await probeWithProgress("GitHub CLI (gh)", () => probeGh());
   let convex = await probeWithProgress("Convex CLI", () => probeConvex(root));
-  let vercel = await probeWithProgress("Vercel CLI", () => probeVercel(root));
+  let wrangler = await probeWithProgress("Wrangler CLI", () =>
+    probeWrangler(root),
+  );
   let clerk = await probeWithProgress("Clerk CLI", () => probeClerk(root));
-
-  printToolLine("GitHub CLI (gh)", gh);
-  printToolLine("Convex CLI", convex);
-  printToolLine("Vercel CLI", vercel);
-  printToolLine("Clerk CLI", clerk);
 
   const missing: string[] = [];
   if (!gh.installed) {
@@ -396,8 +390,8 @@ export async function runSetupCliPrerequisites(
   if (!convex.installed) {
     missing.push("convex");
   }
-  if (!vercel.installed) {
-    missing.push("vercel");
+  if (!wrangler.installed) {
+    missing.push("wrangler");
   }
   if (!clerk.installed) {
     missing.push("clerk");
@@ -428,19 +422,19 @@ export async function runSetupCliPrerequisites(
   }
 
   if (
-    vercel.installed &&
-    !vercel.authenticated &&
-    !process.env.VERCEL_TOKEN?.trim()
+    wrangler.installed &&
+    !wrangler.authenticated &&
+    !process.env.CLOUDFLARE_API_TOKEN?.trim()
   ) {
-    const loggedIn = await ensureInteractiveLogin("Vercel CLI", [
-      ...vercel.command,
+    const loggedIn = await ensureInteractiveLogin("Wrangler CLI", [
+      ...wrangler.command,
       "login",
     ]);
     if (loggedIn) {
-      const whoami = await runCapture([...vercel.command, "whoami"], {
-        cwd: root,
-      });
-      vercel = { ...vercel, authenticated: whoami.ok };
+      wrangler = {
+        ...wrangler,
+        authenticated: await isWranglerAuthenticated(root),
+      };
     }
   }
 
@@ -458,13 +452,19 @@ export async function runSetupCliPrerequisites(
     }
   }
 
+  console.log("");
+  printToolLine("GitHub CLI (gh)", gh);
+  printToolLine("Convex CLI", convex);
+  printToolLine("Wrangler CLI", wrangler);
+  printToolLine("Clerk CLI", clerk);
+
   const gaps =
     missing.length > 0 ||
     (gh.installed && !gh.authenticated) ||
     (convex.installed && !convex.authenticated) ||
-    (vercel.installed &&
-      !vercel.authenticated &&
-      !process.env.VERCEL_TOKEN?.trim()) ||
+    (wrangler.installed &&
+      !wrangler.authenticated &&
+      !process.env.CLOUDFLARE_API_TOKEN?.trim()) ||
     (clerk.installed && !clerk.authenticated);
 
   if (gaps) {
@@ -484,11 +484,11 @@ export async function runSetupCliPrerequisites(
         retry.push([...convex.command, "login"].join(" "));
       }
       if (
-        vercel.installed &&
-        !vercel.authenticated &&
-        !process.env.VERCEL_TOKEN?.trim()
+        wrangler.installed &&
+        !wrangler.authenticated &&
+        !process.env.CLOUDFLARE_API_TOKEN?.trim()
       ) {
-        retry.push([...vercel.command, "login"].join(" "));
+        retry.push([...wrangler.command, "login"].join(" "));
       }
       if (clerk.installed && !clerk.authenticated) {
         retry.push([...clerk.command, "auth", "login"].join(" "));
@@ -510,9 +510,9 @@ export async function runSetupCliPrerequisites(
     console.log(
       "Continuing — automation will be skipped where tools are unavailable; dashboard URLs are printed instead.",
     );
-    return { manualMode: true, gh, convex, vercel, clerk };
+    return { manualMode: true, gh, convex, wrangler, clerk };
   }
 
   console.log("\n✓ CLIs ready — setup will use them where possible.");
-  return { manualMode: false, gh, convex, vercel, clerk };
+  return { manualMode: false, gh, convex, wrangler, clerk };
 }

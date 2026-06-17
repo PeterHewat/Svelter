@@ -1,5 +1,6 @@
 /* eslint-disable no-console -- CLI wizard */
 import { parseConvexProdDeploymentSlug } from "./convex-url";
+import { withConvexUserAuth } from "./convex-user-auth";
 import { CONVEX_DASHBOARD } from "./platform-urls";
 import { readSpawnPipe } from "./spawn-io";
 
@@ -32,17 +33,25 @@ export async function setConvexEnvVar(
   console.log(
     `\n→ bunx convex env set ${name}${prod ? " --prod" : ""} (via stdin)`,
   );
-  const proc = Bun.spawn(args, {
-    cwd: root,
-    stdin: new Blob([value]),
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr, code] = await Promise.all([
-    readSpawnPipe(proc.stdout),
-    readSpawnPipe(proc.stderr),
-    proc.exited,
-  ]);
+  const run = async () => {
+    const proc = Bun.spawn(args, {
+      cwd: root,
+      stdin: new Blob([value]),
+      stdout: "pipe",
+      stderr: "pipe",
+      env: { ...process.env, CONVEX_DEPLOY_KEY: undefined },
+    });
+    const [stdout, stderr, code] = await Promise.all([
+      readSpawnPipe(proc.stdout),
+      readSpawnPipe(proc.stderr),
+      proc.exited,
+    ]);
+    return { stdout, stderr, code };
+  };
+
+  const { stdout, stderr, code } = prod
+    ? await withConvexUserAuth(root, run)
+    : await run();
   const combined = `${stdout}\n${stderr}`.trim();
   if (combined) {
     for (const line of combined.split("\n")) {

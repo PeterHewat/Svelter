@@ -18,4 +18,4 @@ CI runs [Gitleaks](https://github.com/gitleaks/gitleaks) on every push/PR to det
 
 ## Headers and CSP
 
-Configured in `apps/web/vercel.json` and `apps/marketing/vercel.json`. For audits, use [prompts/security-review.md](prompts/security-review.md).
+Configured in `packages/config/pages-edge.ts` (emitted to `apps/*/build/_headers` at build). For audits, use [prompts/security-review.md](prompts/security-review.md).

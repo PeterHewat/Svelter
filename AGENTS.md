@@ -40,12 +40,12 @@ Marketing builds full HTML at CI time. Product runs Convex + Clerk in the browse
 
 ## Generated artifacts (gitignored)
 
-| Path                                                                    | Restore                                    |
-| ----------------------------------------------------------------------- | ------------------------------------------ |
-| `convex/_generated/`                                                    | `bun run codegen` (requires linked Convex) |
-| `.agents/skills/convex*/`, `.agents/skills/clerk-*`, `skills-lock.json` | `bun run setup`                            |
+| Path                                                                                                                              | Restore                                    |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `convex/_generated/`                                                                                                              | `bun run codegen` (requires linked Convex) |
+| `.agents/skills/convex*/`, `.agents/skills/clerk-*`, `.agents/skills/cloudflare/`, `.agents/skills/wrangler/`, `skills-lock.json` | `bun run setup`                            |
 
-Committed symlinks: `.claude` → `.agents`, `CLAUDE.md` → `AGENTS.md`. Setup installs Convex skills via `convex ai-files` and Clerk skills (`clerk-react-patterns`, `clerk-testing`, `clerk-backend-api`) via `bunx skills add`.
+Committed symlinks: `.claude` → `.agents`, `CLAUDE.md` → `AGENTS.md`. Setup installs Convex skills via `convex ai-files`, Clerk skills (`clerk-react-patterns`, `clerk-testing`, `clerk-backend-api`), and Cloudflare skills (`cloudflare`, `wrangler`) via `bunx skills add` — all under `.agents/skills/`.
 
 ## Verify gate
 

@@ -1,5 +1,5 @@
 # Staging — runs on every push to main (after merge).
-# Convex dev deploy + full Playwright E2E. Vercel web/marketing deploy via Git integration.
+# Convex dev deploy + Cloudflare Pages staging + full Playwright E2E.
 #
 # Release workflow requires a successful Staging run for the same commit.
 
@@ -30,6 +30,39 @@ jobs:
         uses: ./.github/actions/deploy-convex
         with:
           convex_deploy_key: ${{ secrets.CONVEX_DEPLOY_KEY }}
+
+  deploy-web-staging:
+    name: Web (staging)
+    needs: deploy-convex
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-bun
+      - name: Deploy web to Cloudflare Pages (staging)
+        uses: ./.github/actions/deploy-web
+        with:
+          convex_deploy_key: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          public_convex_url: ${{ secrets.PUBLIC_CONVEX_URL }}
+          public_clerk_publishable_key: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          pages_project_name: ${{ secrets.CF_PAGES_PROJECT_WEB }}
+          deploy_branch: staging
+
+  deploy-marketing-staging:
+    name: Marketing (staging)
+    needs: deploy-convex
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-bun
+      - name: Deploy marketing to Cloudflare Pages (staging)
+        uses: ./.github/actions/deploy-marketing
+        with:
+          cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          pages_project_name: ${{ secrets.CF_PAGES_PROJECT_MARKETING }}
+          deploy_branch: staging
 
   e2e:
     name: E2E

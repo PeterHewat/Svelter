@@ -96,10 +96,10 @@ Staging: merge to `main`. Production tags: `release-2026-06-07-18-55-37` (one ta
 
 ## Generated code (not committed)
 
-| Output                                                                  | Generator                     | Command                                                                           |
-| ----------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------- |
-| `convex/_generated/`                                                    | Convex                        | `bun run dev:convex` or `bun scripts/generate-convex.ts`                          |
-| `.agents/skills/convex*/`, `.agents/skills/clerk-*`, `skills-lock.json` | `bun run setup` (best effort) | `bunx convex ai-files install`; Clerk: see `clerkSkillsInstallCommand()` in setup |
+| Output                                                                                                                            | Generator                     | Command                                                                                                                           |
+| --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `convex/_generated/`                                                                                                              | Convex                        | `bun run dev:convex` or `bun scripts/generate-convex.ts`                                                                          |
+| `.agents/skills/convex*/`, `.agents/skills/clerk-*`, `.agents/skills/cloudflare/`, `.agents/skills/wrangler/`, `skills-lock.json` | `bun run setup` (best effort) | `bunx convex ai-files install`; Clerk/Cloudflare: see `clerkSkillsInstallCommand()` / `cloudflareSkillsInstallCommand()` in setup |
 
 Repo-owned agent skills (e.g. `.agents/skills/pr-push/`) live under `.agents/skills/`. `.claude` is a symlink to `.agents` (committed) so Claude Code and Convex `ai-files` share the same tree; Convex `convex*` and Clerk `clerk-*` install targets are gitignored. `CLAUDE.md` is a symlink to `AGENTS.md`.
 

@@ -104,7 +104,7 @@ jobs:
           gh pr checks "$PR_NUMBER" --repo "$REPO" || true
           exit 1
 
-      - name: Verify Staging (Convex + E2E) succeeded for this commit
+      - name: Verify Staging (Convex + Pages + E2E) succeeded for this commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -113,12 +113,12 @@ jobs:
 
           if gh run list --commit "$SHA" --workflow staging.yml --json conclusion \
             | jq -e 'any(.[]; .conclusion == "success")' >/dev/null; then
-            echo "✅ Staging (Convex dev + E2E) succeeded for commit ${SHA}"
+            echo "✅ Staging (Convex dev + Cloudflare Pages + E2E) succeeded for commit ${SHA}"
             exit 0
           fi
 
           echo "❌ No successful staging.yml run for commit ${SHA}."
-          echo "   Merge to main must complete Staging (Convex + E2E) before releasing."
+          echo "   Merge to main must complete Staging (Convex + Pages + E2E) before releasing."
           gh run list --commit "$SHA" --workflow staging.yml --limit 5 || true
           exit 1
 

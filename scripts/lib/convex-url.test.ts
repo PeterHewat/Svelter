@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
   convexUrlFromDeploymentSlug,
+  parseConvexDeployKeySlug,
   parseConvexProdDeploymentSlug,
+  resolveProdConvexUrl,
 } from "./convex-url";
 
 describe("parseConvexProdDeploymentSlug", () => {
@@ -19,6 +21,26 @@ describe("parseConvexProdDeploymentSlug", () => {
         '✔ Created deploy key "github-prod" for laudable-deer-836.',
       ),
     ).toBe("laudable-deer-836");
+  });
+});
+
+describe("parseConvexDeployKeySlug", () => {
+  test("parses prod deploy key prefix", () => {
+    expect(
+      parseConvexDeployKeySlug("prod:laudable-deer-836|eyJ2MiI6InRlc3QifQ=="),
+    ).toBe("laudable-deer-836");
+  });
+});
+
+describe("resolveProdConvexUrl", () => {
+  test("derives URL from deploy key with regional reference", () => {
+    expect(
+      resolveProdConvexUrl(
+        "prod:laudable-deer-836|token",
+        undefined,
+        "https://insightful-ibex-892.eu-west-1.convex.cloud",
+      ),
+    ).toBe("https://laudable-deer-836.eu-west-1.convex.cloud");
   });
 });
 

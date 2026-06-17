@@ -6,7 +6,7 @@
   "description": "Product web app (SvelteKit SPA)",
   "scripts": {
     "dev": "vite dev --port 5173",
-    "build": "vite build",
+    "build": "vite build && bun ../../scripts/write-pages-edge-files.ts web",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
     "lint": "eslint .",
@@ -18,17 +18,17 @@
     "e2e": "playwright test"
   },
   "dependencies": {
-    "@clerk/ui": "^1.17.0",
+    "@clerk/ui": "^1.18.0",
     "@repo/config": "workspace:*",
     "@repo/tokens": "workspace:*",
     "@repo/ui-svelte": "workspace:*",
     "@repo/utils": "workspace:*",
     "convex": "^1.41.0",
-    "convex-svelte": "^0.13.0",
+    "convex-svelte": "^0.14.0",
     "svelte-clerk": "^1.1.9"
   },
   "devDependencies": {
-    "@clerk/testing": "^2.1.2",
+    "@clerk/testing": "^2.1.3",
     "@playwright/test": "^1.61.0",
     "@repo/test-utils": "workspace:*",
     "@sveltejs/adapter-static": "^3.0.10",

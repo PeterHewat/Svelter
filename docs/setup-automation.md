@@ -6,9 +6,9 @@ What `bun run setup` automates, what stays manual, and dashboard URLs for fallba
 
 ## Wizard behavior
 
-- **Idempotent** (safe to re-run anytime): should not duplicate Clerk apps, corrupt [`.svelter/setup.json`](../.svelter/setup.json), or worsen secret placement. Interrupted runs resume; create-or-skip steps skip when already done. Prompts still run (with saved defaults); optional sync steps (GitHub secrets, Vercel) run again only when you confirm them.
+- **Idempotent** (safe to re-run anytime): should not duplicate Clerk apps, corrupt [`.svelter/setup.json`](../.svelter/setup.json), or worsen secret placement. Interrupted runs resume; create-or-skip steps skip when already done. Prompts still run (with saved defaults); optional sync steps (GitHub secrets, Cloudflare) run again only when you confirm them.
 - **Interactive** (local TTY): prompts run each time; previous answers from `.svelter/setup.json` are defaults (Enter keeps them).
-- **Non-TTY** (CI, piped stdin): skip prompts; use existing `.svelter/setup.json` and env only. GitHub Actions secret sync, Vercel bootstrap, and production bootstrap require an interactive TTY — or pass `--sync-secrets` when `gh` / `VERCEL_TOKEN` are already authenticated.
+- **Non-TTY** (CI, piped stdin): skip prompts; use existing `.svelter/setup.json` and env only. GitHub Actions secret sync, Cloudflare bootstrap, and production bootstrap require an interactive TTY — or pass `--sync-secrets` when `gh` / `CLOUDFLARE_API_TOKEN` are already set.
 - Dashboard URLs appear as clickable links in setup output. **Follow up** steps are deferred checklists (setup keeps going); **ACTION REQUIRED** only when setup pauses and exits (e.g. Convex link incomplete).
 
 Step-by-step summary: [getting-started.md](./getting-started.md#2-setup-wizard-bun-run-setup).
@@ -17,7 +17,7 @@ Step-by-step summary: [getting-started.md](./getting-started.md#2-setup-wizard-b
 
 ### `.svelter/setup.json` (local, no secrets)
 
-Gitignored in the template repo — created on first `bun run setup`. Stores identity defaults, Vercel project IDs, and which bootstrap steps already ran so re-runs stay idempotent. **Fork maintainers** who want non-interactive CI (`--sync-secrets`) can commit theirs after setup: `git add -f .svelter/setup.json`.
+Gitignored in the template repo — created on first `bun run setup`. Stores identity defaults, Cloudflare Pages project names, and which bootstrap steps already ran so re-runs stay idempotent. **Fork maintainers** who want non-interactive CI (`--sync-secrets`) can commit theirs after setup: `git add -f .svelter/setup.json`.
 
 ```json
 {
@@ -30,15 +30,13 @@ Gitignored in the template repo — created on first `bun run setup`. Stores ide
     "syncedSecrets": {
       "repo": true,
       "production": true,
-      "vercel": true
+      "cloudflare": true
     }
   },
-  "vercel": {
+  "cloudflare": {
     "synced": true,
     "dnsConfigured": true,
-    "orgId": "team_…",
-    "projectIdWeb": "prj_…",
-    "projectIdMarketing": "prj_…",
+    "accountId": "…",
     "projectNameWeb": "my-app-web",
     "projectNameMarketing": "my-app-marketing"
   },
@@ -47,10 +45,10 @@ Gitignored in the template repo — created on first `bun run setup`. Stores ide
 ```
 
 - `github.syncedSecrets.repo` — repository secrets for PR CI / E2E (dev Convex + Clerk).
-- `github.syncedSecrets.vercel` — repository secrets for Vercel deploy workflows.
+- `github.syncedSecrets.cloudflare` — repository secrets for Cloudflare Pages deploy workflows.
 - `github.syncedSecrets.production` — GitHub **production** environment secrets for `release-*` releases.
-- `vercel.synced` — Vercel projects, env vars, and domains configured (not a GitHub sync step).
-- `vercel.dnsConfigured` — registrar nameservers confirmed when an apex domain is set.
+- `cloudflare.synced` — Pages projects and domains configured (not a GitHub sync step).
+- `cloudflare.dnsConfigured` — Cloudflare DNS / custom domains confirmed when an apex domain is set.
 
 Also writes `packages/config/product.ts`, rebrands `README.md` when forking from the template, and optionally replaces MIT [`LICENSE`](../LICENSE).
 
@@ -62,7 +60,7 @@ Also writes `packages/config/product.ts`, rebrands `README.md` when forking from
 | Root `.env.local`               | `CONVEX_DEPLOYMENT`, optional `CONVEX_DEPLOY_KEY`        |
 | `.svelter/clerk-production.env` | Clerk Production keys from `clerk env pull` (gitignored) |
 | GitHub Actions secrets          | CI and deploy keys                                       |
-| Vercel project env              | `PUBLIC_*` per environment                               |
+| CI build env (Actions)          | `PUBLIC_*` baked at compile time — not Pages dashboard   |
 
 ---
 
@@ -70,24 +68,24 @@ Also writes `packages/config/product.ts`, rebrands `README.md` when forking from
 
 ### Still manual or checklist-only
 
-| Area                     | Today                                                                                                                                   |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Account signup / billing | Convex, Clerk, Vercel, GitHub dashboards                                                                                                |
-| Convex first link        | Setup runs `convex dev --once` (OAuth in the same terminal); sets Clerk issuer and re-pushes                                            |
-| Clerk app creation       | [Clerk CLI](https://clerk.com/docs/cli) (`clerk apps create`, `clerk env pull`) when authenticated; dashboard fallback                  |
-| Clerk JWT template       | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual dashboard fallback on failure                                          |
-| Clerk allowed origins    | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual PATCH fallback on failure                                              |
-| Apex domain              | Optional in identity wizard (Enter to skip). Re-run setup to add a domain later.                                                        |
-| DNS at registrar         | When apex is set: setup prints Vercel nameserver instructions and **pauses** until you confirm (stored as `vercel.dnsConfigured`)       |
-| E2E test user            | Wizard defaults `e2e.test@{apex}` when apex is set, else `e2e.test@example.com`; creates user via Clerk API and writes `E2E_USER_EMAIL` |
-| Org GitHub policies      | Branch protection, required reviewers — outside setup                                                                                   |
+| Area                     | Today                                                                                                                                                                         |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Account signup / billing | Convex, Clerk, Cloudflare, GitHub dashboards                                                                                                                                  |
+| Convex first link        | Setup runs `convex dev --once` (OAuth in the same terminal); sets Clerk issuer and re-pushes                                                                                  |
+| Clerk app creation       | [Clerk CLI](https://clerk.com/docs/cli) (`clerk apps create`, `clerk env pull`) when authenticated; dashboard fallback                                                        |
+| Clerk JWT template       | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual dashboard fallback on failure                                                                                |
+| Clerk allowed origins    | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual PATCH fallback on failure                                                                                    |
+| Apex domain              | Optional in identity wizard (Enter to skip). Re-run setup to add a domain later.                                                                                              |
+| DNS at registrar         | When apex is set: setup automates zone/domains/DNS via API, prints Cloudflare nameservers, and **pauses** until you confirm registrar delegation (`cloudflare.dnsConfigured`) |
+| E2E test user            | Wizard defaults `e2e.test@{apex}` when apex is set, else `e2e.test@example.com`; creates user via Clerk API and writes `E2E_USER_EMAIL`                                       |
+| Org GitHub policies      | Branch protection, required reviewers — outside setup                                                                                                                         |
 
 ### Feasibility summary
 
 | Category    | Examples                                                                                                                              |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Script**  | `PRODUCT_NAME`, `.env.local`, `convex env set`, deploy keys, `gh secret set`, Vercel env via API, Clerk JWT template + origins        |
-| **Guided**  | Clerk CLI `env pull` or paste keys, inline Convex link, Vercel import, DNS, E2E user                                                  |
+| **Script**  | `PRODUCT_NAME`, `.env.local`, `convex env set`, deploy keys, `gh secret set`, Pages domains via API, Clerk JWT template + origins     |
+| **Guided**  | Clerk CLI `env pull` or paste keys, inline Convex link, `wrangler login` or Cloudflare API token paste, DNS, E2E user                 |
 | **Manual**  | Account signup, registrar nameserver change (when apex is set), Clerk auth methods, `release-*` release approval, org GitHub policies |
 | **Blocked** | Clerk setup without CLI login or dashboard access                                                                                     |
 
@@ -95,14 +93,16 @@ Also writes `packages/config/product.ts`, rebrands `README.md` when forking from
 
 ## Platform URLs
 
-Placeholders: `{org}`, `{repo}`, `{apex}`, `{vercel-team}`, `{vercel-web-project}`, `{vercel-marketing-project}`.
+Placeholders: `{org}`, `{repo}`, `{apex}`, `{cf-account}`, `{pages-web-project}`, `{pages-marketing-project}`.
 
 **Derived hostnames** from apex `example.com`: see [environments.md](./environments.md#domains-and-dns).
 
-| Surface   | Staging (merge to `main`) | Production (Release) |
-| --------- | ------------------------- | -------------------- |
-| Web       | `preview.example.com`     | `example.com`        |
-| Marketing | `preview.www.example.com` | `www.example.com`    |
+| Surface   | Staging (merge to `main`)            | Production (`*.pages.dev`)   | Production (custom, optional) |
+| --------- | ------------------------------------ | ---------------------------- | ----------------------------- |
+| Web       | `staging.{slug}-web.pages.dev`       | `{slug}-web.pages.dev`       | `example.com`                 |
+| Marketing | `staging.{slug}-marketing.pages.dev` | `{slug}-marketing.pages.dev` | `www.example.com`             |
+
+Without an apex, setup can defer Clerk Production and still sync Convex + Cloudflare to the GitHub **`production`** environment. Clerk requires a domain you own before `pk_live_…` keys exist — not `*.pages.dev`. Re-run setup with an apex (or after `clerk deploy`) to finish Clerk and custom Cloudflare domains.
 
 ### Clerk
 
@@ -136,16 +136,16 @@ bunx convex env set CLERK_JWT_ISSUER_DOMAIN "https://your-app.clerk.accounts.dev
 bunx convex deployment token create github-ci --save-env
 ```
 
-### Vercel
+### Cloudflare Pages
 
-| Step                       | URL                                                              |
-| -------------------------- | ---------------------------------------------------------------- |
-| Dashboard                  | [vercel.com/dashboard](https://vercel.com/dashboard)             |
-| Account tokens             | [vercel.com/account/tokens](https://vercel.com/account/tokens)   |
-| Import Git repository      | [vercel.com/new](https://vercel.com/new)                         |
-| Web project settings       | [Project settings](https://vercel.com/{team}/{project}/settings) |
-| Marketing project settings | Same pattern (root dir `apps/marketing`)                         |
-| Monorepo link (CLI alpha)  | `vercel link --repo`                                             |
+| Step            | URL                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------ |
+| Sign up         | [dash.cloudflare.com/sign-up](https://dash.cloudflare.com/sign-up)                   |
+| Dashboard       | [dash.cloudflare.com](https://dash.cloudflare.com)                                   |
+| API tokens      | [Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens) (CI fallback) |
+| CLI login       | `bunx wrangler login` (setup uses OAuth session when no token is set)                |
+| Workers & Pages | Account → Workers & Pages                                                            |
+| Direct upload   | Create project **without** Git; deploy via `wrangler pages deploy` in GitHub Actions |
 
 ### GitHub
 
@@ -161,14 +161,14 @@ Setup creates the **`production`** environment via `gh api` when your token has 
 
 ## CLI prerequisites
 
-| Tool   | Login                            |
-| ------ | -------------------------------- |
-| `gh`   | `gh auth login -s repo,workflow` |
-| Convex | `bunx convex login`              |
-| Vercel | `bunx vercel login`              |
-| Clerk  | `bunx clerk auth login`          |
+| Tool     | Login                                                  |
+| -------- | ------------------------------------------------------ |
+| `gh`     | `gh auth login -s repo,workflow`                       |
+| Convex   | `bunx convex login`                                    |
+| Wrangler | `bunx wrangler login` or `CLOUDFLARE_API_TOKEN` in env |
+| Clerk    | `bunx clerk auth login`                                |
 
-Setup probes these at the start of each interactive run. Missing tools fall back to printed dashboard URLs; you can continue in manual mode.
+Setup probes these at the start of each interactive run. Missing tools print macOS `brew install …` hints or official docs URLs; you can continue in manual mode.
 
 ---
 
@@ -176,7 +176,7 @@ Setup probes these at the start of each interactive run. Missing tools fall back
 
 ```mermaid
 flowchart TD
-  start[bun run setup] --> cli[CLI prerequisites gh convex vercel clerk]
+  start[bun run setup] --> cli[CLI prerequisites gh convex wrangler clerk]
   cli --> identity[Prompt product name + optional apex domain]
   identity --> scaffold[Copy .env.local if missing]
   scaffold --> clerk[Clerk CLI or dashboard keys]
@@ -189,10 +189,10 @@ flowchart TD
   readiness --> ci{Push GitHub secrets?}
   ci -->|yes| ghSecrets[gh secret set from local env]
   ci -->|no| done[Exit 0 or 1]
-  ghSecrets --> vercel{Vercel token?}
-  vercel -->|yes| vercelBootstrap[Vercel env + project IDs]
-  vercel -->|no| checklist[Print Vercel + DNS checklist]
-  vercelBootstrap --> prod{Configure production?}
+  ghSecrets --> cf{Cloudflare token?}
+  cf -->|yes| cfBootstrap[Pages projects + domains + gh secrets]
+  cf -->|no| checklist[Print Cloudflare + DNS checklist]
+  cfBootstrap --> prod{Configure production?}
   prod -->|yes| prodSecrets[gh secret set --env production + clerk deploy]
   prod -->|no| done
   prodSecrets --> done
@@ -220,10 +220,11 @@ gh auth login -s repo,workflow
 gh secret set CONVEX_DEPLOY_KEY < deploy-key.txt
 gh secret set PUBLIC_CONVEX_URL --body "https://….convex.cloud"
 
-# Vercel (repo-pinned — bunx)
-bunx vercel login
-bunx vercel link --repo
-bunx vercel env add PUBLIC_CONVEX_URL development
+# Cloudflare (repo-pinned — bunx)
+bunx wrangler login
+export CLOUDFLARE_API_TOKEN=…   # optional CI fallback
+export CLOUDFLARE_ACCOUNT_ID=…
+bunx wrangler pages deploy apps/web/build --project-name=my-app-web --branch=staging
 
 # Clerk (repo-pinned — bunx)
 bunx clerk auth login
@@ -236,6 +237,6 @@ bunx clerk deploy                        # provision Production
 ## Security
 
 - Never log secret values; mask in prompts (`pk_test_…`, `sk_test_…`).
-- Deploy keys and `CLERK_SECRET_KEY` only in `.env.local`, GitHub Secrets, or Vercel env — never in `.svelter/setup.json` or git.
-- `gh secret set` and `vercel env add` read from stdin or env vars, not echo.
+- Deploy keys and `CLERK_SECRET_KEY` only in `.env.local`, GitHub Secrets, or CI env — never in `.svelter/setup.json` or git.
+- `gh secret set` reads from stdin or env vars, not echo.
 - Preview/dev share Clerk test users and Convex dev — never prod credentials in repository secrets ([environments.md](./environments.md)).

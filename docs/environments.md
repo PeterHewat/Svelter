@@ -1,86 +1,89 @@
 # Environments and platform setup
 
-How **development**, **staging**, and **production** map across Clerk, Convex, Vercel, domains, and GitHub Actions. CI/CD workflow details live in [ci-cd.md](./ci-cd.md).
+How **development**, **staging**, and **production** map across Clerk, Convex, Cloudflare Pages, domains, and GitHub Actions. CI/CD workflow details live in [ci-cd.md](./ci-cd.md).
 
-**Recommended path:** run `bun run setup` after [getting-started.md](./getting-started.md) — it walks identity, Convex, Clerk, GitHub secrets, and Vercel with dashboard URLs and CLI commands. Manual steps below are fallbacks.
+**Recommended path:** run `bun run setup` after [getting-started.md](./getting-started.md) — it walks identity, Convex, Clerk, GitHub secrets, and Cloudflare Pages with dashboard URLs and CLI commands. Manual steps below are fallbacks.
 
 ## Overview
 
-| Tier            | Purpose                | Convex / Auth                     | Vercel domains (example)                                           |
-| --------------- | ---------------------- | --------------------------------- | ------------------------------------------------------------------ |
-| **Development** | Local, PR CI           | Dev deployment, Clerk             | `localhost:5173`, `localhost:4321`                                 |
-| **Staging**     | Pre-prod on fixed URLs | Same as development               | `preview.example.com` (web), `preview.www.example.com` (marketing) |
-| **Production**  | Customer-facing        | Prod deployment, Clerk (prod app) | `example.com` (web), `www.example.com` (marketing)                 |
+| Tier            | Purpose                | Convex / Auth                     | Hostnames (example)                                                  |
+| --------------- | ---------------------- | --------------------------------- | -------------------------------------------------------------------- |
+| **Development** | Local, PR CI           | Dev deployment, Clerk             | `localhost:5173`, `localhost:4321`                                   |
+| **Staging**     | Pre-prod on fixed URLs | Same as development               | `staging.{slug}-web.pages.dev`, `staging.{slug}-marketing.pages.dev` |
+| **Production**  | Customer-facing        | Prod deployment, Clerk (prod app) | `{slug}-web.pages.dev` (+ `example.com` / `www` when apex is set)    |
 
 Replace `example.com` with your apex domain from [`.svelter/setup.json`](../.svelter/setup.json). Staging and local share the **dev** Convex database — never production data.
 
 ## Deploy triggers
 
-| Event                | What ships | Stack                                                            |
-| -------------------- | ---------- | ---------------------------------------------------------------- |
-| **Merge to `main`**  | Staging    | Convex dev (GitHub Actions) + web/marketing (Vercel Git) + E2E   |
-| **Release workflow** | Production | `release-*` tag → Convex prod + Vercel `--prod` (GitHub Actions) |
+| Event                | What ships | Stack                                                               |
+| -------------------- | ---------- | ------------------------------------------------------------------- |
+| **Merge to `main`**  | Staging    | Convex dev + Cloudflare Pages (`--branch=staging`) + E2E (Actions)  |
+| **Release workflow** | Production | `release-*` tag → Convex prod + Cloudflare Pages production deploys |
 
 There is no `preview-*` release tag. Staging always reflects the latest merge to `main`.
 
 ## Domains and DNS
 
-For apex domain `example.com`, Svelter uses four public hostnames:
+For apex domain `example.com`, hostnames look like this (`{slug}` from your product name, e.g. `svelter`):
 
-| Surface       | Staging (Preview)         | Production        | Vercel project             |
-| ------------- | ------------------------- | ----------------- | -------------------------- |
-| **Web app**   | `preview.example.com`     | `example.com`     | `{product-slug}-web`       |
-| **Marketing** | `preview.www.example.com` | `www.example.com` | `{product-slug}-marketing` |
+| Surface       | Staging (`--branch=staging`)         | Production (`*.pages.dev`)   | Production (custom, optional) | Pages project              |
+| ------------- | ------------------------------------ | ---------------------------- | ----------------------------- | -------------------------- |
+| **Web app**   | `staging.{slug}-web.pages.dev`       | `{slug}-web.pages.dev`       | `example.com`                 | `{product-slug}-web`       |
+| **Marketing** | `staging.{slug}-marketing.pages.dev` | `{slug}-marketing.pages.dev` | `www.example.com`             | `{product-slug}-marketing` |
 
-### DNS (Vercel DNS at your registrar)
+**No apex yet:** Release can deploy to `{slug}-*.pages.dev` (marketing works immediately; web sign-in needs Clerk Production — see below). Add an apex later to attach custom production domains on Cloudflare.
 
-Keep domain registration at your registrar (e.g. OVH). Delegate DNS to Vercel by pointing nameservers to:
+### Clerk Production without a hosting apex
 
-- `ns1.vercel-dns.com`
-- `ns2.vercel-dns.com`
+Skipping the apex prompt only defers **Cloudflare custom domains**. **Clerk Production is separate:** Clerk requires a domain you own to create a Production instance (`pk_live_…`). Clerk does not accept `*.pages.dev` for that step.
+
+Until Clerk Production exists, setup can **defer** Clerk and still sync Convex + Cloudflare to the GitHub `production` environment. Release deploys will build, but **web sign-in on `{slug}-web.pages.dev` will not work** until you run `clerk deploy` (or the dashboard deploy flow) with your domain and re-run setup.
+
+If you already own a domain but are not ready to host on it, you can still use that domain for Clerk Production DNS while serving the app on `*.pages.dev`.
+
+### DNS (Cloudflare zone)
+
+Keep domain registration at your registrar. Add the apex as a **Cloudflare zone** and point registrar nameservers to Cloudflare.
 
 **Checklist:**
 
-1. Run `bun run setup` with an apex domain — setup adds the domain to Vercel, attaches hostnames to projects, and **pauses** until you confirm nameservers are updated.
-2. In Vercel → **Domains** → your apex → enable **Vercel DNS** if prompted.
-3. At your registrar, set custom nameservers to the two values above (copy any email MX/TXT records into Vercel first).
-4. Wait for propagation. Vercel shows **Valid** when each hostname resolves.
-5. Confirm:
-   - `example.com` and `www.example.com` → **Production** (updated only by Release workflow)
-   - `preview.example.com` and `preview.www.example.com` → git branch **`main`** (Vercel Preview deploys on merge)
+1. Run `bun run setup` with an apex domain — setup creates the zone (if needed), Pages projects, production custom domains, and GitHub secrets, then **pauses** until you confirm registrar nameservers point to Cloudflare.
+2. At your registrar, set custom nameservers to the values setup prints (copy any email MX/TXT into Cloudflare DNS first).
+3. Wait for propagation. Cloudflare shows hostnames **Active** when ready.
 
-**No domain yet:** skip the apex prompt in setup (press Enter). Projects deploy to default `*.vercel.app` URLs until you add a domain and re-run setup.
+**No domain yet:** skip the apex prompt in setup (press Enter). Staging and production use `staging.*.pages.dev` and `{slug}-*.pages.dev`. Re-run setup with an apex to add `example.com` / `www` on Cloudflare and Clerk Production.
 
-Per-hostname A/CNAME records at the registrar still work if you cannot change nameservers — add them manually per the Vercel Domains UI.
+### Cloudflare Pages (web + marketing)
 
-### Vercel (web + marketing)
+**Automated (`bun run setup`):** creates direct-upload Pages projects; with an apex, also creates the Cloudflare zone and production custom domains (`example.com`, `www.example.com`). Syncs `CLOUDFLARE_*` / `CF_PAGES_PROJECT_*` to repository secrets and the GitHub **`production`** environment (prod Convex + Clerk + Cloudflare). **Does not build or deploy** — CI only. **Manual only:** registrar nameserver pause when an apex is set.
 
-**Automated (`bun run setup`):** creates or finds Git-linked `{product-slug}-web` and `{product-slug}-marketing`, silences GitHub bot noise, sets web `PUBLIC_CONVEX_URL` and Preview `CONVEX_DEPLOY_KEY` env vars, points Production tracking branch at `production`, attaches domains, optional `gh secret set` for `VERCEL_*`. Re-run setup to re-apply Git and branch settings after dashboard drift.
+**Deploy model (GitHub Actions only):**
 
-**Git staging model:**
+| Hostname assignment                                                  | How it updates                                                          |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `{slug}-web.pages.dev`, `{slug}-marketing.pages.dev`                 | **Release** → `release-*` tag → production `wrangler pages deploy`      |
+| `example.com`, `www.example.com` (when apex configured)              | Same Release deploy — also served on custom domains attached in setup   |
+| `staging.{slug}-web.pages.dev`, `staging.{slug}-marketing.pages.dev` | **Merge to `main`** → Staging workflow → deploy with `--branch=staging` |
 
-1. Connect each project to your GitHub repo (root `apps/web`, `apps/marketing`).
-2. **Production tracking branch** = `production` (not `main`) — **Settings → Environments → Production → Tracking Branch** (setup creates the empty `production` Git branch on `origin` when missing, then sets this via API).
-3. **Preview** stays at **All unassigned branches** (default) — do not pin Preview to `main`. Once Production tracks `production`, every other branch (including `main`) is Preview.
-4. Merges to **`main`** deploy **Preview** builds to `preview.*` hostnames.
-5. **Release** workflow deploys production domains via `vercel deploy --prod` in GitHub Actions.
-6. `ignoreCommand` in each `vercel.json` builds on **`main` only** (skips PR branch deploys).
+`PUBLIC_*` values are baked at **build time in CI** — no Pages dashboard env drift. SPA fallback and security headers live in `apps/*/build/_redirects` and `_headers` (generated at build).
 
-| Hostname assignment                              | How it updates                                                        |
-| ------------------------------------------------ | --------------------------------------------------------------------- |
-| `example.com`, `www.example.com`                 | **Release** → `release-*` tag → GitHub Actions `vercel deploy --prod` |
-| `preview.example.com`, `preview.www.example.com` | **Merge to `main`** → Vercel Git Preview deploy (branch `main`)       |
+**Auth stack by URL (web app sign-in):**
 
-Monorepo build settings live in each app's `vercel.json`. Production never auto-deploys from `main` when Production Branch is `production`.
+| URL                            | Convex      | Clerk instance                             |
+| ------------------------------ | ----------- | ------------------------------------------ |
+| `staging.{slug}-web.pages.dev` | Development | Development (`pk_test_…` in staging build) |
+| `{slug}-web.pages.dev`         | Production  | Production (`pk_live_…` in release build)  |
+| `example.com` (when apex set)  | Production  | Production (same release build)            |
 
-**Not production:** `preview.*` uses dev Convex. `example.com` / `www` use prod Convex.
+Marketing is static SSG — no Clerk on marketing hostnames.
 
 ### Clerk + Convex
 
 | Deployment context | Convex env var              | Web env (`apps/web`)                               |
 | ------------------ | --------------------------- | -------------------------------------------------- |
 | **Development**    | `CLERK_JWT_ISSUER_DOMAIN`   | `PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` |
-| **Production**     | prod Clerk issuer on Convex | prod Clerk keys on Vercel                          |
+| **Production**     | prod Clerk issuer on Convex | prod Clerk keys baked in Release build             |
 
 Enable sign-in providers in the **Clerk dashboard** (Google, email, etc.). Activate the [Convex integration](https://dashboard.clerk.com/apps/setup/convex) so JWTs include the `convex` audience.
 
@@ -93,20 +96,20 @@ Enable sign-in providers in the **Clerk dashboard** (Google, email, etc.). Activ
 
 ### GitHub environments
 
-| Scope                | Secrets    | Used for                                                     |
-| -------------------- | ---------- | ------------------------------------------------------------ |
-| **Repository**       | Dev stack  | PR CI, Staging (Convex + E2E on `main`), Vercel Git env vars |
-| **`production` env** | Prod stack | `release-*` Release deploys only                             |
+| Scope                | Secrets    | Used for                                                |
+| -------------------- | ---------- | ------------------------------------------------------- |
+| **Repository**       | Dev stack  | PR CI, Staging (Convex + Pages staging + E2E on `main`) |
+| **`production` env** | Prod stack | `release-*` Release deploys only                        |
 
 Details: [ci-cd.md](./ci-cd.md#repository-secrets).
 
 ## First-time checklist
 
-1. `bun run setup` through Convex, Clerk, Vercel, GitHub secrets.
-2. Vercel: **Settings → Environments → Production** → Tracking Branch = `production`; Preview = **All unassigned branches** (leave default).
-3. DNS valid for all four hostnames.
-4. Merge a PR to `main` → **Staging** workflow green (Convex + E2E); Vercel deploys staging URLs.
-5. **Release** workflow → `release-*` tag → production.
+1. `bun run setup` through Convex, Clerk, Cloudflare Pages, GitHub + **production** environment secrets.
+2. Staging URLs (`staging.*.pages.dev`) after first merge to `main`; production URLs (`{slug}-*.pages.dev`) after **Release**.
+3. Optional: apex DNS (`example.com`, `www`) after re-run setup with a domain.
+4. Merge a PR to `main` → **Staging** workflow green.
+5. **Release** workflow → `release-*` tag.
 
 ---
 

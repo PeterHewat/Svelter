@@ -16,7 +16,7 @@ node_modules/
 
 # SvelteKit
 .svelte-kit/
-.vercel/
+.wrangler/
 
 # IDEs
 .project
@@ -68,13 +68,13 @@ convex/_generated/
 .svelter/*.env
 
 # Agent skills installed by setup (Convex: `bunx convex ai-files install`)
-.agents/skills/convex
-.agents/skills/convex-*
-.agents/skills/clerk-*
-.claude/skills/convex
-.claude/skills/convex-*
-.claude/skills/clerk-*
+.agents/skills/convex*
+.agents/skills/clerk*
+.agents/skills/cloudflare*
+.agents/skills/wrangler*
 skills-lock.json
+
+.cursor-screenshots/*
 
 # Test results
 test-results/

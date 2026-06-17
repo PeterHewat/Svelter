@@ -7,7 +7,10 @@ import {
   parseDotenvAssignmentValue,
 } from "../../packages/config/env-placeholders";
 import { isPlaceholderE2eEmail } from "../../packages/config/e2e-auth";
-import { areClerkAgentSkillsInstalled } from "./agent-skills";
+import {
+  areClerkAgentSkillsInstalled,
+  areCloudflareAgentSkillsInstalled,
+} from "./agent-skills";
 import {
   readClerkPublishableKey,
   readConvexUrlFromWebEnv,
@@ -200,6 +203,16 @@ function buildChecks(root: string): Check[] {
       : "missing",
     remediation:
       "bun run setup  # or: bunx skills add clerk/skills -y -a cursor --skill clerk-react-patterns --skill clerk-testing --skill clerk-backend-api",
+    optional: true,
+  });
+
+  const cloudflareSkillsOk = areCloudflareAgentSkillsInstalled(root);
+  checks.push({
+    name: "Cloudflare agent skills",
+    ok: cloudflareSkillsOk,
+    detail: cloudflareSkillsOk ? "cloudflare, wrangler" : "missing",
+    remediation:
+      "bun run setup  # or: bunx skills add cloudflare/skills -y -a cursor --skill cloudflare --skill wrangler",
     optional: true,
   });
 

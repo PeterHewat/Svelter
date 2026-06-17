@@ -26,7 +26,7 @@ const en = {
     feature2Body:
       "Hosted auth with social providers and a realtime Convex backend.",
     feature3Title: "Lean Deploy",
-    feature3Body: "Deploys to any CDN; Vercel pre-configured.",
+    feature3Body: "Deploys to any CDN; Cloudflare Pages pre-configured.",
   },
   blog: {
     title: "Blog",

@@ -24,7 +24,7 @@ const ru: TranslationDictionary = {
     feature2Body:
       "Хостинг аутентификации с соцсетями и realtime-бэкендом Convex.",
     feature3Title: "Лёгкий деплой",
-    feature3Body: "Деплой на любой CDN; Vercel преднастроен.",
+    feature3Body: "Деплой на любой CDN; Cloudflare Pages преднастроен.",
   },
   blog: {
     title: "Блог",

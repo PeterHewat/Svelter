@@ -12,7 +12,9 @@ import { resolve } from "node:path";
 import { ensureAgentLinks } from "./lib/agent-links";
 import {
   clerkSkillsInstallCommand,
+  cloudflareSkillsInstallCommand,
   runClerkAgentSkillsIfNeeded,
+  runCloudflareAgentSkillsIfNeeded,
   runConvexAgentSkillsIfNeeded,
 } from "./lib/agent-skills";
 import { applyIdentity, resolveGitHubRepo } from "./lib/apply-identity";
@@ -22,7 +24,7 @@ import { TEMPLATE_PRODUCT_NAME } from "./lib/repo-identity";
 import { bootstrapCiSecrets } from "./lib/bootstrap-ci";
 import { bootstrapConvexClerk } from "./lib/bootstrap-convex-clerk";
 import { bootstrapProduction } from "./lib/bootstrap-production";
-import { bootstrapVercel } from "./lib/bootstrap-vercel";
+import { bootstrapCloudflare } from "./lib/bootstrap-cloudflare";
 import { isConvexLinked } from "./lib/convex-link";
 import { runIdentityWizard } from "./lib/prompt-identity";
 import { runReadiness } from "./lib/readiness";
@@ -160,6 +162,13 @@ async function main(): Promise<void> {
     );
   }
 
+  const cloudflareSkillsCode = await runCloudflareAgentSkillsIfNeeded(root);
+  if (cloudflareSkillsCode !== 0) {
+    console.warn(
+      `○ Cloudflare agent skills not installed (optional). Retry: ${cloudflareSkillsInstallCommand()}`,
+    );
+  }
+
   console.log("\nReadiness");
   const readinessCode = runReadiness(root);
   if (readinessCode !== 0) {
@@ -172,18 +181,29 @@ async function main(): Promise<void> {
   if (setupConfig && (interactive || flags.syncSecrets)) {
     const bootstrapOptions = { autoConfirm: flags.syncSecrets };
     await bootstrapCiSecrets(root, setupConfig, cliContext, bootstrapOptions);
-    const vercelToken = await bootstrapVercel(
+    await bootstrapCloudflare(
       root,
       setupConfig,
       github,
       cliContext,
       bootstrapOptions,
     );
-    await bootstrapProduction(root, setupConfig, {
-      vercelToken: vercelToken ?? undefined,
+    const prodResult = await bootstrapProduction(root, setupConfig, {
       cliContext,
       autoConfirm: flags.syncSecrets,
     });
+    if (prodResult === "failed") {
+      console.log(
+        "\n○ Setup incomplete — production secrets not fully synced. Re-run `bun run setup` after fixing items above.",
+      );
+      process.exit(1);
+    }
+    if (prodResult === "partial") {
+      console.log(
+        "\n✓ Setup complete — production partially synced (re-run with an apex domain for Clerk)",
+      );
+      return;
+    }
   }
 
   console.log("\n✓ Setup complete — continue with docs/getting-started.md");

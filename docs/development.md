@@ -84,7 +84,7 @@ bun run --filter @repo/web build        # Vite production build
 bun run --filter @repo/web e2e          # Playwright (web)
 bun run --filter @repo/marketing e2e    # Playwright (marketing)
 
-# Setup — getting-started.md (identity, Convex, GitHub, Vercel, DNS hints)
+# Setup — getting-started.md (identity, Convex, GitHub, Cloudflare, DNS hints)
 bun run setup          # interactive wizard + readiness (re-run anytime; Enter keeps defaults)
 ```
 
@@ -92,24 +92,25 @@ bun run setup          # interactive wizard + readiness (re-run anytime; Enter k
 
 ### Local tooling
 
-| Tool                                      | How to run    | Install                                                      |
-| ----------------------------------------- | ------------- | ------------------------------------------------------------ |
-| [Git](https://git-scm.com/download/)      | `git`         | System package                                               |
-| [Bun](https://bun.sh/)                    | `bun`         | Match `.bun-version` (>= 1.3.14)                             |
-| [Node.js](https://nodejs.org/)            | `node`        | **24** (`.node-version`)                                     |
-| [GitHub CLI](https://cli.github.com/)     | `gh`          | Global — `brew install gh`; `gh auth login -s repo,workflow` |
-| [Convex CLI](https://docs.convex.dev/cli) | `bunx convex` | Root `devDependency` — `bun install`                         |
-| [Vercel CLI](https://vercel.com/docs/cli) | `bunx vercel` | Root `devDependency` — `bun install`                         |
-| [Clerk CLI](https://clerk.com/docs/cli)   | `bunx clerk`  | Root `devDependency` — `bun install`                         |
+| Tool                                                                | How to run      | Install                                                                                                                                                      |
+| ------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [Git](https://git-scm.com/download/)                                | `git`           | System package                                                                                                                                               |
+| [Bun](https://bun.sh/)                                              | `bun`           | Match `.bun-version` (>= 1.3.14)                                                                                                                             |
+| [Node.js](https://nodejs.org/)                                      | `node`          | **24** (`.node-version`)                                                                                                                                     |
+| [GitHub CLI](https://cli.github.com/)                               | `gh`            | **Global** — not on npm; `brew install gh` (macOS) or [install guide](https://cli.github.com/manual/gh_installation). Used for `gh secret set` and repo API. |
+| [Convex CLI](https://docs.convex.dev/cli)                           | `bunx convex`   | Root `devDependency` — `bun install`                                                                                                                         |
+| [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) | `bunx wrangler` | Root `devDependency` — `bun install`                                                                                                                         |
+| [Clerk CLI](https://clerk.com/docs/cli)                             | `bunx clerk`    | Root `devDependency` — `bun install`                                                                                                                         |
 
-Repo-pinned CLIs use the versions in root `package.json`. Only `gh` is expected as a global/system binary.
+Repo-pinned CLIs use the versions in root `package.json`. **`gh` is the exception** — GitHub ships it as a standalone binary (not a supported npm/bun devDependency), so install it once per machine.
 
 ### Accounts (free tiers; signup in the wizard if needed)
 
 - [GitHub](https://github.com/) — template repo + `gh auth login`
 - [Convex](https://convex.dev/) — browser login during the Convex setup step
-- [Vercel](https://vercel.com/) — account before the Vercel step (API token)
-- **Apex domain** (optional at first) — when set, setup delegates DNS to Vercel via nameservers at your registrar (e.g. OVH)
+- [Clerk](https://dashboard.clerk.com/sign-up) — application created during setup (CLI or dashboard)
+- [Cloudflare](https://dash.cloudflare.com/sign-up) — account before the Cloudflare Pages step (`bunx wrangler login` or API token)
+- **Apex domain** (optional at first) — when set, setup adds the zone on Cloudflare and pauses for DNS confirmation
 
 CI and local scripts use the same Node/Bun major versions. Recommended editors: [VS Code](https://code.visualstudio.com/) or [Cursor](https://cursor.com/) (Copilot reads root [AGENTS.md](../AGENTS.md)).
 
@@ -202,7 +203,7 @@ PR CI runs `test:coverage` in path-based jobs (`@repo/web` + `@repo/ui-svelte` e
 
 Re-run `bun run setup` when local setup is complete ([getting-started.md](./getting-started.md)).
 
-CSP on deploys: `apps/web/vercel.json` — [prompts/security-review.md](../prompts/security-review.md).
+CSP on deploys: `packages/config/pages-edge.ts` → `apps/web/build/_headers` — [prompts/security-review.md](../prompts/security-review.md).
 
 ### Visual regression
 

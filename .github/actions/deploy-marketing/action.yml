@@ -1,0 +1,40 @@
+name: Deploy Marketing to Cloudflare Pages
+description: Build and deploy apps/marketing to Cloudflare Pages (production or staging branch).
+
+inputs:
+  cloudflare_api_token:
+    description: Cloudflare API token (Pages Edit)
+    required: true
+  cloudflare_account_id:
+    description: Cloudflare account ID
+    required: true
+  pages_project_name:
+    description: Cloudflare Pages project name for apps/marketing
+    required: true
+  deploy_branch:
+    description: Preview branch label (e.g. staging); omit for production
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Build and deploy to Cloudflare Pages (marketing)
+      shell: bash
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ inputs.cloudflare_api_token }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ inputs.cloudflare_account_id }}
+        CF_PAGES_PROJECT_MARKETING: ${{ inputs.pages_project_name }}
+        DEPLOY_BRANCH: ${{ inputs.deploy_branch }}
+      run: |
+        set -euo pipefail
+        bun run --filter @repo/marketing build
+        BRANCH_ARGS=()
+        if [ -n "${DEPLOY_BRANCH:-}" ]; then
+          BRANCH_ARGS=(--branch="$DEPLOY_BRANCH")
+        fi
+        bunx wrangler pages deploy apps/marketing/build \
+          --project-name="$CF_PAGES_PROJECT_MARKETING" \
+          "${BRANCH_ARGS[@]}" \
+          --commit-hash="${GITHUB_SHA}" \
+          --commit-message="${GITHUB_REF_NAME:-$GITHUB_SHA}"

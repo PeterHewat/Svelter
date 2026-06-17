@@ -61,6 +61,6 @@
   "devDependencies": {
     "@repo/test-utils": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1",
-    "happy-dom": "^20.10.4"
+    "happy-dom": "^20.10.5"
   }
 }

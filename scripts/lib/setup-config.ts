@@ -8,18 +8,16 @@ export type GitHubSyncedSecrets = {
   repo?: boolean;
   /** GitHub `production` environment secrets for `release-*` tags. */
   production?: boolean;
-  /** Repository secrets for Vercel deploy workflows (`VERCEL_TOKEN`, project IDs). */
-  vercel?: boolean;
+  /** Repository secrets for Cloudflare Pages deploy workflows. */
+  cloudflare?: boolean;
 };
 
-export type VercelSetupMeta = {
-  /** Vercel projects, env vars, and domains configured via setup. */
+export type CloudflareSetupMeta = {
+  /** Pages projects, domains, and secrets configured via setup. */
   synced?: boolean;
-  /** User confirmed Vercel DNS nameservers at registrar (setup pauses until true). */
+  /** User confirmed registrar nameservers at Cloudflare (setup pauses until true). */
   dnsConfigured?: boolean;
-  orgId: string;
-  projectIdWeb: string;
-  projectIdMarketing: string;
+  accountId: string;
   projectNameWeb: string;
   projectNameMarketing: string;
 };
@@ -36,7 +34,7 @@ export type SetupConfig = {
   } | null;
   /** When true, setup replaces MIT `LICENSE` with the proprietary stub. */
   removeMitLicense?: boolean;
-  vercel?: VercelSetupMeta;
+  cloudflare?: CloudflareSetupMeta;
 };
 
 const REL_PATH = ".svelter/setup.json";
@@ -111,7 +109,7 @@ export function buildSetupConfig(
         }
       : null,
     removeMitLicense,
-    vercel: existing?.vercel,
+    cloudflare: existing?.cloudflare,
   };
 }
 
@@ -148,45 +146,48 @@ export function markGithubSecretsSynced(root: string): void {
 }
 
 /**
- * Records Vercel project metadata after a successful bootstrap.
+ * Records Cloudflare Pages metadata after a successful bootstrap.
  *
  * @param root - Repository root
- * @param vercel - Vercel project IDs and org
+ * @param cloudflare - Account and project names
  */
-export function markVercelSynced(root: string, vercel: VercelSetupMeta): void {
+export function markCloudflareSynced(
+  root: string,
+  cloudflare: CloudflareSetupMeta,
+): void {
   const config = readSetupConfig(root);
   if (!config) {
     return;
   }
   writeSetupConfig(root, {
     ...config,
-    vercel: { ...config.vercel, ...vercel, synced: true },
+    cloudflare: { ...config.cloudflare, ...cloudflare, synced: true },
   });
 }
 
 /**
- * Records that the user confirmed registrar DNS for Vercel hostnames.
+ * Records that the user confirmed registrar nameservers point to Cloudflare.
  *
  * @param root - Repository root
  */
-export function markVercelDnsConfigured(root: string): void {
+export function markCloudflareDnsConfigured(root: string): void {
   const config = readSetupConfig(root);
-  if (!config?.vercel) {
+  if (!config?.cloudflare) {
     return;
   }
   writeSetupConfig(root, {
     ...config,
-    vercel: { ...config.vercel, dnsConfigured: true },
+    cloudflare: { ...config.cloudflare, dnsConfigured: true },
   });
 }
 
 /**
- * Records that Vercel deploy secrets were synced to GitHub repository secrets.
+ * Records that Cloudflare deploy secrets were synced to GitHub repository secrets.
  *
  * @param root - Repository root
  */
-export function markVercelGithubSecretsSynced(root: string): void {
-  markGitHubSecretSynced(root, "vercel");
+export function markCloudflareGithubSecretsSynced(root: string): void {
+  markGitHubSecretSynced(root, "cloudflare");
 }
 
 /**

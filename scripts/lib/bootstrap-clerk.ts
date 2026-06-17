@@ -1,8 +1,9 @@
 /* eslint-disable no-console -- CLI wizard */
 import { defaultE2eEmail } from "../../packages/config/e2e-auth";
 import { isPlaceholderEnvValue } from "../../packages/config/env-placeholders";
-import { deriveHostnames } from "../../packages/config/hostnames";
-import { hasApexDomain } from "../../packages/config/validate-domain";
+import { clerkDevelopmentOrigins } from "../../packages/config/hostnames";
+import { pagesProjectNames } from "./hosting-project-spec";
+import { productNameToSlug } from "./repo-identity";
 import {
   bootstrapClerkEnvViaCli,
   clerkAppMatchesProductName,
@@ -43,7 +44,7 @@ import {
 import { maskSecret, promptLine, promptSecret } from "./prompt";
 import { canAutomateClerk, type SetupCliContext } from "./setup-cli";
 import type { SetupConfig } from "./setup-config";
-import { openUrlInBrowser } from "./vercel-git";
+import { openUrlInBrowser } from "./open-url";
 
 const WEB_ENV = "apps/web/.env.local";
 
@@ -325,7 +326,7 @@ async function promptClerkKeys(
 }
 
 /**
- * Ensures Development-instance allowed origins include localhost and preview staging.
+ * Ensures Development-instance allowed origins include localhost and staging web.
  *
  * @param secretKey - Clerk development secret key
  * @param setup - Persisted setup config
@@ -334,9 +335,8 @@ async function syncClerkDevOrigins(
   secretKey: string,
   setup: SetupConfig,
 ): Promise<void> {
-  const clerkDevOrigins = hasApexDomain(setup.apexDomain)
-    ? deriveHostnames(setup.apexDomain!).localSiteUrls
-    : ["http://localhost:5173"];
+  const { web } = pagesProjectNames(productNameToSlug(setup.productName));
+  const clerkDevOrigins = clerkDevelopmentOrigins(web);
   console.log("\nClerk allowed origins (Development instance)");
 
   const result = await mergeClerkAllowedOrigins(secretKey, clerkDevOrigins, {
