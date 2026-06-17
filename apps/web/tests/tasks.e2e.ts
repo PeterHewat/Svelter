@@ -1,6 +1,10 @@
 import { clerk } from "@clerk/testing/playwright";
 import { expect, test } from "@playwright/test";
-import { isTasksE2EConfigured, tasksE2EEnvMessage } from "./helpers/e2e-auth";
+import {
+  gotoClerkReady,
+  isTasksE2EConfigured,
+  tasksE2EEnvMessage,
+} from "./helpers/e2e-auth";
 import { TasksPage } from "./pom/TasksPage";
 
 test.describe("Tasks (Clerk + Convex)", () => {
@@ -14,7 +18,7 @@ test.describe("Tasks (Clerk + Convex)", () => {
     const tasks = new TasksPage(page);
     const title = `E2E task ${Date.now()}`;
 
-    await page.goto("/");
+    await gotoClerkReady(page);
     await clerk.signIn({
       page,
       emailAddress: process.env.E2E_USER_EMAIL!,

@@ -1,5 +1,6 @@
 import { isPlaceholderE2eEmail } from "@repo/config/e2e-auth";
 import { isPlaceholderEnvValue } from "@repo/config/env-placeholders";
+import { expect, type Page } from "@playwright/test";
 
 /** Error message when authenticated tasks E2E env is incomplete. */
 export const tasksE2EEnvMessage =
@@ -75,4 +76,17 @@ export function isPlaywrightUiOnly(): boolean {
   if (process.env.PLAYWRIGHT_UI_ONLY === "1") return true;
   if (process.env.PLAYWRIGHT_UI_ONLY === "0") return false;
   return !isTasksE2EConfigured();
+}
+
+/**
+ * Open a route that mounts the deferred Clerk shell before `@clerk/testing` sign-in.
+ *
+ * The home page alone does not load Clerk (`clerk-deferred-layout.svelte`); `/login`
+ * requests the auth shell and returns to `/` with Clerk initializing.
+ *
+ * @param page - Playwright page
+ */
+export async function gotoClerkReady(page: Page): Promise<void> {
+  await page.goto("/login");
+  await expect(page).toHaveURL("/");
 }

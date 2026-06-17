@@ -6,7 +6,7 @@ Accepted — 2026-06-17
 
 ## Context
 
-Svelter serves two static surfaces: a **product web SPA shell** (`apps/web`, `adapter-static` + `200.html` fallback) and a **marketing SSG** (`apps/marketing`, full prerender). **Convex** and **Clerk** run outside the host. The template needs:
+Svelter serves two static surfaces: a **product web SPA shell** (`apps/web`, `adapter-static` + `index.html` fallback) and a **marketing SSG** (`apps/marketing`, full prerender). **Convex** and **Clerk** run outside the host. The template needs:
 
 - **Staging** on `staging.{project}.pages.dev` when `main` merges
 - **Production** on apex + `www` when a `release-*` tag ships
@@ -23,7 +23,7 @@ Previously the template used **Vercel**: Git-linked staging on `main`, productio
 | Actions-only prebuilt upload                       | Staging relied on Git integration; CLI staging awkward on Hobby    | **Wrangler `pages deploy`** — no Git link required               | **`netlify deploy`** — direct upload supported |
 | Staging + production without platform Git          | Production via Actions; staging needed Git hook or paid custom env | **`--branch=staging`** on `staging.*.pages.dev` branch aliases   | Branch deploys; similar direct-upload path     |
 | Custom domains (production only, 2 hostnames)      | Mature; Vercel DNS delegation                                      | Zone on Cloudflare; staging on `*.pages.dev` (no preview CNAMEs) | Mature; `_redirects` / headers files           |
-| SPA fallback + security headers                    | `vercel.json` rewrites + headers                                   | `_redirects` + `_headers` in build output                        | `_redirects` + `_headers`                      |
+| SPA fallback + security headers                    | `vercel.json` rewrites + headers                                   | `index.html` fallback + `_headers` in build output               | `_redirects` + `_headers`                      |
 | Monorepo (2 projects, root install + filter build) | Per-app `vercel.json` (removed)                                    | Two direct-upload Pages projects                                 | Two Netlify sites or monorepo plugin           |
 | Setup wizard / API automation                      | Mature API + Git noise tuning                                      | Pages + DNS API; no Git link simplifies bootstrap                | Solid CLI/API                                  |
 | DNS ownership                                      | Vercel nameservers option                                          | **Cloudflare DNS** (registrar unchanged)                         | Netlify DNS or external                        |
@@ -36,7 +36,7 @@ Adopt **Cloudflare Pages** with **direct upload via Wrangler** from GitHub Actio
 
 - Two Pages projects: `{slug}-web`, `{slug}-marketing`
 - No Cloudflare ↔ GitHub OAuth; builds run in Actions with env baked at compile time
-- Edge config (`_headers`, `_redirects`) emitted into `apps/*/build` at build time from `packages/config/pages-edge.ts`
+- Edge config (`_headers`; web SPA via `index.html` + Pages built-in routing) emitted into `apps/*/build` at build time from `packages/config/pages-edge.ts`
 - Setup wizard provisions projects, domains, and `CLOUDFLARE_*` / `CF_PAGES_PROJECT_*` GitHub secrets. Operational detail: [environments.md](../environments.md), [ci-cd.md](../ci-cd.md).
 
 ## Consequences

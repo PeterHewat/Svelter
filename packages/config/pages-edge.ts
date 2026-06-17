@@ -30,11 +30,4 @@ export function marketingPagesHeadersFile(): string {
   return lines.join("\n");
 }
 
-/**
- * Cloudflare Pages `_redirects` SPA fallback for `adapter-static` + `200.html`.
- */
-export function webSpaRedirectsFile(): string {
-  return "/*    /200.html   200\n";
-}
-
 export { PAGES_STAGING_BRANCH } from "./hostnames";
