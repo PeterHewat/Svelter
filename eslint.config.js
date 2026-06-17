@@ -90,7 +90,7 @@ export default defineConfig(
     "**/dist/**",
     "**/build/**",
     "**/.svelte-kit/**",
-    "**/.vercel/**",
+    "**/.wrangler/**",
     "**/coverage/**",
     "convex/_generated/**",
     ".agents/skills/**",

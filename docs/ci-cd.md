@@ -5,31 +5,31 @@
 | Workflow                                                | Purpose                                                                                                |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | [ci.yml](../.github/workflows/ci.yml)                   | Lint, test, and build on pull requests to `main` (not re-run on merge)                                 |
-| [staging.yml](../.github/workflows/staging.yml)         | On push to `main`: Convex dev deploy + full Playwright E2E                                             |
+| [staging.yml](../.github/workflows/staging.yml)         | On push to `main`: Convex dev deploy + Cloudflare Pages staging + full Playwright E2E                  |
 | [release.yml](../.github/workflows/release.yml)         | Production release: verify CI + Staging, tag `release-*`, deploy full stack                            |
 | [deploy.yml](../.github/workflows/deploy.yml)           | **Deploy** — redeploy/rollback a `release-*` tag (also called from Release)                            |
 | [e2e.yml](../.github/workflows/e2e.yml)                 | Manual Playwright (web and/or marketing); reusable from Staging                                        |
 | [sync-labels.yml](../.github/workflows/sync-labels.yml) | One-time or occasional: sync issue/PR labels ([source of truth](../.github/workflows/sync-labels.yml)) |
 
-**Staging:** merge to `main` → [staging.yml](../.github/workflows/staging.yml) (Convex dev + E2E) + Vercel Git deploys web/marketing to `preview.*`.
+**Staging:** merge to `main` → [staging.yml](../.github/workflows/staging.yml) (Convex dev + Cloudflare Pages staging + E2E).
 
-**Production release:** Actions → **Release** (from `main`). Creates `release-2026-06-07-18-55-37`, deploys Convex prod + Vercel production. Requires green **Staging** on the same commit.
+**Production release:** Actions → **Release** (from `main`). Creates `release-2026-06-07-18-55-37`, deploys Convex prod + Cloudflare Pages production. Requires green **Staging** on the same commit.
 
 **Rollback / redeploy:** Actions → **Deploy** → `release-*` tag.
 
-**CI vs staging vs release:** [ci.yml](../.github/workflows/ci.yml) runs on **pull requests only**. [staging.yml](../.github/workflows/staging.yml) runs on **merge to `main`**. [Release](../.github/workflows/release.yml) verifies PR CI and Staging E2E before tagging.
+**CI vs staging vs release:** [ci.yml](../.github/workflows/ci.yml) runs on **pull requests only**. [staging.yml](../.github/workflows/staging.yml) runs on **merge to `main`**. [Release](../.github/workflows/release.yml) verifies PR CI and Staging (Pages + E2E) before tagging.
 
-**Production Vercel codegen:** [deploy.yml](../.github/workflows/deploy.yml) runs `bun scripts/generate-convex.ts` before `vercel build` (GitHub **`production`** environment secrets).
+**Production Pages build:** [deploy.yml](../.github/workflows/deploy.yml) runs `bun scripts/generate-convex.ts` and `bun run --filter @repo/web build` with GitHub **`production`** environment secrets (`PUBLIC_CONVEX_URL`, `PUBLIC_CLERK_PUBLISHABLE_KEY`).
 
 **No Turborepo/Nx:** Path-based jobs and [setup-bun](../.github/actions/setup-bun/action.yml) (`bun install --ignore-scripts` in CI; lifecycle scripts run only where needed). See [ADR-003](./adr/003-bun-native-monorepo-tasks-and-ci.md).
 
 ## Deployment tiers
 
-| Lane            | Convex / Auth | Web domain (example)  | Marketing (example)       | When                                      |
-| --------------- | ------------- | --------------------- | ------------------------- | ----------------------------------------- |
-| **Local + E2E** | Dev / Clerk   | `localhost:5173`      | `localhost:4321`          | Dev, Playwright                           |
-| **Staging**     | Dev / Clerk   | `preview.example.com` | `preview.www.example.com` | Merge to `main` (Vercel Git + Staging CI) |
-| **Production**  | Prod / Clerk  | `example.com`         | `www.example.com`         | Release → `release-*` tag                 |
+| Lane            | Convex / Auth | Web domain (example)                             | Marketing (example)                            | When                                                    |
+| --------------- | ------------- | ------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------- |
+| **Local + E2E** | Dev / Clerk   | `localhost:5173`                                 | `localhost:4321`                               | Dev, Playwright                                         |
+| **Staging**     | Dev / Clerk   | `staging.{slug}-web.pages.dev`                   | `staging.{slug}-marketing.pages.dev`           | Merge to `main` (Staging CI + Pages `--branch=staging`) |
+| **Production**  | Prod / Clerk  | `{slug}-web.pages.dev` (+ `example.com` if apex) | `{slug}-marketing.pages.dev` (+ `www` if apex) | Release → `release-*` tag                               |
 
 Platform setup and DNS: **[environments.md](./environments.md)**.
 
@@ -37,10 +37,10 @@ Platform setup and DNS: **[environments.md](./environments.md)**.
 
 [deploy.yml](../.github/workflows/deploy.yml) uses the GitHub **`production`** environment for all jobs. [staging.yml](../.github/workflows/staging.yml) uses **repository secrets** (dev stack).
 
-| Scope                | Secrets                            | Deploy behavior                                                     |
-| -------------------- | ---------------------------------- | ------------------------------------------------------------------- |
-| **Repository**       | Dev stack (see below)              | PR CI, Staging on `main` (Convex dev + E2E); Vercel Git staging     |
-| **`production` env** | Prod stack (same secret **names**) | `release-*` — Convex prod; Vercel **`--prod`** (Production domains) |
+| Scope                | Secrets                            | Deploy behavior                                         |
+| -------------------- | ---------------------------------- | ------------------------------------------------------- |
+| **Repository**       | Dev stack (see below)              | PR CI, Staging on `main` (Convex + Pages staging + E2E) |
+| **`production` env** | Prod stack (same secret **names**) | `release-*` — Convex prod; Cloudflare Pages production  |
 
 Create **`production`** under **Settings → Environments** and add prod credentials there. Full checklist: [environments.md](./environments.md#github-environments).
 
@@ -94,51 +94,61 @@ The **E2E** workflow runs **UI-only** (`home`, `routing`) when Clerk E2E secrets
 
 ## Repository secrets
 
-Configure in **Settings → Secrets and variables → Actions**. Used by PR CI, Staging (Convex + E2E on `main`) — **development** stack only.
+Configure in **Settings → Secrets and variables → Actions**. Used by PR CI, Staging (Convex + Pages + E2E on `main`) — **development** stack only.
 
 `bun run setup` can set these via `gh secret set` when you confirm after readiness (see [getting-started.md](./getting-started.md)).
 
-| Secret                        | Purpose                                | Setup / source                                                                      |
-| ----------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------- |
-| `CONVEX_DEPLOY_KEY`           | CI/E2E codegen + Staging Convex deploy | Setup mints via `npx convex deployment token create github-ci`                      |
-| `PUBLIC_CONVEX_URL`           | E2E + Vercel preview env vars          | From `apps/web/.env.local` / `bun run dev:convex`                                   |
-| `E2E_USER_EMAIL`              | Playwright Clerk sign-in               | [development.md](./development.md#e2e-tests-playwright)                             |
-| `CLERK_SECRET_KEY`            | `@clerk/testing` Playwright helpers    | From Clerk dashboard; also in `apps/web/.env.local` for local E2E                   |
-| `VERCEL_TOKEN`                | Production Release deploy              | Setup Vercel step or [vercel.com/account/tokens](https://vercel.com/account/tokens) |
-| `VERCEL_ORG_ID`               | Team/user scope for deploy             | Setup Vercel step or Vercel project settings                                        |
-| `VERCEL_WEB_PROJECT_ID`       | `apps/web` project                     | Setup Vercel step or [vercel.com/new](https://vercel.com/new)                       |
-| `VERCEL_MARKETING_PROJECT_ID` | `apps/marketing` project               | Setup Vercel step                                                                   |
+### Migrating from Vercel secrets
+
+If this repo previously used Vercel GitHub Actions deploys, remove obsolete secrets and add Cloudflare ones before the next Staging or Release run:
+
+| Remove (obsolete)                                                                       | Add (Cloudflare Pages)                                                                                |
+| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_WEB_PROJECT_ID`, `VERCEL_MARKETING_PROJECT_ID` | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CF_PAGES_PROJECT_WEB`, `CF_PAGES_PROJECT_MARKETING` |
+
+Set them at **repository** level (staging) and duplicate production values in the GitHub **`production`** environment for `release-*` deploys. Re-run `bun run setup` (Cloudflare + Production steps) or set manually. Ensure `PUBLIC_CLERK_PUBLISHABLE_KEY` exists in **`production`** for release web builds (`pk_live_…`).
+
+| Secret                         | Purpose                                | Setup / source                                                                       |
+| ------------------------------ | -------------------------------------- | ------------------------------------------------------------------------------------ |
+| `CONVEX_DEPLOY_KEY`            | CI/E2E codegen + Staging Convex deploy | Setup mints via `npx convex deployment token create github-ci`                       |
+| `PUBLIC_CONVEX_URL`            | E2E + web staging/prod builds          | From `apps/web/.env.local` / `bun run dev:convex`                                    |
+| `PUBLIC_CLERK_PUBLISHABLE_KEY` | Web staging/prod builds                | From `apps/web/.env.local` / setup                                                   |
+| `E2E_USER_EMAIL`               | Playwright Clerk sign-in               | [development.md](./development.md#e2e-tests-playwright)                              |
+| `CLERK_SECRET_KEY`             | `@clerk/testing` Playwright helpers    | From Clerk dashboard; also in `apps/web/.env.local` for local E2E                    |
+| `CLOUDFLARE_API_TOKEN`         | Wrangler Pages deploy                  | Setup Cloudflare step — [API tokens](https://dash.cloudflare.com/profile/api-tokens) |
+| `CLOUDFLARE_ACCOUNT_ID`        | Account scope for Wrangler             | Setup Cloudflare step or dashboard URL                                               |
+| `CF_PAGES_PROJECT_WEB`         | `apps/web` project name                | Setup Cloudflare step (e.g. `{slug}-web`)                                            |
+| `CF_PAGES_PROJECT_MARKETING`   | `apps/marketing` project name          | Setup Cloudflare step (e.g. `{slug}-marketing`)                                      |
 
 ### `production` environment secrets
 
-Configure in **Settings → Environments → production → Environment secrets**. Used for `release-*` tags. Same secret **names**, **production** values. **`bun run setup`** can populate these when you confirm the **Production** step (after dev + Vercel); manual fallback:
+Configure in **Settings → Environments → production → Environment secrets**. Used for `release-*` tags. Same secret **names**, **production** values. **`bun run setup`** can populate these when you confirm the **Production** step (after dev + Cloudflare); manual fallback:
 
-| Secret                        | Purpose            | Where to find it                                                            |
-| ----------------------------- | ------------------ | --------------------------------------------------------------------------- |
-| `CONVEX_DEPLOY_KEY`           | Convex prod deploy | [Convex](https://dashboard.convex.dev) → Production → Settings → Deploy Key |
-| `PUBLIC_CONVEX_URL`           | Web prod build     | Convex Production deployment URL                                            |
-| `VERCEL_TOKEN`                | Prod Vercel deploy | [vercel.com/account/tokens](https://vercel.com/account/tokens)              |
-| `VERCEL_ORG_ID`               | Team/user scope    | Same as repository or `.svelter/setup.json` → `vercel.orgId`                |
-| `VERCEL_WEB_PROJECT_ID`       | Web project        | Same projects as dev                                                        |
-| `VERCEL_MARKETING_PROJECT_ID` | Marketing project  | Same as repository                                                          |
+| Secret                         | Purpose            | Where to find it                                                                         |
+| ------------------------------ | ------------------ | ---------------------------------------------------------------------------------------- |
+| `CONVEX_DEPLOY_KEY`            | Convex prod deploy | [Convex](https://dashboard.convex.dev) → Production → Settings → Deploy Key              |
+| `PUBLIC_CONVEX_URL`            | Web prod build     | Convex Production deployment URL                                                         |
+| `PUBLIC_CLERK_PUBLISHABLE_KEY` | Web prod build     | Clerk Production → API keys (`pk_live_…`)                                                |
+| `CLOUDFLARE_API_TOKEN`         | Prod Pages deploy  | [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens) |
+| `CLOUDFLARE_ACCOUNT_ID`        | Account scope      | Same as repository or `.svelter/setup.json` → `cloudflare.accountId`                     |
+| `CF_PAGES_PROJECT_WEB`         | Web project name   | Same as repository (e.g. `{slug}-web`)                                                   |
+| `CF_PAGES_PROJECT_MARKETING`   | Marketing project  | Same as repository                                                                       |
 
-Domains, DNS, and Vercel hostname assignment: [environments.md](./environments.md#domains-and-dns).
+Domains, DNS, and Pages hostname assignment: [environments.md](./environments.md#domains-and-dns).
 
-### Vercel (web + marketing)
+### Cloudflare Pages (web + marketing)
 
-Two projects from this monorepo (`apps/web`, `apps/marketing`). Prefer **`bun run setup`** (Vercel step) or follow [environments.md](./environments.md#vercel-web--marketing).
+Two direct-upload projects from this monorepo (`apps/web`, `apps/marketing`). Prefer **`bun run setup`** (Cloudflare step) or follow [environments.md](./environments.md#cloudflare-pages-web--marketing).
 
-**Web project:** `PUBLIC_CONVEX_URL` on Vercel (setup sets all targets on dev values; update **Production** env in Vercel when you add prod Convex URL).
+**Web build:** `PUBLIC_CONVEX_URL` and `PUBLIC_CLERK_PUBLISHABLE_KEY` are set in GitHub Actions during `bun run --filter @repo/web build` (repository secrets for staging; `production` environment for releases).
 
 **Release deploys:** [release.yml](../.github/workflows/release.yml) — verify Staging, then Convex → web + marketing in parallel.
 
-**Vercel:** Staging on merge via **Git integration** (`ignoreCommand` builds `main` only). Production via GitHub Actions `vercel deploy --prebuilt --prod` on `release-*` tags.
+**Staging:** merge to `main` → [staging.yml](../.github/workflows/staging.yml) deploys both apps with `wrangler pages deploy … --branch=staging`.
 
-**GitHub PR noise:** `bun run setup` silences Vercel bot comments, `deployment_status` / `repository_dispatch` events, and commit statuses on both projects (feature-branch pushes are skipped by `ignoreCommand`; staging still deploys on `main`). Re-run setup to re-apply if dashboard toggles drift.
+Tune CSP in `packages/config/pages-edge.ts` (emitted to `apps/web/build/_headers`).
 
-Deploy actions: [deploy-convex](../.github/actions/deploy-convex), [deploy-web-vercel](../.github/actions/deploy-web-vercel), [deploy-marketing-vercel](../.github/actions/deploy-marketing-vercel).
-
-Tune CSP in `apps/web/vercel.json` for your auth and Convex domains.
+Deploy actions: [deploy-convex](../.github/actions/deploy-convex), [deploy-web](../.github/actions/deploy-web), [deploy-marketing](../.github/actions/deploy-marketing).
 
 ### Getting the Convex deploy key
 
@@ -156,7 +166,7 @@ Heavy workflows run only from **Actions** → **Run workflow**. Choose the **bra
 
 **Workflow:** [staging.yml](../.github/workflows/staging.yml) — automatic on **push to `main`**
 
-Convex dev deploy, then full Playwright E2E. Vercel deploys web/marketing via Git (not part of this workflow).
+Convex dev deploy, Cloudflare Pages staging deploys, then full Playwright E2E.
 
 ### Release
 

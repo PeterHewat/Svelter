@@ -1,16 +1,25 @@
 /* eslint-disable no-console -- CLI wizard */
-import { deriveHostnames } from "../../packages/config/hostnames";
+import {
+  deriveProductionHostnames,
+  deriveStagingHostnames,
+  pagesProductionHostname,
+} from "../../packages/config/hostnames";
 import {
   hasApexDomain,
   isValidApexDomain,
   normalizeApexDomainInput,
 } from "../../packages/config/validate-domain";
 import { fetchGitHubRepoDescription } from "./github-repo-meta";
+import { pagesProjectNames } from "./hosting-project-spec";
 import { shouldOfferLicenseRemoval } from "./license-identity";
 import { writeProductName } from "./product-name";
 import { readProductTagline, writeProductTagline } from "./product-tagline";
 import { promptLine } from "./prompt";
-import { productNameFromRepo, type GitHubRepo } from "./repo-identity";
+import {
+  productNameFromRepo,
+  productNameToSlug,
+  type GitHubRepo,
+} from "./repo-identity";
 import {
   buildSetupConfig,
   readSetupConfig,
@@ -19,17 +28,31 @@ import {
 } from "./setup-config";
 
 /**
- * Prints derived hostnames from the apex domain.
+ * Prints production and staging hostnames for the product.
  *
- * @param apexDomain - Apex domain
+ * @param productSlug - Product slug (e.g. `svelter`)
+ * @param apexDomain - Optional apex domain for production custom domains
  */
-export function printHostnameTable(apexDomain: string): void {
-  const hostnames = deriveHostnames(apexDomain);
+export function printHostnameTable(
+  productSlug: string,
+  apexDomain?: string,
+): void {
+  const projects = pagesProjectNames(productSlug);
+  const staging = deriveStagingHostnames(projects.web, projects.marketing);
+  const productionPages = {
+    web: pagesProductionHostname(projects.web),
+    marketing: pagesProductionHostname(projects.marketing),
+  };
   console.log("\nHostnames");
-  console.log(`  Web staging:           ${hostnames.webPreRelease}`);
-  console.log(`  Web production:        ${hostnames.webProduction}`);
-  console.log(`  Marketing staging:     ${hostnames.marketingPreRelease}`);
-  console.log(`  Marketing production:  ${hostnames.marketingProduction}`);
+  console.log(`  Web staging:           https://${staging.web}`);
+  console.log(`  Marketing staging:     https://${staging.marketing}`);
+  console.log(`  Web production:        https://${productionPages.web}`);
+  console.log(`  Marketing production:  https://${productionPages.marketing}`);
+  if (apexDomain) {
+    const custom = deriveProductionHostnames(apexDomain);
+    console.log(`  Web production (apex):  ${custom.webProduction}`);
+    console.log(`  Marketing (apex):      ${custom.marketingProduction}`);
+  }
 }
 
 /**
@@ -77,11 +100,13 @@ function persistIdentityConfig(root: string, config: SetupConfig): void {
     );
   }
   console.log(`✓ Wrote .svelter/setup.json`);
-  if (hasApexDomain(config.apexDomain)) {
-    printHostnameTable(config.apexDomain!);
-  } else {
+  printHostnameTable(
+    productNameToSlug(config.productName),
+    hasApexDomain(config.apexDomain) ? config.apexDomain : undefined,
+  );
+  if (!hasApexDomain(config.apexDomain)) {
     console.log(
-      "\n○ No apex domain — custom hostnames deferred until you add one and re-run setup",
+      "  Cloudflare custom domains deferred — Clerk Production still needs a domain you own (can defer in the Production step)",
     );
   }
 }

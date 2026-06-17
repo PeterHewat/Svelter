@@ -4,7 +4,7 @@ Starter for a product web app (SvelteKit SPA), marketing site (SvelteKit SSG), a
 
 The template includes a small signed-in CRUD todo list (`/tasks`) to prove Clerk, Convex, and the web app work together. Use it as your setup check; replace it with your own product when you are ready.
 
-[Prerequisites](./development.md#prerequisites): Git, Bun, Node, `gh`, plus GitHub, Convex, Clerk, and Vercel accounts. An apex domain is optional at first — add one when you are ready for custom hostnames.
+[Prerequisites](./development.md#prerequisites): Git, Bun, Node, `gh`, plus GitHub, Convex, Clerk, and Cloudflare accounts. An apex domain is optional at first — add one when you are ready for custom hostnames.
 
 ## Local development
 
@@ -22,19 +22,29 @@ Safe to **re-run anytime** (resume after interruptions). Each run re-asks questi
 
 | Step           | What it does                                                                                                                                                                 |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **CLI check**  | `gh` (global) + `bunx convex` / `bunx vercel` (devDependencies); runs login commands when needed — continue manually if tools are missing                                    |
+| **CLI check**  | `gh` (global) + `bunx convex` / `bunx wrangler` (devDependencies); runs login commands when needed — continue manually if tools are missing                                  |
 | **Identity**   | Product name + tagline + optional apex domain (Enter to skip) + optional MIT LICENSE removal → [`.svelter/setup.json`](../.svelter/setup.json), `packages/config/product.ts` |
 | **Convex**     | Runs `convex dev --once` (browser login if needed) → syncs `PUBLIC_CONVEX_URL` to `apps/web/.env.local`. Daily dev: `bun run dev:convex`                                     |
 | **Codegen**    | Convex `_generated/` + optional Convex agent skills + readiness report (**exit 0** = ready for PRs)                                                                          |
 | **GitHub**     | Sync dev CI secrets via `gh` (default **yes** first time) — `PUBLIC_CONVEX_URL`, E2E vars, `CONVEX_DEPLOY_KEY`                                                               |
-| **Vercel**     | Two projects, web env vars, custom domains when apex is set, **Vercel DNS nameserver pause**, `VERCEL_*` → `gh` (default **yes** first time)                                 |
-| **Production** | Defer until release: GitHub **`production`** environment for `release-*` (prod Convex deploy key + `PUBLIC_CONVEX_URL`)                                                      |
+| **Cloudflare** | Pages projects, zone, production custom domains, `CLOUDFLARE_*` → `gh`; **registrar nameserver pause** (explicit confirm). Staging on `staging.*.pages.dev` via CI only.     |
+| **Production** | GitHub **`production`** environment — prod Convex + Cloudflare (`release-*`); Clerk Production needs a domain you own (defer in setup if needed).                            |
 
 Dashboard URLs are printed as clickable links in setup steps — open them directly in your terminal or browser.
 
-Details and fallbacks: [setup-automation.md](./setup-automation.md). **DNS (Vercel nameservers at your registrar):** [environments.md](./environments.md#dns-vercel-dns-at-your-registrar).
+Details and fallbacks: [setup-automation.md](./setup-automation.md). **DNS (Cloudflare zone):** [environments.md](./environments.md#dns-cloudflare-zone).
 
-### 3. Clerk + Convex
+### 3. Cloudflare
+
+Before the Cloudflare Pages step in setup:
+
+1. Create a free account at [dash.cloudflare.com/sign-up](https://dash.cloudflare.com/sign-up).
+2. Setup runs `bunx wrangler login` (browser OAuth) when no API token is set, or accepts `CLOUDFLARE_API_TOKEN` from the environment.
+3. **Staging and production deploys never run during setup** — only [staging.yml](../.github/workflows/staging.yml) (merge to `main`) and [release.yml](../.github/workflows/release.yml) → [deploy.yml](../.github/workflows/deploy.yml) build and upload assets.
+
+Registrar nameserver delegation is the only Cloudflare step that still pauses for explicit confirmation when an apex domain is set.
+
+### 4. Clerk + Convex
 
 After Convex is linked, interactive setup walks through Clerk:
 
@@ -45,7 +55,7 @@ After Convex is linked, interactive setup walks through Clerk:
 
 For Playwright tasks E2E: run `bun run setup` to create a Clerk test user and write `E2E_USER_EMAIL` to `apps/web/.env.local`, plus `CLERK_SECRET_KEY` for the testing helper.
 
-### 4. Run and verify the sample app
+### 5. Run and verify the sample app
 
 ```bash
 bun run dev:convex   # terminal 1
@@ -58,14 +68,14 @@ bun run dev:marketing   # optional — terminal 3
 
 Day-to-day commands: [development.md](./development.md#commands).
 
-### 5. If setup fails
+### 6. If setup fails
 
 Resume `bun run setup`, or see [setup-automation.md](./setup-automation.md) for manual steps and dashboard URLs.
 
-### 6. Before your first release
+### 7. Before your first release
 
 1. Green PR CI on `main` ([branch protection](./ci-cd.md#branch-protection)).
-2. Merge to `main` — **Staging** deploys Convex dev + E2E; Vercel Git updates `preview.*` ([environments.md](./environments.md)).
+2. Merge to `main` — **Staging** deploys Convex dev + Cloudflare Pages staging + E2E ([environments.md](./environments.md)).
 3. Answer **yes** on the setup **Production** step (or add secrets manually) before running **Release** — [ci-cd.md](./ci-cd.md#production-environment-secrets).
 
 ---

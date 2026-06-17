@@ -25,7 +25,8 @@ const es: TranslationDictionary = {
     feature2Body:
       "Autenticación alojada con proveedores sociales y backend Convex en tiempo real.",
     feature3Title: "Despliegue ligero",
-    feature3Body: "Despliegue en cualquier CDN; Vercel preconfigurado.",
+    feature3Body:
+      "Despliegue en cualquier CDN; Cloudflare Pages preconfigurado.",
   },
   blog: {
     title: "Blog",

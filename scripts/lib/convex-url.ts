@@ -58,6 +58,38 @@ export function parseConvexProdDeploymentSlug(text: string): string | null {
 }
 
 /**
+ * Parses a deployment slug from a Convex deploy key (`prod:happy-animal-123|…`).
+ *
+ * @param deployKey - Value of `CONVEX_DEPLOY_KEY`
+ */
+export function parseConvexDeployKeySlug(deployKey: string): string | null {
+  const match = deployKey.trim().match(/^(?:prod|dev):([a-z0-9-]+)\|/i);
+  return match?.[1] ?? null;
+}
+
+/**
+ * Resolves the production Convex cloud URL from deploy-key mint output.
+ *
+ * @param deployKey - Minted `CONVEX_DEPLOY_KEY` for production
+ * @param cliOutput - Combined stdout/stderr from `convex deployment token create`
+ * @param referenceUrl - Dev Convex URL used to infer regional host suffix
+ */
+export function resolveProdConvexUrl(
+  deployKey: string,
+  cliOutput?: string,
+  referenceUrl?: string | null,
+): string | null {
+  const slug =
+    (cliOutput ? parseConvexProdDeploymentSlug(cliOutput) : null) ??
+    parseConvexDeployKeySlug(deployKey);
+  if (!slug) {
+    return null;
+  }
+  const url = convexUrlFromDeploymentSlug(slug, referenceUrl);
+  return url.includes(".convex.cloud") ? url : null;
+}
+
+/**
  * Reads the dev Convex deployment URL from root `.env.local` when linked.
  *
  * @param root - Repository root

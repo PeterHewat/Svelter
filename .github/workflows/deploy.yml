@@ -76,20 +76,19 @@ jobs:
           ref: ${{ needs.parse-release.outputs.tag }}
       - uses: ./.github/actions/setup-bun
       - name: Deploy web
-        uses: ./.github/actions/deploy-web-vercel
+        uses: ./.github/actions/deploy-web
         with:
           convex_deploy_key: ${{ secrets.CONVEX_DEPLOY_KEY }}
-          vercel_token: ${{ secrets.VERCEL_TOKEN }}
-          vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel_project_id: ${{ secrets.VERCEL_WEB_PROJECT_ID }}
           public_convex_url: ${{ secrets.PUBLIC_CONVEX_URL }}
-          vercel_pull_environment: production
-          vercel_prod_flag: "true"
+          public_clerk_publishable_key: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          pages_project_name: ${{ secrets.CF_PAGES_PROJECT_WEB }}
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
         with:
           name: web-build-${{ needs.parse-release.outputs.stamp }}-prod
-          path: apps/web/dist/
+          path: apps/web/build/
           retention-days: 30
 
   deploy-marketing:
@@ -102,16 +101,14 @@ jobs:
           ref: ${{ needs.parse-release.outputs.tag }}
       - uses: ./.github/actions/setup-bun
       - name: Deploy marketing
-        uses: ./.github/actions/deploy-marketing-vercel
+        uses: ./.github/actions/deploy-marketing
         with:
-          vercel_token: ${{ secrets.VERCEL_TOKEN }}
-          vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel_project_id: ${{ secrets.VERCEL_MARKETING_PROJECT_ID }}
-          vercel_pull_environment: production
-          vercel_prod_flag: "true"
+          cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          pages_project_name: ${{ secrets.CF_PAGES_PROJECT_MARKETING }}
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
         with:
           name: marketing-build-${{ needs.parse-release.outputs.stamp }}-prod
-          path: apps/marketing/dist/
+          path: apps/marketing/build/
           retention-days: 30

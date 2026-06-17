@@ -32,10 +32,8 @@ describe("parseCliVersion", () => {
     ).toBe("2.93.0");
   });
 
-  it("parses Vercel CLI output", () => {
-    expect(parseCliVersion("Vercel CLI 54.11.0 (Node.js 24.16.0)")).toBe(
-      "54.11.0",
-    );
+  it("parses Wrangler CLI output", () => {
+    expect(parseCliVersion("wrangler 4.14.0")).toBe("4.14.0");
   });
 
   it("parses a bare semver line", () => {

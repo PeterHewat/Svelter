@@ -25,7 +25,7 @@ const nl: TranslationDictionary = {
     feature2Body:
       "Gehoste authenticatie met social providers en realtime Convex-backend.",
     feature3Title: "Lean deploy",
-    feature3Body: "Deploy op elke CDN; Vercel vooraf geconfigureerd.",
+    feature3Body: "Deploy op elke CDN; Cloudflare Pages vooraf geconfigureerd.",
   },
   blog: {
     title: "Blog",

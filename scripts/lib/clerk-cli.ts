@@ -541,12 +541,19 @@ async function runClerkDeployInteractive(
 export async function deployClerkProduction(
   clerk: CliToolState,
   root: string,
+  apexDomain?: string,
 ): Promise<ClerkProductionKeys | null> {
   if (!isInteractivePrompt()) {
     console.log(
       "○ `clerk deploy` needs an interactive terminal — run `bunx clerk deploy` manually",
     );
     return null;
+  }
+
+  if (apexDomain) {
+    console.log(
+      `→ Provisioning Clerk Production for ${apexDomain} (complete DNS/OAuth in the wizard)`,
+    );
   }
 
   if (!(await runClerkDeployInteractive(clerk, root))) {

@@ -20,12 +20,32 @@ export const CLERK_JWT_TEMPLATES =
 export function clerkAppDashboardUrl(appId: string): string {
   return `https://dashboard.clerk.com/apps/${appId}`;
 }
-export const VERCEL_DASHBOARD = "https://vercel.com/dashboard";
-export const VERCEL_NEW_PROJECT = "https://vercel.com/new";
-export const VERCEL_TOKENS = "https://vercel.com/account/tokens";
-export const VERCEL_LOGIN_CONNECTIONS =
-  "https://vercel.com/account/login-connections";
-export const VERCEL_GITHUB_APP = "https://github.com/apps/vercel";
+export const CLOUDFLARE_DASHBOARD = "https://dash.cloudflare.com";
+export const CLOUDFLARE_SIGN_UP = "https://dash.cloudflare.com/sign-up";
+export const CLOUDFLARE_API_TOKENS =
+  "https://dash.cloudflare.com/profile/api-tokens";
+
+/**
+ * Cloudflare Pages project dashboard URL.
+ *
+ * @param accountId - Cloudflare account ID
+ * @param projectName - Pages project name
+ */
+export function cloudflarePagesProjectUrl(
+  accountId: string,
+  projectName: string,
+): string {
+  return `https://dash.cloudflare.com/${accountId}/pages/view/${projectName}`;
+}
+
+/**
+ * Cloudflare DNS settings URL for a zone.
+ *
+ * @param apex - Apex domain
+ */
+export function cloudflareZoneDnsUrl(apex: string): string {
+  return `https://dash.cloudflare.com/?to=/:account/${apex}/dns`;
+}
 
 /**
  * GitHub Actions secrets settings URL for a repository.

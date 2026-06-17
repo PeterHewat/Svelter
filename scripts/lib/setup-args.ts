@@ -1,6 +1,6 @@
 /** CLI flags for `bun scripts/setup.ts`. */
 export type SetupFlags = {
-  /** Non-interactive GitHub/Vercel/production sync when prerequisites are met. */
+  /** Non-interactive GitHub/Cloudflare/production sync when prerequisites are met. */
   syncSecrets: boolean;
 };
 

@@ -31,12 +31,12 @@ Backend/Convex security:
 
 ## CSP and response headers (this template)
 
-Production headers are committed in Vercel config — not set by Vite in dev.
+Production headers are emitted into Cloudflare Pages `_headers` at build time — not set by Vite in dev.
 
-| Surface   | File                                                     |
-| --------- | -------------------------------------------------------- |
-| Web       | `apps/web/vercel.json` → `headers` (CSP includes Convex) |
-| Marketing | `apps/marketing/vercel.json` → `headers` (no CSP)        |
+| Surface   | Source                                                            |
+| --------- | ----------------------------------------------------------------- |
+| Web       | `packages/config/pages-edge.ts` → `apps/web/build/_headers` (CSP) |
+| Marketing | `packages/config/pages-edge.ts` → `apps/marketing/build/_headers` |
 
 When reviewing or changing CSP:
 

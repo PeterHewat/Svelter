@@ -6,7 +6,7 @@
   "description": "Marketing site (SvelteKit SSG)",
   "scripts": {
     "dev": "vite dev --port 4321",
-    "build": "vite build && rm -rf build/_app/immutable/chunks build/_app/immutable/entry build/_app/immutable/nodes build/_app/version.json",
+    "build": "vite build && bun ../../scripts/strip-marketing-client-js.ts && bun ../../scripts/write-pages-edge-files.ts marketing",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
     "lint": "eslint .",

@@ -12,12 +12,12 @@ Root [package.json](../package.json) `overrides` pin **transitive** dependency v
 | `brace-expansion`   | `^5.0.6`   | ReDoS in older brace-expansion                                                                                         |
 | `picomatch`         | `^4.0.4`   | Aligns with tooling that depends on picomatch 4                                                                        |
 | `yaml`              | `^2.9.0`   | [GHSA-48c2-rrv3-qjmp](https://github.com/advisories/GHSA-48c2-rrv3-qjmp) (stack overflow in nested YAML)               |
-| `@tootallnate/once` | `^3.0.1`   | [GHSA-vpq2-c234-7xj6](https://github.com/advisories/GHSA-vpq2-c234-7xj6) (Vercel CLI / `@vercel/fun`)                  |
-| `smol-toml`         | `^1.6.1`   | [GHSA-v3rj-xjv7-4jmq](https://github.com/advisories/GHSA-v3rj-xjv7-4jmq) (Vercel CLI helpers)                          |
-| `tar`               | `^7.5.16`  | [GHSA-83g3-92jg-28cx](https://github.com/advisories/GHSA-83g3-92jg-28cx) (Vercel CLI extraction)                       |
-| `srvx`              | `^0.11.16` | [GHSA-p36q-q72m-gchr](https://github.com/advisories/GHSA-p36q-q72m-gchr) (`@vercel/backends`)                          |
-| `path-to-regexp`    | `^8.4.2`   | [GHSA-9wv6-86v2-598j](https://github.com/advisories/GHSA-9wv6-86v2-598j) (Vercel CLI 6.x pins)                         |
-| `undici`            | `^8.5.0`   | Multiple GHSA advisories in Vercel CLI transitive tree                                                                 |
+| `@tootallnate/once` | `^3.0.1`   | [GHSA-vpq2-c234-7xj6](https://github.com/advisories/GHSA-vpq2-c234-7xj6) (transitive tooling)                          |
+| `smol-toml`         | `^1.6.1`   | [GHSA-v3rj-xjv7-4jmq](https://github.com/advisories/GHSA-v3rj-xjv7-4jmq) (transitive tooling)                          |
+| `tar`               | `^7.5.16`  | [GHSA-83g3-92jg-28cx](https://github.com/advisories/GHSA-83g3-92jg-28cx) (transitive extraction)                       |
+| `srvx`              | `^0.11.16` | [GHSA-p36q-q72m-gchr](https://github.com/advisories/GHSA-p36q-q72m-gchr) (transitive tooling)                          |
+| `path-to-regexp`    | `^8.4.2`   | [GHSA-9wv6-86v2-598j](https://github.com/advisories/GHSA-9wv6-86v2-598j) (transitive tooling pins)                     |
+| `undici`            | `^8.5.0`   | Multiple GHSA advisories in Wrangler / tooling transitive tree                                                         |
 | `esbuild`           | `^0.28.1`  | [GHSA-gv7w-rqvm-qjhr](https://github.com/advisories/GHSA-gv7w-rqvm-qjhr) (binary integrity in Deno API)                |
 | `js-cookie`         | `^3.0.7`   | [GHSA-qjx8-664m-686j](https://github.com/advisories/GHSA-qjx8-664m-686j) (`svelte-clerk` → `@clerk/shared` pins 3.0.5) |
 

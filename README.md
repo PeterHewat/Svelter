@@ -13,20 +13,20 @@
 
 **Svelter** is a production-shaped **Bun monorepo template** for teams shipping a **product web app** (SvelteKit SPA), a **marketing site** (SvelteKit SSG), and a **Convex + Clerk** backend—with shared packages, per-surface CI/CD, and agent-first conventions (`AGENTS.md`).
 
-**Good fit:** product + marketing + realtime backend, Vercel deploys, AI-assisted development.
+**Good fit:** product + marketing + realtime backend, Cloudflare Pages deploys, AI-assisted development.
 
 ## Resources
 
-| Resource                                                 | Purpose                                                 |
-| -------------------------------------------------------- | ------------------------------------------------------- |
-| [docs/getting-started.md](docs/getting-started.md)       | **Start here** — interactive `setup.ts` wizard          |
-| [docs/setup-automation.md](docs/setup-automation.md)     | What setup automates vs manual; dashboard URLs          |
-| [docs/development.md](docs/development.md)               | Day-to-day commands, E2E, Convex tests                  |
-| [docs/environments.md](docs/environments.md)             | Clerk, Convex, Vercel, domains, GitHub `production` env |
-| [docs/ci-cd.md](docs/ci-cd.md)                           | Workflows, secrets, releases, PR labels                 |
-| [docs/monorepo-structure.md](docs/monorepo-structure.md) | Layout, surfaces, env, aliases, codegen                 |
-| [AGENTS.md](AGENTS.md)                                   | Rules for coding agents                                 |
-| [CONTRIBUTING.md](CONTRIBUTING.md)                       | Branches, commits, hooks                                |
-| [convex/README.md](convex/README.md)                     | Convex folder map                                       |
-| [SECURITY.md](SECURITY.md)                               | Vulnerability reporting                                 |
-| [prompts/](prompts/)                                     | AI prompt templates (incl. security review)             |
+| Resource                                                 | Purpose                                                           |
+| -------------------------------------------------------- | ----------------------------------------------------------------- |
+| [docs/getting-started.md](docs/getting-started.md)       | **Start here** — interactive `setup.ts` wizard                    |
+| [docs/setup-automation.md](docs/setup-automation.md)     | What setup automates vs manual; dashboard URLs                    |
+| [docs/development.md](docs/development.md)               | Day-to-day commands, E2E, Convex tests                            |
+| [docs/environments.md](docs/environments.md)             | Clerk, Convex, Cloudflare Pages, domains, GitHub `production` env |
+| [docs/ci-cd.md](docs/ci-cd.md)                           | Workflows, secrets, releases, PR labels                           |
+| [docs/monorepo-structure.md](docs/monorepo-structure.md) | Layout, surfaces, env, aliases, codegen                           |
+| [AGENTS.md](AGENTS.md)                                   | Rules for coding agents                                           |
+| [CONTRIBUTING.md](CONTRIBUTING.md)                       | Branches, commits, hooks                                          |
+| [convex/README.md](convex/README.md)                     | Convex folder map                                                 |
+| [SECURITY.md](SECURITY.md)                               | Vulnerability reporting                                           |
+| [prompts/](prompts/)                                     | AI prompt templates (incl. security review)                       |
