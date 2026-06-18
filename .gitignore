@@ -5,6 +5,8 @@ build-deploy/
 build-compiled/
 dist/
 dist-ssr/
+build-stats.html
+stats.html
 
 # TypeScript build cache
 *.tsbuildinfo
@@ -17,7 +19,11 @@ node_modules/
 
 # SvelteKit
 .svelte-kit/
+.output
+.netlify
 .wrangler/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
 
 # IDEs
 .project
@@ -54,6 +60,7 @@ Thumbs.db
 .env.*
 !.env.example
 !.env.*.example
+!.env.test
 
 # Docker
 docker-compose.override.yml

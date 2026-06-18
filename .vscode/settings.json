@@ -60,7 +60,15 @@
     "**/build": true,
     "**/dist": true,
     "**/node_modules": true,
-    "**/convex/_generated": true
+    "**/convex/_generated": true,
+    "**/.agents/skills/convex*": true,
+    "**/.agents/skills/clerk*": true,
+    "**/.agents/skills/cloudflare*": true,
+    "**/.agents/skills/wrangler*": true,
+    "**/.claude/skills/convex*": true,
+    "**/.claude/skills/clerk*": true,
+    "**/.claude/skills/cloudflare*": true,
+    "**/.claude/skills/wrangler*": true
   },
   "html.format.wrapAttributes": "force-expand-multiline",
   "js/ts.updateImportsOnFileMove.enabled": "always",

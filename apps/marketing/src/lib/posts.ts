@@ -1,4 +1,8 @@
-import { blogPostSchema, type BlogPostMeta } from "./blog-schema";
+import {
+  blogPostSchema,
+  type BlogPostMeta,
+  type BlogPostType,
+} from "./blog-schema";
 import { parseFrontmatter } from "./frontmatter";
 
 const posts = import.meta.glob("../content/blog/*.md", {
@@ -17,10 +21,7 @@ function slugFromPath(path: string): string {
   return match?.[1] ?? path;
 }
 
-/**
- * Loads all blog posts sorted by publication date (newest first).
- */
-export function getAllPosts(): BlogPost[] {
+function loadPosts(): BlogPost[] {
   return Object.entries(posts)
     .map(([path, raw]) => {
       const { data, content } = parseFrontmatter(raw);
@@ -28,6 +29,24 @@ export function getAllPosts(): BlogPost[] {
       return { ...meta, slug: slugFromPath(path), content };
     })
     .sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
+}
+
+/**
+ * Loads all blog posts sorted by publication date (newest first).
+ */
+export function getAllPosts(): BlogPost[] {
+  return loadPosts();
+}
+
+/**
+ * Loads blog posts filtered by content type.
+ *
+ * @param type - When set, only posts of that type; otherwise all posts.
+ */
+export function getPostsByType(type?: BlogPostType): BlogPost[] {
+  const all = loadPosts();
+  if (!type) return all;
+  return all.filter((post) => post.type === type);
 }
 
 /**

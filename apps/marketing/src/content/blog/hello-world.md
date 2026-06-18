@@ -2,6 +2,7 @@
 title: "Hello World"
 description: "Our first blog post"
 pubDate: 2024-01-15
+type: article
 author: "Team Svelter"
 ---
 

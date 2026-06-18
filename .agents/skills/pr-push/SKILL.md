@@ -22,6 +22,7 @@ Examples: [examples.md](examples.md).
 - **Stage before you run** — everything that belongs in the PR must be staged before invoking this skill. Unstaged work on the branch is not committed and not described.
 - Do not push to `main`. Work lands on a feature branch and enters `main` via squash merge.
 - Do not run `bun run verify` or `bun run check` — the user is expected to have verified already before opening a PR.
+- **Errors — report and stop.** If any step fails (git, `gh`, tests, checks, or other commands run during this skill), explain what went wrong and stop. Do not edit files, run formatters, retry with fixes, or continue to commit/push/PR.
 - Never include "Made with Cursor" (or similar Cursor attribution) in the PR body. Cursor may inject it on `gh pr create`; re-apply the drafted description with `gh pr edit` after create (see [Push and publish PR](#push-and-publish-pr)).
 - No test-plan section in the PR body — squash-merge release notes use title and body; keep copy release-note-ready.
 

@@ -12,7 +12,7 @@ const config = {
       strict: true,
     }),
     prerender: {
-      entries: ["*"],
+      entries: ["*", "/sitemap.xml"],
       // Baked into hreflang / canonical URLs at build time (see deploy-marketing action).
       origin: process.env.PUBLIC_MARKETING_ORIGIN ?? marketingDevOrigin,
     },

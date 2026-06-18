@@ -1,0 +1,10 @@
+# Generated agent skills (`bun run setup`) — repo-owned pr-push stays indexed
+.agents/skills/convex*
+.agents/skills/clerk*
+.agents/skills/cloudflare*
+.agents/skills/wrangler*
+.claude/skills/convex*
+.claude/skills/clerk*
+.claude/skills/cloudflare*
+.claude/skills/wrangler*
+skills-lock.json
