@@ -3,12 +3,11 @@
   import { PRODUCT_NAME } from "@repo/config/product";
   import { SiteFooter } from "@repo/ui-svelte";
   import { siteMainContainerClass } from "@repo/utils/chrome";
-  import { setupConvex } from "convex-svelte";
   import { initializeTheme } from "@repo/utils/theme";
   import { onMount } from "svelte";
   import ClerkDeferredLayout from "$lib/components/clerk-deferred-layout.svelte";
   import AppHeader from "$lib/components/app-header.svelte";
-  import { isAuthEnabled, isBackendEnabled } from "$lib/backend";
+  import { isAuthEnabled } from "$lib/backend";
   import { loadWebEnv } from "$lib/web-env";
   import { useTranslation } from "$lib/i18n";
   import "$lib/i18n";
@@ -21,10 +20,6 @@
   const copyright = $derived(
     t("footer.copyright", { year, name: PRODUCT_NAME }),
   );
-
-  if (isBackendEnabled() && env.convexUrl) {
-    setupConvex(env.convexUrl);
-  }
 
   onMount(() => {
     initializeTheme();

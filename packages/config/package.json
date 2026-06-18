@@ -9,7 +9,10 @@
     "./product": "./product.ts",
     "./env-placeholders": "./env-placeholders.ts",
     "./validate-domain": "./validate-domain.ts",
+    "./dev-ports": "./dev-ports.ts",
     "./hostnames": "./hostnames.ts",
+    "./github-repo": "./github-repo.ts",
+    "./github-labels": "./github-labels.ts",
     "./e2e-auth": "./e2e-auth.ts",
     "./clerk-csp": "./clerk-csp.ts"
   },

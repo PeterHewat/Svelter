@@ -26,7 +26,7 @@ Safe to **re-run anytime** (resume after interruptions). Each run re-asks questi
 | **Identity**   | Product name + tagline + optional apex domain (Enter to skip) + optional MIT LICENSE removal → [`.svelter/setup.json`](../.svelter/setup.json), `packages/config/product.ts` |
 | **Convex**     | Runs `convex dev --once` (browser login if needed) → syncs `PUBLIC_CONVEX_URL` to `apps/web/.env.local`. Daily dev: `bun run dev:convex`                                     |
 | **Codegen**    | Convex `_generated/` + optional Convex agent skills + readiness report (**exit 0** = ready for PRs)                                                                          |
-| **GitHub**     | Sync dev CI secrets via `gh` (default **yes** first time) — `PUBLIC_CONVEX_URL`, E2E vars, `CONVEX_DEPLOY_KEY`                                                               |
+| **GitHub**     | Sync dev CI secrets via `gh` (default **yes** first time) — `PUBLIC_CONVEX_URL`, E2E vars, `CONVEX_DEPLOY_KEY`; one-time issue/PR labels (`github.labelsSynced`)             |
 | **Cloudflare** | Pages projects, zone, production custom domains, `CLOUDFLARE_*` → `gh`; **registrar nameserver pause** (explicit confirm). Staging on `staging.*.pages.dev` via CI only.     |
 | **Production** | GitHub **`production`** environment — prod Convex + Cloudflare (`release-*`); Clerk Production needs a domain you own (defer in setup if needed).                            |
 
@@ -63,8 +63,8 @@ bun run dev:web      # terminal 2
 bun run dev:marketing   # optional — terminal 3
 ```
 
-- Web: [localhost:5173/tasks](http://localhost:5173/tasks)
-- Marketing: [localhost:4321](http://localhost:4321)
+- Web: [localhost:3000/tasks](http://localhost:3000/tasks)
+- Marketing: [localhost:3001](http://localhost:3001)
 
 Day-to-day commands: [development.md](./development.md#commands).
 

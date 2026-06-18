@@ -8,11 +8,7 @@ const CONVEX_SKILLS_MARKER = ".agents/skills/convex/SKILL.md";
 /** Cursor target — installs to `.agents/skills/` (`.claude` → `.agents`). */
 const AGENT_SKILLS_TARGET = "cursor";
 
-const CLERK_SETUP_SKILLS = [
-  "clerk-react-patterns",
-  "clerk-testing",
-  "clerk-backend-api",
-] as const;
+const CLERK_SETUP_SKILLS = ["clerk-testing", "clerk-backend-api"] as const;
 
 /** Cloudflare Pages / Wrangler skills for static hosting in this template. */
 const CLOUDFLARE_SETUP_SKILLS = ["cloudflare", "wrangler"] as const;

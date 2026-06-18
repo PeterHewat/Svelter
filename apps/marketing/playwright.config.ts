@@ -1,7 +1,8 @@
+import { marketingDevOrigin } from "@repo/config/dev-ports";
 import { defineConfig, devices } from "@playwright/test";
 
 const isCI = !!process.env.CI;
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:4321";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? marketingDevOrigin;
 
 export default defineConfig({
   testDir: "tests",

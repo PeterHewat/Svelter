@@ -10,11 +10,7 @@
     siteNavClass,
   } from "@repo/utils/chrome";
   import { focusRing } from "@repo/utils/focus";
-  import {
-    authModal,
-    openAuthModal,
-    setAuthModalAnchor,
-  } from "$lib/auth-ui.svelte";
+  import { openAuthModal } from "$lib/auth-ui.svelte";
   import { isAuthEnabled } from "$lib/backend";
   import { useTranslation } from "$lib/i18n";
 
@@ -28,13 +24,11 @@
 
   const { t } = useTranslation();
 
-  let signInButton = $state<HTMLButtonElement | null>(null);
   let ClerkHeader = $state<
     typeof import("$lib/components/app-header-clerk.svelte").default | null
   >(null);
 
   function handleOpenAuth(redirectTo?: string) {
-    if (signInButton) setAuthModalAnchor(signInButton);
     openAuthModal(redirectTo);
   }
 
@@ -51,20 +45,6 @@
       cancelled = true;
     };
   });
-
-  $effect(() => {
-    if (mode !== "anonymous") return;
-    if (!authModal.open || !signInButton) return;
-
-    const updateAnchor = () => setAuthModalAnchor(signInButton);
-    updateAnchor();
-    window.addEventListener("resize", updateAnchor);
-    window.addEventListener("scroll", updateAnchor, true);
-    return () => {
-      window.removeEventListener("resize", updateAnchor);
-      window.removeEventListener("scroll", updateAnchor, true);
-    };
-  });
 </script>
 
 <header class={siteHeaderClass}>
@@ -72,8 +52,15 @@
     <div class="flex items-center gap-4">
       <a href="/" class={cn("text-lg", navLinkClass)}>{t("home.title")}</a>
       {#if isAuthEnabled()}
-        {#if mode === "ready" && ClerkHeader}
-          <ClerkHeader part="nav" />
+        {#if mode === "ready"}
+          {#if ClerkHeader}
+            <ClerkHeader part="nav" />
+          {:else}
+            <span
+              class={cn(navSecondaryLinkClass, "invisible")}
+              aria-hidden="true">{t("nav.tasks")}</span
+            >
+          {/if}
         {:else if mode === "loading"}
           <span
             class={cn(navSecondaryLinkClass, "invisible")}
@@ -94,8 +81,14 @@
       <LanguageSwitcher ariaLabel={t("language.select")} />
       <ThemeToggle />
       {#if isAuthEnabled()}
-        {#if mode === "ready" && ClerkHeader}
-          <ClerkHeader part="actions" />
+        {#if mode === "ready"}
+          {#if ClerkHeader}
+            <ClerkHeader part="actions" />
+          {:else}
+            <div class={iconSlotClass}>
+              <div class="h-10 w-10 shrink-0" aria-hidden="true"></div>
+            </div>
+          {/if}
         {:else if mode === "loading"}
           <div class={iconSlotClass}>
             <div class="h-10 w-10 shrink-0" aria-hidden="true"></div>
@@ -103,11 +96,9 @@
         {:else}
           <div class={iconSlotClass}>
             <button
-              bind:this={signInButton}
               type="button"
               class={iconButtonClass()}
               onclick={() => handleOpenAuth()}
-              aria-expanded={authModal.open}
               aria-haspopup="dialog"
               aria-label={t("auth.openAuth")}
               title={t("auth.openAuth")}

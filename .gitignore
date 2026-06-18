@@ -1,5 +1,6 @@
 # Distribution / packaging
 build/
+build-stats.html
 build-deploy/
 build-compiled/
 dist/

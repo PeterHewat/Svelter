@@ -11,6 +11,14 @@ const BASE_SECURITY_HEADERS = [
   "Referrer-Policy: strict-origin-when-cross-origin",
 ] as const;
 
+/** Vite/SvelteKit content-hashed assets under `_app/immutable/`. */
+export const IMMUTABLE_ASSET_CACHE_CONTROL =
+  "Cache-Control: public, max-age=31536000, immutable";
+
+/** Marketing `static/init.js` is not content-hashed; allow short CDN cache. */
+export const MARKETING_INIT_CACHE_CONTROL =
+  "Cache-Control: public, max-age=3600, must-revalidate";
+
 /**
  * Cloudflare Pages `_headers` body for the product web SPA.
  *
@@ -26,6 +34,9 @@ export function webPagesHeadersFile(options?: {
         })
       : WEB_CONTENT_SECURITY_POLICY;
   const lines = [
+    "/_app/immutable/*",
+    `  ${IMMUTABLE_ASSET_CACHE_CONTROL}`,
+    "",
     "/*",
     ...BASE_SECURITY_HEADERS.map((h) => `  ${h}`),
     `  Content-Security-Policy: ${csp}`,
@@ -38,7 +49,17 @@ export function webPagesHeadersFile(options?: {
  * Cloudflare Pages `_headers` body for the marketing SSG site (no CSP).
  */
 export function marketingPagesHeadersFile(): string {
-  const lines = ["/*", ...BASE_SECURITY_HEADERS.map((h) => `  ${h}`), ""];
+  const lines = [
+    "/_app/immutable/*",
+    `  ${IMMUTABLE_ASSET_CACHE_CONTROL}`,
+    "",
+    "/init.js",
+    `  ${MARKETING_INIT_CACHE_CONTROL}`,
+    "",
+    "/*",
+    ...BASE_SECURITY_HEADERS.map((h) => `  ${h}`),
+    "",
+  ];
   return lines.join("\n");
 }
 

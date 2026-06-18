@@ -20,7 +20,7 @@ Examples: [examples.md](examples.md).
 - Never discard user work. No destructive git commands without explicit user request.
 - **Staged index for commits** — commit only what is already staged. Do not run `git add` unless the user explicitly asks.
 - **Stage before you run** — everything that belongs in the PR must be staged before invoking this skill. Unstaged work on the branch is not committed and not described.
-- Do not push to `main` / `master`. Work lands on a feature branch and enters `main` via squash merge.
+- Do not push to `main`. Work lands on a feature branch and enters `main` via squash merge.
 - Do not run `bun run verify` or `bun run check` — the user is expected to have verified already before opening a PR.
 - Never include "Made with Cursor" (or similar Cursor attribution) in the PR body. Cursor may inject it on `gh pr create`; re-apply the drafted description with `gh pr edit` after create (see [Push and publish PR](#push-and-publish-pr)).
 - No test-plan section in the PR body — squash-merge release notes use title and body; keep copy release-note-ready.
@@ -34,11 +34,31 @@ git status
 git diff --cached
 git log --oneline -10
 git branch --show-current
-git rev-list --count main..HEAD 2>/dev/null || git rev-list --count master..HEAD
-gh pr view --json url,number,title,labels 2>/dev/null || true
+git rev-list --count main..HEAD
+gh pr view --json url,number,title,labels,state 2>/dev/null || true
 ```
 
-Set `base` to `main` (fallback `master`). Set `existing_pr` when `gh pr view` succeeds for the current branch.
+Set `base` to `main`. Set `existing_pr` when `gh pr view` succeeds for the current branch and `state` is `OPEN`.
+
+### Feature branch already shipped (stop early)
+
+When the current branch is **not** `main`, run after preflight:
+
+```bash
+current="$(git branch --show-current)"
+gh pr view --json state,mergedAt,url,title,number 2>/dev/null || true
+git ls-remote --heads origin "$current" 2>/dev/null || true
+```
+
+**Stop immediately** — do not commit, push, or create/update a PR — when any of these apply:
+
+| Condition                                                                                 | Report                                                                                                                |
+| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `gh pr view` succeeds and `state` is `MERGED`                                             | PR `#<number>` (`<title>`) is already merged. Checkout `base`, pull, and start a new branch for new work.             |
+| `gh pr view` succeeds and `state` is `CLOSED` (not merged)                                | PR `#<number>` (`<title>`) was closed without merge. Reopen it on GitHub or checkout `base` and start a fresh branch. |
+| `git ls-remote --heads origin "$current"` is empty and a merged PR exists for this branch | Remote branch was deleted after merge. Checkout `base`, pull, and start a new branch.                                 |
+
+Include the PR URL when available. Do not force-push or reopen/merge unless the user explicitly asks.
 
 ### What to ship
 
@@ -104,20 +124,19 @@ Write for squash-merge release notes: the PR body becomes the merge commit messa
 
 ### Label
 
-Apply **one** primary label. Names must match [sync-labels.yml](../../../.github/workflows/sync-labels.yml):
+Apply **one** primary label.
 
-| Label                | When to use                                                                       |
-| -------------------- | --------------------------------------------------------------------------------- |
-| `enhancement`        | New feature or user-visible improvement                                           |
-| `fix`                | Bug fix (preferred on pull requests)                                              |
-| `breaking-change`    | Breaking API or behavior change                                                   |
-| `security`           | Security fix or hardening                                                         |
-| `documentation`      | Docs-only or primarily documentation                                              |
-| `dependencies`       | Dependency version bumps in committed manifests                                   |
-| `github-actions`     | GitHub Actions workflow changes                                                   |
-| `chore`              | Internal or tooling work with no user-facing impact (excluded from release notes) |
-| `test`               | Test-only changes (excluded from release notes)                                   |
-| `ignore-for-release` | Ship to `main` but omit from generated release notes                              |
+| Label             | When to use                                                                       |
+| ----------------- | --------------------------------------------------------------------------------- |
+| `enhancement`     | New feature or user-visible improvement                                           |
+| `fix`             | Bug fix (preferred on pull requests)                                              |
+| `breaking-change` | Breaking API or behavior change                                                   |
+| `security`        | Security fix or hardening                                                         |
+| `documentation`   | Docs-only or primarily documentation                                              |
+| `dependencies`    | Dependency version bumps in committed manifests                                   |
+| `github-actions`  | GitHub Actions workflow changes                                                   |
+| `chore`           | Internal or tooling work with no user-facing impact (excluded from release notes) |
+| `test`            | Test-only changes (excluded from release notes)                                   |
 
 These labels are **mutually exclusive** primary categories — apply only one. On update, if the drafted label differs from the PR's current primary label, `--remove-label` the old one before or when adding the new one.
 
@@ -129,7 +148,7 @@ Shell steps that push or call `gh` need git and network access (e.g. `required_p
 
 ### Branch
 
-If current branch is `main` / `master`:
+If current branch is `main`:
 
 ```bash
 branch="${type}/${short-slug}"
@@ -214,7 +233,7 @@ If `gh pr create` fails because a PR already exists for the branch, run the **Ex
 
 Assign the PR author with `--assignee @me` on create only. Use an explicit login only when the user asks to assign someone else.
 
-Label must exist in the repo (run [sync-labels.yml](../../../.github/workflows/sync-labels.yml) if missing).
+Label must exist in the repo (run `bun run setup` if missing).
 
 ## 4. Report back
 

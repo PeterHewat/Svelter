@@ -41,6 +41,7 @@
 
 <svelte:head>
   <link rel="icon" href="/favicon.svg" />
+  <link rel="canonical" href="{data.origin}{data.pathname}" />
   {#each MARKETING_LOCALES as locale (locale)}
     <link
       rel="alternate"

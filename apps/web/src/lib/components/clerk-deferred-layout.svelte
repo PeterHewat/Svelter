@@ -7,9 +7,10 @@
   import {
     clerkLoad,
     getAuthShell,
-    initClerkLoadFromCookies,
+    initClerkLoad,
     requestClerkLoad,
   } from "$lib/clerk-load.svelte";
+  import { needsClerkForRoute } from "$lib/clerk-routes";
   import { useTranslation } from "$lib/i18n";
 
   interface Props {
@@ -22,34 +23,32 @@
 
   const { t } = useTranslation();
 
-  const needsClerkForRoute = $derived(
-    page.url.pathname === "/tasks" ||
-      page.url.pathname === "/login" ||
-      page.url.searchParams.get("auth") === "login",
+  const routeNeedsClerk = $derived(
+    needsClerkForRoute(page.url.pathname, page.url.searchParams),
   );
 
   const headerMode = $derived.by(() => {
     if (clerkLoad.status === "ready") return "ready" as const;
-    if (clerkLoad.requested || needsClerkForRoute) return "loading" as const;
+    if (clerkLoad.requested || routeNeedsClerk) return "loading" as const;
     return "anonymous" as const;
   });
 
   const showRouteLoading = $derived(
-    needsClerkForRoute && clerkLoad.status !== "ready",
+    routeNeedsClerk && clerkLoad.status !== "ready",
   );
 
   const showAnonymousMain = $derived(
-    !needsClerkForRoute && clerkLoad.status !== "ready",
+    !routeNeedsClerk && clerkLoad.status !== "ready",
   );
 
   const AuthShell = $derived(getAuthShell());
 
   onMount(() => {
-    initClerkLoadFromCookies();
+    initClerkLoad();
   });
 
   $effect(() => {
-    if (needsClerkForRoute) {
+    if (routeNeedsClerk) {
       requestClerkLoad();
     }
   });

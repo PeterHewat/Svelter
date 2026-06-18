@@ -14,12 +14,3 @@ export const clerkAppearance: Appearance = {
     },
   },
 };
-
-/** SignIn inside the anchored auth panel — fit panel width instead of ~400px default. */
-export const authPanelSignInAppearance: Appearance = {
-  elements: {
-    rootBox: { width: "100%", maxWidth: "100%" },
-    cardBox: { width: "100%", maxWidth: "100%" },
-    card: { width: "100%", maxWidth: "100%" },
-  },
-};

@@ -8,8 +8,12 @@ let loadPromise: Promise<void> | null = null;
  */
 export function loadAuthShell(): Promise<void> {
   if (!loadPromise) {
-    loadPromise = import("$lib/components/auth-shell.svelte").then((module) => {
-      setAuthShellModule(module.default);
+    loadPromise = Promise.all([
+      import("$lib/components/auth-shell.svelte"),
+      // Prefetch only — warms the chunk before AppHeader dynamically imports it.
+      import("$lib/components/app-header-clerk.svelte"),
+    ]).then(([shellModule]) => {
+      setAuthShellModule(shellModule.default);
     });
   }
   return loadPromise;

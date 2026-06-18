@@ -1,5 +1,11 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { mayHaveClerkSession } from "./clerk-session-hint";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  hasClerkReturnSignal,
+  markClerkLoadRequested,
+  mayHaveClerkSession,
+  shouldEagerLoadClerk,
+  wasClerkLoadRequested,
+} from "./clerk-session-hint";
 
 describe("mayHaveClerkSession", () => {
   const originalCookie = document.cookie;
@@ -26,8 +32,42 @@ describe("mayHaveClerkSession", () => {
     expect(mayHaveClerkSession()).toBe(true);
   });
 
+  it("returns true when suffixed __session is present", () => {
+    document.cookie = "__session_abc123=eyJhbGciOiJIUzI1NiJ9.test";
+    expect(mayHaveClerkSession()).toBe(true);
+  });
+
   it("returns true when __client_uat is greater than zero", () => {
     document.cookie = "__client_uat=1700000000";
     expect(mayHaveClerkSession()).toBe(true);
+  });
+
+  it("returns true when suffixed __client_uat is greater than zero", () => {
+    document.cookie = "__client_uat_abc123=1700000000";
+    expect(mayHaveClerkSession()).toBe(true);
+  });
+});
+
+describe("clerk eager load signals", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    sessionStorage.clear();
+    document.cookie = "";
+  });
+
+  it("tracks clerk load requests in sessionStorage across reloads", () => {
+    expect(wasClerkLoadRequested()).toBe(false);
+    markClerkLoadRequested();
+    expect(wasClerkLoadRequested()).toBe(true);
+    expect(shouldEagerLoadClerk()).toBe(true);
+  });
+
+  it("detects Clerk OAuth return URLs", () => {
+    vi.stubGlobal("location", {
+      search: "?__clerk_status=sign-in",
+      hash: "",
+    });
+    expect(hasClerkReturnSignal()).toBe(true);
+    expect(shouldEagerLoadClerk()).toBe(true);
   });
 });
