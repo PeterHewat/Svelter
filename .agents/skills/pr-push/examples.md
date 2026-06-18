@@ -59,6 +59,16 @@ Stay on supported Vitest 3.x with matching coverage packages across workspaces.
 - Root and workspace overrides updated together
 - Config files adjusted for renamed coverage options
 
+## Pre-commit hook failure — stop
+
+`git commit` fails because lint-staged / ESLint rejects a staged file.
+
+**Wrong:** Fix lint, run `git add`, retry commit, push, open PR.
+
+**Wrong:** Run `git commit --no-verify` to bypass the hook.
+
+**Right:** Paste the hook error output, note that commit did not land, and stop. The user fixes lint and re-invokes the skill.
+
 ## Update existing PR
 
 Second run on `feat/task-due-dates` after a follow-up commit fixing overdue styling. **Run full preflight again** — do not assume the PR is already up to date because it was created earlier in the session. Draft from `git diff main...HEAD`, not just the latest staged slice or latest commit message. Commit message: title only. **Always** publish the full-branch title and body via `gh pr edit` after push.
