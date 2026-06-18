@@ -22,4 +22,6 @@ bun run --filter @repo/marketing e2e
 
 Shared tokens: `@repo/tokens`. Routes: `src/routes/`.
 
+**i18n:** New marketing keys land in `src/lib/locales/en.ts` first. Translate other locales in [v1/marketing-product.md](../../docs/spec/v1/marketing-product.md).
+
 Monorepo commands and CI: [docs/development.md](../../docs/development.md).

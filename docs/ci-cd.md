@@ -97,16 +97,6 @@ Configure in **Settings → Secrets and variables → Actions**. Used by PR CI, 
 
 `bun run setup` can set these via `gh secret set` when you confirm after readiness (see [getting-started.md](./getting-started.md)).
 
-### Migrating from Vercel secrets
-
-If this repo previously used Vercel GitHub Actions deploys, remove obsolete secrets and add Cloudflare ones before the next Staging or Release run:
-
-| Remove (obsolete)                                                                       | Add (Cloudflare Pages)                                                                                |
-| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_WEB_PROJECT_ID`, `VERCEL_MARKETING_PROJECT_ID` | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CF_PAGES_PROJECT_WEB`, `CF_PAGES_PROJECT_MARKETING` |
-
-Set them at **repository** level (staging) and duplicate production values in the GitHub **`production`** environment for `release-*` deploys. Re-run `bun run setup` (Cloudflare + Production steps) or set manually. Ensure `PUBLIC_CLERK_PUBLISHABLE_KEY` exists in **`production`** for release web builds (`pk_live_…`).
-
 | Secret                         | Purpose                                | Setup / source                                                                       |
 | ------------------------------ | -------------------------------------- | ------------------------------------------------------------------------------------ |
 | `CONVEX_DEPLOY_KEY`            | CI/E2E codegen + Staging Convex deploy | Setup mints via `npx convex deployment token create github-ci`                       |

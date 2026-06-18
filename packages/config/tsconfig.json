@@ -11,6 +11,8 @@
   },
   "include": [
     "aliases.ts",
+    "dev-ports.ts",
+    "dev-ports.test.ts",
     "env-placeholders.ts",
     "env-placeholders.test.ts",
     "product.ts",

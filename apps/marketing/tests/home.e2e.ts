@@ -1,8 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { PRODUCT_NAME } from "@repo/config/product";
 import { mt } from "../src/lib/i18n";
-import { SITE_NAME } from "../src/lib/site";
+import { productAppHref } from "../src/lib/product-links";
 
-const enTitle = `${SITE_NAME} - ${mt("home.titleSuffix", "en")}`;
+const enTitle = `${PRODUCT_NAME} - ${mt("home.titleSuffix", "en")}`;
+const signupHref = productAppHref({ kind: "signup", utmCampaign: "hero" });
 
 test.describe("Marketing Home Page", () => {
   test("redirects / to browser or default locale", async ({ page }) => {
@@ -62,10 +64,55 @@ test.describe("Marketing Home Page", () => {
     await page.goto("/en");
     await expect(
       page.getByRole("heading", {
-        name: new RegExp(`build faster with ${SITE_NAME}`, "i"),
+        name: new RegExp(`build faster with ${PRODUCT_NAME}`, "i"),
       }),
     ).toBeVisible();
     await expect(page.getByText(/production-ready monorepo/i)).toBeVisible();
+    await expect(page.getByText(/no credit card required/i)).toBeVisible();
+  });
+
+  test("hero Start free links to product signup URL", async ({ page }) => {
+    await page.goto("/en");
+    const heroCta = page
+      .locator("section")
+      .filter({ hasText: /build faster with/i })
+      .getByRole("link", { name: /start free/i });
+    await expect(heroCta).toHaveAttribute("href", signupHref);
+  });
+
+  test("nav Start free links to product signup URL", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto("/en");
+    const navCta = page
+      .getByRole("navigation", { name: /main navigation/i })
+      .getByRole("link", { name: /start free/i });
+    await expect(navCta).toHaveAttribute(
+      "href",
+      productAppHref({ kind: "signup", utmCampaign: "nav" }),
+    );
+  });
+
+  test("shows mobile nav links without JavaScript", async ({ browser }) => {
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+      viewport: { width: 390, height: 844 },
+    });
+    const page = await context.newPage();
+    await page.goto("/en");
+    await expect(
+      page.getByRole("link", { name: /start free/i }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /start free/i }).first(),
+    ).toHaveAttribute(
+      "href",
+      productAppHref({ kind: "signup", utmCampaign: "nav" }),
+    );
+    await page.locator("[data-nav-menu] summary").click();
+    await expect(
+      page.locator("[data-nav-menu]").getByRole("link", { name: /features/i }),
+    ).toBeVisible();
+    await context.close();
   });
 
   test("should have correct meta description", async ({ page }) => {
@@ -82,5 +129,32 @@ test.describe("Marketing Home Page", () => {
   test("should navigate to the blog page", async ({ page }) => {
     await page.goto("/en/blog");
     await expect(page.getByRole("heading", { name: /^blog$/i })).toBeVisible();
+  });
+
+  test("homepage pricing teaser renders 3 tiers", async ({ page }) => {
+    await page.goto("/en");
+    const pricingHeading = page.getByRole("heading", {
+      name: /simple, transparent pricing/i,
+    });
+    await expect(pricingHeading).toBeVisible();
+    const pricing = page.locator("section").filter({ has: pricingHeading });
+    await expect(
+      pricing.getByRole("heading", { name: "Free", exact: true }),
+    ).toBeVisible();
+    await expect(
+      pricing.getByRole("heading", { name: "Pro", exact: true }),
+    ).toBeVisible();
+    await expect(
+      pricing.getByRole("heading", { name: "Business", exact: true }),
+    ).toBeVisible();
+  });
+
+  test("homepage FAQ includes JSON-LD", async ({ page }) => {
+    await page.goto("/en");
+    const schema = page.locator('script[type="application/ld+json"]');
+    await expect(schema).toHaveCount(1);
+    const content = await schema.textContent();
+    expect(content).toContain("FAQPage");
+    expect(content).toContain("Is the free plan really free?");
   });
 });

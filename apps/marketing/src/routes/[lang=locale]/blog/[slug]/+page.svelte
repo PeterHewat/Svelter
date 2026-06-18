@@ -6,7 +6,10 @@
   let { data } = $props();
 
   const lang = $derived(data.lang as Locale);
-  const t = $derived((key: Parameters<typeof mt>[0]) => mt(key, lang));
+  const t = $derived(
+    (key: Parameters<typeof mt>[0], vars?: Record<string, string | number>) =>
+      mt(key, lang, vars),
+  );
   const blogHref = $derived(localizedPath(lang, "blog"));
 </script>
 
@@ -20,6 +23,9 @@
     <h1 class="mb-2 text-4xl font-bold">{data.post.title}</h1>
     <p class="text-muted-foreground text-sm">
       {new Date(data.post.pubDate).toLocaleDateString(lang)}
+      {#if data.post.type === "changelog" && data.post.version}
+        · {t("blog.changelogVersion", { version: data.post.version })}
+      {/if}
       {#if data.post.author}
         · {data.post.author}
       {/if}
