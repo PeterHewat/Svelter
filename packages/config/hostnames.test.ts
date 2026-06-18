@@ -1,9 +1,11 @@
 import { describe, expect, test } from "vitest";
+import { webDevOrigin } from "./dev-ports";
 import {
   clerkDevelopmentOrigins,
   clerkProductionOrigins,
   deriveProductionHostnames,
   deriveStagingHostnames,
+  pagesOrigin,
   pagesProductionHostname,
   pagesStagingHostname,
   PAGES_STAGING_BRANCH,
@@ -45,6 +47,20 @@ describe("pagesProductionHostname", () => {
   });
 });
 
+describe("pagesOrigin", () => {
+  test("builds production origin without branch", () => {
+    expect(pagesOrigin("svelter-marketing")).toBe(
+      "https://svelter-marketing.pages.dev",
+    );
+  });
+
+  test("builds staging origin with branch", () => {
+    expect(pagesOrigin("svelter-marketing", PAGES_STAGING_BRANCH)).toBe(
+      "https://staging.svelter-marketing.pages.dev",
+    );
+  });
+});
+
 describe("clerkProductionOrigins", () => {
   test("includes pages.dev only without apex", () => {
     expect(clerkProductionOrigins("svelter-web")).toEqual([
@@ -63,7 +79,7 @@ describe("clerkProductionOrigins", () => {
 describe("clerkDevelopmentOrigins", () => {
   test("includes localhost and staging web origin", () => {
     expect(clerkDevelopmentOrigins("svelter-web")).toEqual([
-      "http://localhost:5173",
+      webDevOrigin,
       "https://staging.svelter-web.pages.dev",
     ]);
   });

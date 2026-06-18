@@ -101,7 +101,7 @@ export async function resolveClerkIssuerDomain(
  *
  * @param secretKey - Clerk secret key for the target instance
  * @param origins - Origins to ensure are allowed
- * @param options - Optional `development_origin` (e.g. `http://localhost:5173`)
+ * @param options - Optional `development_origin` (e.g. `http://localhost:3000`)
  */
 export async function mergeClerkAllowedOrigins(
   secretKey: string,

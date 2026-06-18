@@ -6,7 +6,7 @@
       "request": "launch",
       "skipFiles": ["${workspaceFolder}/node_modules/**/*.js"],
       "name": "Debug Web App",
-      "url": "http://localhost:5173/",
+      "url": "http://localhost:3000/",
       "webRoot": "${workspaceFolder}/apps/web/src"
     },
     {

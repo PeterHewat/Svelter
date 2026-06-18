@@ -44,8 +44,8 @@ bun run verify                      # check + workspace tests + scripts tests
 
 # Dev
 bun run dev:convex            # Convex (repo root)
-bun run dev:web               # Vite :5173
-bun run dev:marketing         # SvelteKit :4321
+bun run dev:web               # Web dev :3000, preview :4000
+bun run dev:marketing         # Marketing dev :3001, preview :4001
 
 # Lint / format
 bun run lint                  # ESLint (repo root)

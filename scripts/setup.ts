@@ -22,6 +22,7 @@ import { applyLicenseFromConfig } from "./lib/license-identity";
 import { applyReadmeIdentity } from "./lib/readme-identity";
 import { TEMPLATE_PRODUCT_NAME } from "./lib/repo-identity";
 import { bootstrapCiSecrets } from "./lib/bootstrap-ci";
+import { bootstrapGithubLabels } from "./lib/bootstrap-github-labels";
 import { bootstrapConvexClerk } from "./lib/bootstrap-convex-clerk";
 import { bootstrapProduction } from "./lib/bootstrap-production";
 import { bootstrapCloudflare } from "./lib/bootstrap-cloudflare";
@@ -181,6 +182,7 @@ async function main(): Promise<void> {
   if (setupConfig && (interactive || flags.syncSecrets)) {
     const bootstrapOptions = { autoConfirm: flags.syncSecrets };
     await bootstrapCiSecrets(root, setupConfig, cliContext, bootstrapOptions);
+    await bootstrapGithubLabels(root, setupConfig, cliContext);
     await bootstrapCloudflare(
       root,
       setupConfig,

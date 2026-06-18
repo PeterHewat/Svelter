@@ -7,8 +7,10 @@ SvelteKit **SSG** marketing site (`adapter-static`, `csr: false`). Pre-rendered 
 From repo root:
 
 ```bash
-bun run dev:marketing   # http://localhost:4321
+bun run dev:marketing   # http://localhost:3001
 ```
+
+Preview production build: `bun run --filter @repo/marketing preview` → [localhost:4001](http://localhost:4001)
 
 ## Build & test
 

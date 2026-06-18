@@ -2,6 +2,7 @@
 import { defaultE2eEmail } from "../../packages/config/e2e-auth";
 import { isPlaceholderEnvValue } from "../../packages/config/env-placeholders";
 import { clerkDevelopmentOrigins } from "../../packages/config/hostnames";
+import { webDevOrigin } from "../../packages/config/dev-ports";
 import { pagesProjectNames } from "./hosting-project-spec";
 import { productNameToSlug } from "./repo-identity";
 import {
@@ -340,7 +341,7 @@ async function syncClerkDevOrigins(
   console.log("\nClerk allowed origins (Development instance)");
 
   const result = await mergeClerkAllowedOrigins(secretKey, clerkDevOrigins, {
-    developmentOrigin: "http://localhost:5173",
+    developmentOrigin: webDevOrigin,
   });
 
   if (result.ok) {
@@ -362,7 +363,7 @@ async function syncClerkDevOrigins(
   printManualAction("Set Clerk allowed origins via Backend API", [
     "Allowed origins are not configured on the Clerk Domains dashboard page",
     `PATCH https://api.clerk.com/v1/instance with Authorization: Bearer <CLERK_SECRET_KEY>`,
-    `Body: {"allowed_origins":${JSON.stringify(clerkDevOrigins)},"development_origin":"http://localhost:5173"}`,
+    `Body: {"allowed_origins":${JSON.stringify(clerkDevOrigins)},"development_origin":"${webDevOrigin}"}`,
     "Re-run setup after fixing the secret key, or apply the PATCH manually",
   ]);
 }

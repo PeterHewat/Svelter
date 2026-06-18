@@ -1,3 +1,4 @@
+import { webDevOrigin } from "./dev-ports";
 import { normalizeApexDomainInput } from "./validate-domain";
 
 /** Wrangler `--branch` label for staging preview deployments. */
@@ -71,6 +72,23 @@ export function pagesProductionHostname(projectName: string): string {
 }
 
 /**
+ * Absolute site origin for a Cloudflare Pages project.
+ *
+ * @param projectName - Pages project name (e.g. `my-app-marketing`)
+ * @param branch - Preview branch label; omit for production `*.pages.dev`
+ */
+export function pagesOrigin(
+  projectName: string,
+  branch?: string,
+): `https://${string}` {
+  const hostname =
+    branch != null && branch.length > 0
+      ? pagesStagingHostname(projectName, branch)
+      : pagesProductionHostname(projectName);
+  return `https://${hostname}`;
+}
+
+/**
  * Clerk Production `allowed_origins` for `*.pages.dev` and optional apex web domain.
  *
  * @param webProject - Web Pages project name
@@ -94,8 +112,5 @@ export function clerkProductionOrigins(
  * @param webProject - Web Pages project name
  */
 export function clerkDevelopmentOrigins(webProject: string): string[] {
-  return [
-    "http://localhost:5173",
-    `https://${pagesStagingHostname(webProject)}`,
-  ];
+  return [webDevOrigin, `https://${pagesStagingHostname(webProject)}`];
 }

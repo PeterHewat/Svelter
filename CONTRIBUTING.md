@@ -40,7 +40,7 @@ To update outside ranges, edit versions in `package.json`, then run `bun update`
 
 ## E2E
 
-Pull requests run **unit tests** only (lint, typecheck, build). **Playwright E2E** is manual or runs from **Release** before deploy (always against the dev stack). See [docs/ci-cd.md](docs/ci-cd.md#manual-workflows).
+Pull requests run **unit tests** only (lint, typecheck, build). **Playwright E2E** runs on every merge to `main` via **Staging** (full suite when repository secrets are set); **Release** verifies that Staging succeeded on the same commit without re-running E2E. Manual runs: Actions → **E2E**. Always against the dev stack — see [docs/ci-cd.md](docs/ci-cd.md#e2e-tests-playwright).
 
 ## Agent rules
 

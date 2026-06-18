@@ -27,6 +27,7 @@ Gitignored in the template repo — created on first `bun run setup`. Stores ide
   "github": {
     "org": "acme",
     "repo": "my-app",
+    "labelsSynced": true,
     "syncedSecrets": {
       "repo": true,
       "production": true,
@@ -44,6 +45,7 @@ Gitignored in the template repo — created on first `bun run setup`. Stores ide
 }
 ```
 
+- `github.labelsSynced` — issue/PR labels created via `gh label create` (one-time).
 - `github.syncedSecrets.repo` — repository secrets for PR CI / E2E (dev Convex + Clerk).
 - `github.syncedSecrets.cloudflare` — repository secrets for Cloudflare Pages deploy workflows.
 - `github.syncedSecrets.production` — GitHub **production** environment secrets for `release-*` releases.
@@ -82,12 +84,12 @@ Also writes `packages/config/product.ts`, rebrands `README.md` when forking from
 
 ### Feasibility summary
 
-| Category    | Examples                                                                                                                              |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Script**  | `PRODUCT_NAME`, `.env.local`, `convex env set`, deploy keys, `gh secret set`, Pages domains via API, Clerk JWT template + origins     |
-| **Guided**  | Clerk CLI `env pull` or paste keys, inline Convex link, `wrangler login` or Cloudflare API token paste, DNS, E2E user                 |
-| **Manual**  | Account signup, registrar nameserver change (when apex is set), Clerk auth methods, `release-*` release approval, org GitHub policies |
-| **Blocked** | Clerk setup without CLI login or dashboard access                                                                                     |
+| Category    | Examples                                                                                                                                             |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Script**  | `PRODUCT_NAME`, `.env.local`, `convex env set`, deploy keys, `gh secret set`, `gh label create`, Pages domains via API, Clerk JWT template + origins |
+| **Guided**  | Clerk CLI `env pull` or paste keys, inline Convex link, `wrangler login` or Cloudflare API token paste, DNS, E2E user                                |
+| **Manual**  | Account signup, registrar nameserver change (when apex is set), Clerk auth methods, `release-*` release approval, org GitHub policies                |
+| **Blocked** | Clerk setup without CLI login or dashboard access                                                                                                    |
 
 ---
 

@@ -1,3 +1,4 @@
+import { webDevOrigin } from "@repo/config/dev-ports";
 import { defineConfig, devices } from "@playwright/test";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -38,7 +39,7 @@ function loadEnvFile(filename: string): void {
 loadEnvFile(".env.local");
 
 const isCI = !!process.env.CI;
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? webDevOrigin;
 const clerkPublishableKey = clerkPublishableKeyForE2E();
 const convexUrl =
   process.env.PUBLIC_CONVEX_URL ??

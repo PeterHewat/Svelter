@@ -8,7 +8,7 @@ How **development**, **staging**, and **production** map across Clerk, Convex, C
 
 | Tier            | Purpose                | Convex / Auth                     | Hostnames (example)                                                  |
 | --------------- | ---------------------- | --------------------------------- | -------------------------------------------------------------------- |
-| **Development** | Local, PR CI           | Dev deployment, Clerk             | `localhost:5173`, `localhost:4321`                                   |
+| **Development** | Local, PR CI           | Dev deployment, Clerk             | `localhost:3000`, `localhost:3001`                                   |
 | **Staging**     | Pre-prod on fixed URLs | Same as development               | `staging.{slug}-web.pages.dev`, `staging.{slug}-marketing.pages.dev` |
 | **Production**  | Customer-facing        | Prod deployment, Clerk (prod app) | `{slug}-web.pages.dev` (+ `example.com` / `www` when apex is set)    |
 

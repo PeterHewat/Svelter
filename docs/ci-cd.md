@@ -2,14 +2,13 @@
 
 ## Workflows
 
-| Workflow                                                | Purpose                                                                                                |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| [ci.yml](../.github/workflows/ci.yml)                   | Lint, test, and build on pull requests to `main` (not re-run on merge)                                 |
-| [staging.yml](../.github/workflows/staging.yml)         | On push to `main`: Convex dev deploy + Cloudflare Pages staging + full Playwright E2E                  |
-| [release.yml](../.github/workflows/release.yml)         | Production release: verify CI + Staging, tag `release-*`, deploy full stack                            |
-| [deploy.yml](../.github/workflows/deploy.yml)           | **Deploy** — redeploy/rollback a `release-*` tag (also called from Release)                            |
-| [e2e.yml](../.github/workflows/e2e.yml)                 | Manual Playwright (web and/or marketing); reusable from Staging                                        |
-| [sync-labels.yml](../.github/workflows/sync-labels.yml) | One-time or occasional: sync issue/PR labels ([source of truth](../.github/workflows/sync-labels.yml)) |
+| Workflow                                        | Purpose                                                                               |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [ci.yml](../.github/workflows/ci.yml)           | Lint, test, and build on pull requests to `main` (not re-run on merge)                |
+| [staging.yml](../.github/workflows/staging.yml) | On push to `main`: Convex dev deploy + Cloudflare Pages staging + full Playwright E2E |
+| [release.yml](../.github/workflows/release.yml) | Production release: verify CI + Staging, tag `release-*`, deploy full stack           |
+| [deploy.yml](../.github/workflows/deploy.yml)   | **Deploy** — redeploy/rollback a `release-*` tag (also called from Release)           |
+| [e2e.yml](../.github/workflows/e2e.yml)         | Manual Playwright (web and/or marketing); reusable from Staging                       |
 
 **Staging:** merge to `main` → [staging.yml](../.github/workflows/staging.yml) (Convex dev + Cloudflare Pages staging + E2E).
 
@@ -27,7 +26,7 @@
 
 | Lane            | Convex / Auth | Web domain (example)                             | Marketing (example)                            | When                                                    |
 | --------------- | ------------- | ------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------- |
-| **Local + E2E** | Dev / Clerk   | `localhost:5173`                                 | `localhost:4321`                               | Dev, Playwright                                         |
+| **Local + E2E** | Dev / Clerk   | `localhost:3000`                                 | `localhost:3001`                               | Dev, Playwright                                         |
 | **Staging**     | Dev / Clerk   | `staging.{slug}-web.pages.dev`                   | `staging.{slug}-marketing.pages.dev`           | Merge to `main` (Staging CI + Pages `--branch=staging`) |
 | **Production**  | Prod / Clerk  | `{slug}-web.pages.dev` (+ `example.com` if apex) | `{slug}-marketing.pages.dev` (+ `www` if apex) | Release → `release-*` tag                               |
 
@@ -206,16 +205,4 @@ Release notes group **merged PRs** by label ([.github/release.yml](../.github/re
 
 Dependabot applies `dependencies`, `github-actions`, `monorepo`, and `typescript`; bot PRs are excluded from notes by author.
 
-### Sync labels to GitHub
-
-Run once after creating the repo (and again when label names in [sync-labels.yml](../.github/workflows/sync-labels.yml) change):
-
-In GitHub: Actions → Sync GitHub labels → Run workflow
-
-Or from a machine with the [GitHub CLI](https://cli.github.com/) authenticated:
-
-```bash
-gh workflow run sync-labels.yml -R owner/repo
-```
-
-Safe to re-run (`gh label create --force` updates color/description). Use `chore` for CI and workflow changes. Keep labels aligned with [.github/release.yml](../.github/release.yml).
+`bun run setup` syncs labels to GitHub once per fork (`github.labelsSynced` in [`.svelter/setup.json`](../.svelter/setup.json)). Definitions live in [`packages/config/github-labels.ts`](../packages/config/github-labels.ts) — keep aligned with [.github/release.yml](../.github/release.yml). Use `chore` for CI and workflow changes.

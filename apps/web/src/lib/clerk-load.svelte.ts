@@ -1,4 +1,7 @@
-import { mayHaveClerkSession } from "$lib/clerk-session-hint";
+import {
+  markClerkLoadRequested,
+  shouldEagerLoadClerk,
+} from "$lib/clerk-session-hint";
 import type { Component } from "svelte";
 
 export type ClerkLoadStatus = "idle" | "loading" | "ready";
@@ -20,6 +23,7 @@ let authShellModule: AuthShellComponent | null = null;
  */
 export function requestClerkLoad(): void {
   if (clerkLoad.status === "ready") return;
+  markClerkLoadRequested();
   clerkLoad.requested = true;
   if (clerkLoad.status === "idle") {
     clerkLoad.status = "loading";
@@ -27,10 +31,10 @@ export function requestClerkLoad(): void {
 }
 
 /**
- * On first client mount, eagerly load Clerk when session cookies are present.
+ * On first client mount, eagerly load Clerk when a session or prior auth flow exists.
  */
-export function initClerkLoadFromCookies(): void {
-  if (mayHaveClerkSession()) {
+export function initClerkLoad(): void {
+  if (shouldEagerLoadClerk()) {
     requestClerkLoad();
   }
 }

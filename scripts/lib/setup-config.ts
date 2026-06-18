@@ -30,6 +30,8 @@ export type SetupConfig = {
   github: {
     org: string;
     repo: string;
+    /** Issue/PR labels synced via `gh label create` (one-time). */
+    labelsSynced?: boolean;
     syncedSecrets?: GitHubSyncedSecrets;
   } | null;
   /** When true, setup replaces MIT `LICENSE` with the proprietary stub. */
@@ -105,6 +107,7 @@ export function buildSetupConfig(
       ? {
           org: github.org,
           repo: github.repo,
+          labelsSynced: existing?.github?.labelsSynced,
           syncedSecrets: existing?.github?.syncedSecrets,
         }
       : null,
@@ -143,6 +146,22 @@ function markGitHubSecretSynced(
  */
 export function markGithubSecretsSynced(root: string): void {
   markGitHubSecretSynced(root, "repo");
+}
+
+/**
+ * Records that GitHub issue/PR labels were synced by setup.
+ *
+ * @param root - Repository root
+ */
+export function markGithubLabelsSynced(root: string): void {
+  const config = readSetupConfig(root);
+  if (!config?.github) {
+    return;
+  }
+  writeSetupConfig(root, {
+    ...config,
+    github: { ...config.github, labelsSynced: true },
+  });
 }
 
 /**

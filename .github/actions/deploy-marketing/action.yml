@@ -28,6 +28,11 @@ runs:
         DEPLOY_BRANCH: ${{ inputs.deploy_branch }}
       run: |
         set -euo pipefail
+        if [ -n "${DEPLOY_BRANCH:-}" ]; then
+          export PUBLIC_MARKETING_ORIGIN="https://${DEPLOY_BRANCH}.${CF_PAGES_PROJECT_MARKETING}.pages.dev"
+        else
+          export PUBLIC_MARKETING_ORIGIN="https://${CF_PAGES_PROJECT_MARKETING}.pages.dev"
+        fi
         bun run --filter @repo/marketing build
         BRANCH_ARGS=()
         if [ -n "${DEPLOY_BRANCH:-}" ]; then
