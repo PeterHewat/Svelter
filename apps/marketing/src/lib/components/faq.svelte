@@ -41,13 +41,19 @@
       mainEntity: questionItems,
     }),
   );
+
+  const faqJsonLdScript = $derived(
+    jsonLd && faqJsonLd
+      ? `<script type="application/ld+json">${faqJsonLd.replace(/</g, "\\u003c")}<` +
+          `/script>`
+      : "",
+  );
 </script>
 
 <svelte:head>
-  {#if jsonLd && faqJsonLd}
-    <script type="application/ld+json">
-{faqJsonLd}
-    </script>
+  {#if faqJsonLdScript}
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -- trusted FAQ JSON-LD; `<` escaped -->
+    {@html faqJsonLdScript}
   {/if}
 </svelte:head>
 

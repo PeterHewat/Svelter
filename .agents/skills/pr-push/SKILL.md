@@ -23,6 +23,7 @@ Examples: [examples.md](examples.md).
 - Do not push to `main`. Work lands on a feature branch and enters `main` via squash merge.
 - Do not run `bun run verify` or `bun run check` — the user is expected to have verified already before opening a PR.
 - **Errors — report and stop.** If any step fails (git, `gh`, tests, checks, or other commands run during this skill), explain what went wrong and stop. Do not edit files, run formatters, retry with fixes, or continue to commit/push/PR.
+- **Pre-commit / hook failures — stop, do not repair.** If `git commit` fails because of a pre-commit hook (e.g. lint-staged, ESLint, Prettier, tests), report the hook output and **stop**. Do not edit files, run formatters or linters, run `git add`, retry the commit, use `--no-verify`, or continue to push/PR. Do not propose a fix plan — repairing hook failures is outside this skill unless the user explicitly asks.
 - Never include "Made with Cursor" (or similar Cursor attribution) in the PR body. Cursor may inject it on `gh pr create`; re-apply the drafted description with `gh pr edit` after create (see [Push and publish PR](#push-and-publish-pr)).
 - No test-plan section in the PR body — squash-merge release notes use title and body; keep copy release-note-ready.
 
@@ -185,6 +186,8 @@ git commit -m "<drafted title>"
 ```
 
 If there is no staged diff but the branch is ahead of `base`, skip this step.
+
+If commit exits non-zero (including pre-commit hook failure), apply **Pre-commit / hook failures** in Hard rules — report and stop.
 
 ### Push and publish PR
 
