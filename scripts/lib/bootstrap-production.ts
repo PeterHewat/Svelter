@@ -9,7 +9,6 @@ import {
   normalizeClerkIssuerDomain,
   resolveClerkIssuerDomain,
 } from "./clerk-instance";
-import { resolveCloudflareApiToken } from "./cloudflare-auth";
 import { mintConvexDeployKey } from "./convex-deploy-key";
 import { setConvexEnvVar } from "./convex-env";
 import {
@@ -400,23 +399,10 @@ export async function bootstrapProduction(
   }
 
   const cloudflare = setup.cloudflare;
-  let cloudflareToken = "";
-  const resolvedCfToken = await resolveCloudflareApiToken(root);
-  if (resolvedCfToken) {
-    cloudflareToken = resolvedCfToken.token;
-    if (resolvedCfToken.source === "env") {
-      console.log("✓ Cloudflare API token — CLOUDFLARE_API_TOKEN env");
-    }
-  } else {
-    console.log("○ CLOUDFLARE_API_TOKEN required for production deploys");
-  }
-
   if (!cloudflare?.synced) {
     console.log(
-      "○ Skip Cloudflare production secrets — run the Cloudflare setup step first or set manually",
+      "○ Cloudflare Pages secrets sync in the Cloudflare step — complete that first",
     );
-  } else if (!webProject) {
-    console.log("○ Skip Cloudflare production secrets — missing project names");
   }
 
   if (clerkSk.startsWith("sk_live_") && webProject) {
@@ -434,17 +420,6 @@ export async function bootstrapProduction(
   ];
   if (!clerkDeferred && clerkPk) {
     secrets.push(["PUBLIC_CLERK_PUBLISHABLE_KEY", clerkPk]);
-  }
-
-  if (cloudflare?.synced) {
-    secrets.push(
-      ["CLOUDFLARE_ACCOUNT_ID", cloudflare.accountId],
-      ["CF_PAGES_PROJECT_WEB", cloudflare.projectNameWeb],
-      ["CF_PAGES_PROJECT_MARKETING", cloudflare.projectNameMarketing],
-    );
-  }
-  if (cloudflareToken) {
-    secrets.push(["CLOUDFLARE_API_TOKEN", cloudflareToken]);
   }
 
   let okCount = 0;

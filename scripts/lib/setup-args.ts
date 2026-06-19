@@ -8,6 +8,8 @@ export type SetupFlags = {
 export type SetupBootstrapOptions = {
   /** Skip confirmation prompts; proceed when CLIs and env are ready. */
   autoConfirm?: boolean;
+  /** Re-sync Cloudflare deploy secrets even when already marked synced. */
+  forceResync?: boolean;
 };
 
 /**

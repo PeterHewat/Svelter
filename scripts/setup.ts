@@ -180,7 +180,10 @@ async function main(): Promise<void> {
   }
 
   if (setupConfig && (interactive || flags.syncSecrets)) {
-    const bootstrapOptions = { autoConfirm: flags.syncSecrets };
+    const bootstrapOptions = {
+      autoConfirm: flags.syncSecrets,
+      forceResync: flags.syncSecrets,
+    };
     await bootstrapCiSecrets(root, setupConfig, cliContext, bootstrapOptions);
     await bootstrapGithubLabels(root, setupConfig, cliContext);
     await bootstrapCloudflare(
