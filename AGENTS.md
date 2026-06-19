@@ -63,12 +63,15 @@ Committed symlinks: `.claude` → `.agents`, `CLAUDE.md` → `AGENTS.md`. Setup 
 
 Before ending a turn, run what applies to your edits:
 
-| Change                         | Command                                    |
-| ------------------------------ | ------------------------------------------ |
-| Docs / Markdown only           | `bunx prettier --write <touched paths>`    |
-| `scripts/**` only              | Prettier on touched paths + `bun run lint` |
-| Any `.ts` / `.js` / `.svelte`  | Prettier + `bun run check`                 |
-| Task complete or broad changes | `bun run verify`                           |
+| Change                           | Command                                                              |
+| -------------------------------- | -------------------------------------------------------------------- |
+| `apps/marketing/src/content/**`  | Prettier on touched paths + `bun run --filter @repo/marketing build` |
+| Docs / Markdown only (elsewhere) | `bunx prettier --write <touched paths>`                              |
+| `scripts/**` only                | Prettier on touched paths + `bun run lint`                           |
+| Any `.ts` / `.js` / `.svelte`    | Prettier + `bun run check`                                           |
+| Task complete or broad changes   | `bun run verify`                                                     |
+
+Marketing content is prerendered at build time — SvelteKit crawls every `<a href>` and fails on 404s or missing fragment IDs. `bun run verify` does not run the marketing build; CI does.
 
 Use `bunx prettier --write` (not `bun run format`, which is check-only).
 

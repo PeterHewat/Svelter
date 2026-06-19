@@ -40,7 +40,7 @@ PUBLIC_MARKETING_ORIGIN=http://localhost:4001 \
   bun run --filter @repo/marketing build
 ```
 
-**CI (staging / production)** — the deploy-marketing GitHub Action sets both `PUBLIC_*` origins from your Pages project names (and `APEX_DOMAIN` on production release when configured via `bun run setup`). See `packages/config/app-origins.ts` and [environments.md](../../../../docs/environments.md).
+**CI (staging / production)** — the deploy-marketing GitHub Action sets both `PUBLIC_*` origins from your Pages project names (and `APEX_DOMAIN` on production release when configured via `bun run setup`). See `packages/config/app-origins.ts` and `docs/environments.md` in the repo root.
 
 Nav **Dashboard** uses `ProductAppLink` → product app root. The product app footer copyright link uses `marketingHomeHref()` (locale + theme query params).
 
