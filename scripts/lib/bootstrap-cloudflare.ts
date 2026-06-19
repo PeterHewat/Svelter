@@ -1,7 +1,6 @@
 /* eslint-disable no-console -- CLI wizard */
 import { deriveProductionHostnames } from "../../packages/config/hostnames";
 import { hasApexDomain } from "../../packages/config/validate-domain";
-import { ghSecretSet, isGhAuthenticated } from "./gh-secrets";
 import {
   CloudflareApiError,
   ensurePagesProject,
@@ -21,12 +20,12 @@ import {
   resolveCloudflareApiToken,
   resolveWranglerAccountId,
 } from "./cloudflare-auth";
+import { ensureCloudflareGithubSecretsSynced } from "./cloudflare-github-secrets";
 import { productNameToSlug, type GitHubRepo } from "./repo-identity";
 import type { SetupBootstrapOptions } from "./setup-args";
-import { canAutomateGh, type SetupCliContext } from "./setup-cli";
+import type { SetupCliContext } from "./setup-cli";
 import {
   markCloudflareDnsConfigured,
-  markCloudflareGithubSecretsSynced,
   markCloudflareSynced,
   type CloudflareSetupMeta,
   type SetupConfig,
@@ -188,54 +187,6 @@ async function configureApexHosting(
 }
 
 /**
- * Syncs Cloudflare deploy credentials to GitHub repository secrets.
- */
-async function syncCloudflareGithubSecrets(
-  root: string,
-  token: string,
-  accountId: string,
-  meta: CloudflareSetupMeta,
-  setup: SetupConfig,
-  cliContext?: SetupCliContext,
-): Promise<void> {
-  if (setup.github?.syncedSecrets?.cloudflare) {
-    console.log("✓ Cloudflare GitHub secrets already synced — skip");
-    return;
-  }
-
-  const ghReady = cliContext
-    ? canAutomateGh(cliContext)
-    : await isGhAuthenticated();
-  if (!ghReady) {
-    printManualAction("Authenticate GitHub CLI", [
-      "Run `gh auth login` in a terminal",
-      "Re-run `bun run setup` and confirm the Cloudflare GitHub secrets sync step",
-    ]);
-    return;
-  }
-
-  const pairs: Array<[string, string]> = [
-    ["CLOUDFLARE_API_TOKEN", token],
-    ["CLOUDFLARE_ACCOUNT_ID", accountId],
-    ["CF_PAGES_PROJECT_WEB", meta.projectNameWeb],
-    ["CF_PAGES_PROJECT_MARKETING", meta.projectNameMarketing],
-  ];
-
-  let okCount = 0;
-  for (const [name, value] of pairs) {
-    const ok = await ghSecretSet(root, name, value);
-    console.log(ok ? `✓ ${name}` : `○ Failed to set ${name}`);
-    if (ok) {
-      okCount += 1;
-    }
-  }
-
-  if (okCount === pairs.length) {
-    markCloudflareGithubSecretsSynced(root);
-  }
-}
-
-/**
  * Interactive Cloudflare Pages bootstrap: projects, domains, GitHub secrets.
  *
  * @param root - Repository root
@@ -258,6 +209,7 @@ export async function bootstrapCloudflare(
   if (cloudflareSynced && (dnsConfigured || !hasApex)) {
     console.log("\nCloudflare Pages");
     console.log("✓ Cloudflare already configured — skip");
+    await ensureCloudflareGithubSecretsSynced(root, setup, cliContext, options);
     return;
   }
 
@@ -292,14 +244,7 @@ export async function bootstrapCloudflare(
     if (zone) {
       await awaitRegistrarNameservers(root, zone, options);
     }
-    await syncCloudflareGithubSecrets(
-      root,
-      token,
-      accountId,
-      meta,
-      setup,
-      cliContext,
-    );
+    await ensureCloudflareGithubSecretsSynced(root, setup, cliContext, options);
     return;
   }
 
@@ -366,14 +311,7 @@ export async function bootstrapCloudflare(
       webProject.name,
       marketingProject.name,
     );
-    await syncCloudflareGithubSecrets(
-      root,
-      token,
-      accountId,
-      meta,
-      setup,
-      cliContext,
-    );
+    await ensureCloudflareGithubSecretsSynced(root, setup, cliContext, options);
     if (zone) {
       await awaitRegistrarNameservers(root, zone, options);
     }
@@ -389,13 +327,6 @@ export async function bootstrapCloudflare(
     console.log(
       "  Projects use default *.pages.dev URLs until you add a domain and re-run setup",
     );
-    await syncCloudflareGithubSecrets(
-      root,
-      token,
-      accountId,
-      meta,
-      setup,
-      cliContext,
-    );
+    await ensureCloudflareGithubSecretsSynced(root, setup, cliContext, options);
   }
 }

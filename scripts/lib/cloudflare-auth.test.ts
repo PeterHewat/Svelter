@@ -1,9 +1,30 @@
 import { describe, expect, test } from "bun:test";
 import {
+  cloudflareApiTokenManualSteps,
   parseWranglerAuthTokenJson,
   parseWranglerWhoami,
   parseWranglerWhoamiJson,
 } from "./cloudflare-auth";
+
+describe("cloudflareApiTokenManualSteps", () => {
+  test("uses product name in suggested token label", () => {
+    const steps = cloudflareApiTokenManualSteps("Acme");
+    expect(steps.some((step) => step.includes('"Acme GitHub Actions"'))).toBe(
+      true,
+    );
+  });
+
+  test("lists deploy and DNS permissions for one long-lived token", () => {
+    const steps = cloudflareApiTokenManualSteps();
+    expect(steps[0]).toContain("api-tokens");
+    expect(steps.some((step) => step.includes("Token name"))).toBe(true);
+    expect(steps.some((step) => step.includes("Cloudflare Pages"))).toBe(true);
+    expect(steps.some((step) => step.includes("Zone → Zone"))).toBe(true);
+    expect(
+      steps.some((step) => step.includes("paste the token at the prompt")),
+    ).toBe(true);
+  });
+});
 
 describe("parseWranglerWhoamiJson", () => {
   test("reads logged out state", () => {

@@ -1,9 +1,10 @@
 /* eslint-disable no-console -- CLI wizard */
 import { resolveCloudflareAccountId } from "./cloudflare-api";
-import { CLOUDFLARE_API_TOKENS, CLOUDFLARE_SIGN_UP } from "./platform-urls";
-import { openUrlInBrowser } from "./open-url";
 import { printManualAction } from "./manual-action";
+import { openUrlInBrowser } from "./open-url";
+import { CLOUDFLARE_API_TOKENS } from "./platform-urls";
 import { promptSecret } from "./prompt";
+import { readSetupConfig } from "./setup-config";
 import { readSpawnPipe } from "./spawn-io";
 
 export type WranglerWhoami = {
@@ -14,6 +15,37 @@ export type ResolvedCloudflareToken = {
   token: string;
   source: "env" | "wrangler_oauth" | "prompt";
 };
+
+export type ResolveCloudflareApiTokenOptions = {
+  /** Require env or pasted long-lived token — skip `wrangler login` OAuth (CI secrets). */
+  durableOnly?: boolean;
+  /** Allow interactive paste; default `stdin.isTTY`. */
+  interactive?: boolean;
+};
+
+/**
+ * Step-by-step bullets for creating a User API token in the Cloudflare dashboard.
+ *
+ * Includes Zone/DNS permissions so the same token works for CI deploys and later
+ * custom-domain bootstrap — no second token when you add an apex domain.
+ *
+ * @param productName - Product name from setup (e.g. for suggested token label)
+ */
+export function cloudflareApiTokenManualSteps(productName?: string): string[] {
+  const name = productName?.trim() || "My App";
+  return [
+    `Open ${CLOUDFLARE_API_TOKENS}`,
+    "Create Token → Create Custom Token",
+    `Token name: e.g. "${name} GitHub Actions" (any descriptive label)`,
+    "Permissions — Account → Cloudflare Pages → Edit",
+    "Permissions — Account → Account Settings → Read",
+    "Permissions — Zone → Zone → Edit (all zones)",
+    "Permissions — Zone → DNS → Edit (all zones)",
+    "Account Resources — Include → select your Cloudflare account",
+    "Create Token → copy the value (shown once)",
+    "Return here and paste the token at the prompt below (input is hidden)",
+  ];
+}
 
 const WRANGLER_COMMAND = ["bunx", "wrangler"] as const;
 
@@ -158,42 +190,71 @@ export async function ensureWranglerLogin(root: string): Promise<boolean> {
 }
 
 /**
- * Resolves a Cloudflare API token for setup and GitHub Actions secrets.
- *
- * Order: `CLOUDFLARE_API_TOKEN` env → `wrangler login` + `wrangler auth token` → paste.
+ * Interactive paste flow for a long-lived Cloudflare User API token.
  *
  * @param root - Repository root
  */
+async function promptForDurableCloudflareApiToken(
+  root: string,
+): Promise<ResolvedCloudflareToken | null> {
+  printManualAction(
+    "Create a Cloudflare API token for GitHub Actions",
+    cloudflareApiTokenManualSteps(readSetupConfig(root)?.productName),
+    { immediate: true },
+  );
+  await openUrlInBrowser(CLOUDFLARE_API_TOKENS);
+  const pasted = await promptSecret("Paste your Cloudflare API token here", {
+    required: true,
+    hint: "Copy from the Cloudflare dashboard after Create Token — then paste below.",
+  });
+  const trimmed = pasted.trim();
+  return trimmed ? { token: trimmed, source: "prompt" } : null;
+}
+
+/**
+ * Resolves a Cloudflare API token for setup and GitHub Actions secrets.
+ *
+ * Order: `CLOUDFLARE_API_TOKEN` env → (`wrangler login` OAuth when allowed) → paste.
+ *
+ * @param root - Repository root
+ * @param options - `durableOnly` for CI secret sync (skips short-lived OAuth tokens)
+ */
 export async function resolveCloudflareApiToken(
   root: string,
+  options?: ResolveCloudflareApiTokenOptions,
 ): Promise<ResolvedCloudflareToken | null> {
   const fromEnv = process.env.CLOUDFLARE_API_TOKEN?.trim();
   if (fromEnv) {
     return { token: fromEnv, source: "env" };
   }
 
-  const loggedIn = await ensureWranglerLogin(root);
-  if (loggedIn) {
-    const authToken = await runWrangler(root, ["auth", "token", "--json"]);
-    const oauthToken = authToken.ok
-      ? parseWranglerAuthTokenJson(authToken.stdout)
-      : undefined;
-    if (oauthToken) {
-      console.log("✓ Cloudflare token — `wrangler login` session");
-      return { token: oauthToken, source: "wrangler_oauth" };
+  if (!options?.durableOnly) {
+    const loggedIn = await ensureWranglerLogin(root);
+    if (loggedIn) {
+      const authToken = await runWrangler(root, ["auth", "token", "--json"]);
+      const oauthToken = authToken.ok
+        ? parseWranglerAuthTokenJson(authToken.stdout)
+        : undefined;
+      if (oauthToken) {
+        console.log("✓ Cloudflare token — `wrangler login` session");
+        return { token: oauthToken, source: "wrangler_oauth" };
+      }
     }
   }
 
-  printManualAction("Create a Cloudflare API token for GitHub Actions", [
-    `Sign up or sign in: ${CLOUDFLARE_SIGN_UP}`,
-    `API Tokens: ${CLOUDFLARE_API_TOKENS}`,
-    "Permissions: Account → Cloudflare Pages → Edit; Account → Account Settings → Read",
-    "Zone → Zone → Edit; Zone → DNS → Edit (all zones)",
-  ]);
-  await openUrlInBrowser(CLOUDFLARE_API_TOKENS);
-  const pasted = await promptSecret("Paste your Cloudflare API token", {
-    required: true,
-  });
-  const trimmed = pasted.trim();
-  return trimmed ? { token: trimmed, source: "prompt" } : null;
+  const interactive = options?.interactive ?? Boolean(process.stdin.isTTY);
+  if (!interactive) {
+    console.log(
+      "○ CLOUDFLARE_API_TOKEN required for CI — export it or run setup interactively",
+    );
+    return null;
+  }
+
+  if (options?.durableOnly) {
+    console.log(
+      "  `wrangler login` tokens expire — GitHub Actions needs a long-lived API token.",
+    );
+  }
+
+  return promptForDurableCloudflareApiToken(root);
 }
