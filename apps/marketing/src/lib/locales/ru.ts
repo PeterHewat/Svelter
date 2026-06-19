@@ -20,8 +20,14 @@ const ru: TranslationDictionary = {
   },
   home: {
     heroTitle: "Создавайте быстрее с {{name}}",
-    heroSecondaryCta: "Читать блог",
+    heroTagline:
+      "Готовый monorepo-шаблон для продуктовых и маркетинговых сайтов.",
+    heroScreenshotAlt: "Заглушка скриншота продукта",
     heroMicrocopy: "Попробуйте бесплатно — без аккаунта и банковской карты",
+    logoBarTagline: "Нам доверяют команды, создающие на шаблоне",
+    ctaTitle: "Готовы запустить продукт?",
+    ctaSubtitle:
+      "Клонируйте шаблон, настройте заглушки контента и разверните сегодня.",
     howItWorksTitle: "Как это работает",
     metricsTitle: "Создан для скорости",
     testimonialTitle: "Что говорят команды",
@@ -41,7 +47,6 @@ const ru: TranslationDictionary = {
     featureColumn: "Функция",
     included: "Включено",
     excluded: "Не включено",
-    faqTitle: "FAQ по тарифам",
   },
   blog: {
     title: "Блог",
@@ -62,14 +67,9 @@ const ru: TranslationDictionary = {
     company: "Компания",
     resources: "Ресурсы",
     legal: "Правовая информация",
-    features: "Возможности",
-    pricing: "Тарифы",
     about: "О нас",
     customers: "Клиенты",
-    blog: "Блог",
     security: "Безопасность",
-    docs: "Документация",
-    faq: "FAQ",
     github: "GitHub",
     privacy: "Конфиденциальность",
     terms: "Условия",

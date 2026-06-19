@@ -1,20 +1,16 @@
 <script lang="ts">
   import { cn } from "@repo/utils";
   import type { PricingTier } from "$lib/marketing-content";
-  import { mt, type Locale } from "$lib/i18n";
+  import { useMarketingT } from "$lib/marketing-context";
 
   interface Props {
-    lang: Locale;
     tier: PricingTier;
     billing: "monthly" | "annual";
   }
 
-  let { lang, tier, billing }: Props = $props();
+  let { tier, billing }: Props = $props();
 
-  const t = $derived(
-    (key: Parameters<typeof mt>[0], vars?: Record<string, string | number>) =>
-      mt(key, lang, vars),
-  );
+  const t = useMarketingT();
 
   const price = $derived(
     billing === "monthly" ? tier.monthlyPrice : tier.annualPrice,

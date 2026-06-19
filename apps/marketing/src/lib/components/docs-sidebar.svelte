@@ -1,21 +1,18 @@
 <script lang="ts">
   import { cn } from "@repo/utils";
-  import { mt, type Locale } from "$lib/i18n";
-  import { localizedPath } from "$lib/locale-path";
   import type { DocPage } from "$lib/docs";
+  import { useMarketingLang, useMarketingT } from "$lib/marketing-context";
+  import { localizedPath } from "$lib/locale-path";
 
   interface Props {
-    lang: Locale;
     docs: DocPage[];
     currentSlug?: string;
   }
 
-  let { lang, docs, currentSlug }: Props = $props();
+  let { docs, currentSlug }: Props = $props();
 
-  const t = $derived(
-    (key: Parameters<typeof mt>[0], vars?: Record<string, string | number>) =>
-      mt(key, lang, vars),
-  );
+  const t = useMarketingT();
+  const lang = useMarketingLang();
   const docsIndexHref = $derived(localizedPath(lang, "docs"));
 </script>
 

@@ -1,30 +1,26 @@
 <script lang="ts">
   import Section from "$lib/components/section.svelte";
-  import { mt, type Locale } from "$lib/i18n";
+  import type { MarketingTranslationKey } from "$lib/i18n";
+  import { useMarketingT } from "$lib/marketing-context";
   import type { FaqItem } from "$lib/marketing-content";
   import { marketingContent } from "$lib/marketing-content";
 
   interface Props {
-    lang: Locale;
     /** FAQ items — defaults to homepage FAQ. */
     items?: readonly FaqItem[];
     /** i18n key for section title. */
-    titleKey?: Parameters<typeof mt>[0];
+    titleKey?: MarketingTranslationKey;
     /** Emit FAQPage JSON-LD (homepage only). */
     jsonLd?: boolean;
   }
 
   let {
-    lang,
     items = marketingContent.faq,
     titleKey = "home.faqTitle",
     jsonLd = false,
   }: Props = $props();
 
-  const t = $derived(
-    (key: Parameters<typeof mt>[0], vars?: Record<string, string | number>) =>
-      mt(key, lang, vars),
-  );
+  const t = useMarketingT();
 
   const questionItems = $derived(
     items.map((item) => ({

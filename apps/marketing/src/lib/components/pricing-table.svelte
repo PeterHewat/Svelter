@@ -1,19 +1,10 @@
 <script lang="ts">
   import PricingTierCard from "$lib/components/pricing-tier-card.svelte";
   import Section from "$lib/components/section.svelte";
-  import { mt, type Locale } from "$lib/i18n";
+  import { useMarketingT } from "$lib/marketing-context";
   import { marketingContent } from "$lib/marketing-content";
 
-  interface Props {
-    lang: Locale;
-  }
-
-  let { lang }: Props = $props();
-
-  const t = $derived(
-    (key: Parameters<typeof mt>[0], vars?: Record<string, string | number>) =>
-      mt(key, lang, vars),
-  );
+  const t = useMarketingT();
 
   const tiers = marketingContent.pricingTiers;
   const { comparisonRows, enterprise } = marketingContent.pricingPage;
@@ -73,13 +64,13 @@
 
     <div class="monthly-cards mx-auto max-w-5xl gap-6 md:grid-cols-3">
       {#each tiers as tier (tier.id)}
-        <PricingTierCard {lang} {tier} billing="monthly" />
+        <PricingTierCard {tier} billing="monthly" />
       {/each}
     </div>
 
     <div class="annual-cards mx-auto max-w-5xl gap-6 md:grid-cols-3">
       {#each tiers as tier (tier.id)}
-        <PricingTierCard {lang} {tier} billing="annual" />
+        <PricingTierCard {tier} billing="annual" />
       {/each}
     </div>
   </Section>

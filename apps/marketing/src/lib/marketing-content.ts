@@ -62,9 +62,6 @@ export type PricingTier = {
   annualNote: string;
 };
 
-/** @deprecated Alias for {@link PricingTier}. */
-export type PricingTierTeaser = PricingTier;
-
 export type ComparisonCell = "included" | "excluded" | string;
 
 export type ComparisonRow = {
@@ -106,13 +103,7 @@ export type StubPageContent = {
 
 /** Template marketing body copy — replace in v1. Labels live in i18n (`mt()`). */
 export const marketingContent = {
-  hero: {
-    /** Alt text for the hero screenshot placeholder — replace in v1. */
-    screenshotAlt: "Product app screenshot placeholder",
-  },
   logoBar: {
-    /** Replace in v1 — or disable `logoBar` section. */
-    tagline: "Trusted by teams building with the template",
     /** Placeholder logos — replace in v1 with real assets or disable `logoBar`. */
     logos: [
       { name: "Acme Corp" },
@@ -308,11 +299,6 @@ export const marketingContent = {
         "The Enterprise row is a stub for custom contracts. Replace with your sales process in v1.",
     },
   ] satisfies FaqItem[],
-  ctaBand: {
-    title: "Ready to ship your product?",
-    subtitle:
-      "Clone the template, customize the placeholder content, and deploy today.",
-  },
   stubs: {
     features: {
       intro:

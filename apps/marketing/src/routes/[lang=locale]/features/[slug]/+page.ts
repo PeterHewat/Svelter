@@ -3,7 +3,7 @@ import {
   getFeatureDeepDive,
   getFeatureDeepDiveSlugs,
 } from "$lib/marketing-content";
-import { localeEntries } from "$lib/locale-path";
+import { localeEntries } from "$lib/i18n";
 import type { PageLoad } from "./$types";
 
 export function entries() {

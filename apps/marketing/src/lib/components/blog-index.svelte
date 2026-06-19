@@ -1,19 +1,16 @@
 <script lang="ts">
-  import { mt, type Locale } from "$lib/i18n";
+  import { useMarketingLang, useMarketingT } from "$lib/marketing-context";
   import { localizedPath } from "$lib/locale-path";
   import type { BlogPost } from "$lib/posts";
 
   interface Props {
-    lang: Locale;
     posts: BlogPost[];
   }
 
-  let { lang, posts }: Props = $props();
+  let { posts }: Props = $props();
 
-  const t = $derived(
-    (key: Parameters<typeof mt>[0], vars?: Record<string, string | number>) =>
-      mt(key, lang, vars),
-  );
+  const t = useMarketingT();
+  const lang = useMarketingLang();
 </script>
 
 <ul class="m-0 list-none space-y-8 p-0" role="list">

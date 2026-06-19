@@ -1,62 +1,53 @@
 <script lang="ts">
   import { cn } from "@repo/utils";
   import { navSecondaryLinkClass } from "@repo/utils/chrome";
-  import { mt, type Locale } from "$lib/i18n";
-  import { localizedAnchor, localizedPath } from "$lib/locale-path";
-  import { GITHUB_REPO_URL } from "$lib/site";
+  import { useMarketingLang, useMarketingT } from "$lib/marketing-context";
+  import {
+    footerCompanyLinks,
+    footerLegalLinks,
+    footerResourceLinks,
+    productNavLinks,
+  } from "$lib/marketing-nav-links";
+  import { SITE_NAME } from "$lib/site";
 
-  interface Props {
-    lang: Locale;
-    copyright: string;
-  }
-
-  let { lang, copyright }: Props = $props();
-
-  const t = $derived(
-    (key: Parameters<typeof mt>[0], vars?: Record<string, string | number>) =>
-      mt(key, lang, vars),
-  );
+  const t = useMarketingT();
+  const lang = useMarketingLang();
+  const year = new Date().getFullYear();
+  const copyright = $derived(t("footer.copyright", { year, name: SITE_NAME }));
 
   const footerLinkClass = cn(
     navSecondaryLinkClass,
     "hover:text-foreground transition-colors",
   );
 
-  const productLinks = $derived([
-    { href: localizedAnchor(lang, "features"), label: t("footer.features") },
-    { href: localizedPath(lang, "docs"), label: t("footer.docs") },
-    { href: localizedPath(lang, "blog"), label: t("footer.blog") },
-    { href: localizedAnchor(lang, "faq"), label: t("footer.faq") },
-    { href: localizedAnchor(lang, "pricing"), label: t("footer.pricing") },
-  ]);
+  const productLinks = $derived(
+    productNavLinks.map((link) => ({
+      href: link.href(lang),
+      label: t(link.labelKey),
+    })),
+  );
 
-  const companyLinks = $derived([
-    { href: localizedPath(lang, "about"), label: t("footer.about") },
-    { href: localizedPath(lang, "customers"), label: t("footer.customers") },
-  ]);
+  const companyLinks = $derived(
+    footerCompanyLinks.map((link) => ({
+      href: link.href(lang),
+      label: t(link.labelKey),
+    })),
+  );
 
-  const resourceLinks = $derived([
-    {
-      href: localizedPath(lang, "security"),
-      label: t("footer.security"),
-    },
-    {
-      href: GITHUB_REPO_URL,
-      label: t("footer.github"),
-      external: true as const,
-    },
-  ]);
+  const resourceLinks = $derived(
+    footerResourceLinks.map((link) => ({
+      href: link.href(lang),
+      label: t(link.labelKey),
+      ...("external" in link ? { external: link.external } : {}),
+    })),
+  );
 
-  const legalLinks = $derived([
-    {
-      href: localizedPath(lang, "legal/privacy"),
-      label: t("footer.privacy"),
-    },
-    {
-      href: localizedPath(lang, "legal/terms"),
-      label: t("footer.terms"),
-    },
-  ]);
+  const legalLinks = $derived(
+    footerLegalLinks.map((link) => ({
+      href: link.href(lang),
+      label: t(link.labelKey),
+    })),
+  );
 
   const footerColumns = $derived([
     { title: t("footer.product"), links: productLinks },

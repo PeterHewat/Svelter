@@ -1,6 +1,6 @@
 <script lang="ts">
   import Section from "$lib/components/section.svelte";
-  import { mt, type Locale } from "$lib/i18n";
+  import { useMarketingT } from "$lib/marketing-context";
   import {
     marketingContent,
     type TestimonialItem,
@@ -8,17 +8,13 @@
   import { iconButtonClass } from "@repo/utils/chrome";
 
   interface Props {
-    lang: Locale;
     /** Carousel items — defaults to homepage testimonials. */
     items?: readonly TestimonialItem[];
   }
 
-  let { lang, items = marketingContent.testimonials }: Props = $props();
+  let { items = marketingContent.testimonials }: Props = $props();
 
-  const t = $derived(
-    (key: Parameters<typeof mt>[0], vars?: Record<string, string | number>) =>
-      mt(key, lang, vars),
-  );
+  const t = useMarketingT();
 
   const first = $derived(items[0]);
   const testimonialsJson = $derived(JSON.stringify(items));
@@ -35,7 +31,7 @@
   const showControls = $derived(items.length > 1);
 </script>
 
-<Section class="bg-muted/20" title={t("home.testimonialTitle")}>
+<Section title={t("home.testimonialTitle")}>
   <div
     class="testimonial-carousel mx-auto flex max-w-4xl items-center gap-2 md:gap-4"
     data-testimonial-carousel

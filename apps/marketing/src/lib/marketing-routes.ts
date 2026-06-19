@@ -1,20 +1,8 @@
-import type { Locale } from "@repo/utils/i18n";
 import { getDocSlugs } from "$lib/docs";
+import { MARKETING_LOCALES } from "$lib/i18n";
 import { getFeatureDeepDiveSlugs } from "$lib/marketing-content";
 import { localizedPath } from "$lib/locale-path";
 import { getAllPosts } from "$lib/posts";
-
-const MARKETING_LOCALES = [
-  "en",
-  "es",
-  "fr",
-  "de",
-  "pt",
-  "it",
-  "nl",
-  "pl",
-  "ru",
-] as const satisfies readonly Locale[];
 
 /** Static route segments under `/[lang]/` (no leading slash). */
 export const MARKETING_STATIC_ROUTES = [

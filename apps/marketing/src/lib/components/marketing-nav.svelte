@@ -15,46 +15,30 @@
     siteNavClass,
   } from "@repo/utils/chrome";
   import ProductAppLink from "$lib/components/product-app-link.svelte";
-  import {
-    MARKETING_LOCALES,
-    mt,
-    SUPPORTED_LOCALES,
-    type Locale,
-  } from "$lib/i18n";
-  import {
-    localizedAnchor,
-    localizedPath,
-    switchLocalePath,
-  } from "$lib/locale-path";
+  import { MARKETING_LOCALES, SUPPORTED_LOCALES } from "$lib/i18n";
+  import { useMarketingLang, useMarketingT } from "$lib/marketing-context";
+  import { productNavLinks } from "$lib/marketing-nav-links";
+  import { localizedPath, switchLocalePath } from "$lib/locale-path";
   import { SITE_NAME } from "$lib/site";
 
   interface Props {
-    lang: Locale;
     pathname: string;
   }
 
-  let { lang, pathname }: Props = $props();
+  let { pathname }: Props = $props();
 
-  const t = $derived(
-    (key: Parameters<typeof mt>[0], vars?: Record<string, string | number>) =>
-      mt(key, lang, vars),
-  );
+  const t = useMarketingT();
+  const lang = useMarketingLang();
   const homeHref = $derived(localizedPath(lang));
-  const featuresHref = $derived(localizedAnchor(lang, "features"));
-  const docsHref = $derived(localizedPath(lang, "docs"));
-  const pricingHref = $derived(localizedAnchor(lang, "pricing"));
-  const faqHref = $derived(localizedAnchor(lang, "faq"));
-  const blogHref = $derived(localizedPath(lang, "blog"));
+  const navLinks = $derived(
+    productNavLinks.map((link) => ({
+      href: link.href(lang),
+      label: t(link.labelKey),
+    })),
+  );
 
   const primaryCtaClass =
     "bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 shrink-0 items-center rounded-lg px-4 text-sm font-medium transition-colors";
-  const navLinks = $derived([
-    { href: featuresHref, label: t("nav.features") },
-    { href: docsHref, label: t("nav.docs") },
-    { href: blogHref, label: t("nav.blog") },
-    { href: faqHref, label: t("nav.faq") },
-    { href: pricingHref, label: t("nav.pricing") },
-  ] as const);
 </script>
 
 <header class={siteHeaderClass}>

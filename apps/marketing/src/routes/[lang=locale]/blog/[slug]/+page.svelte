@@ -1,16 +1,13 @@
 <script lang="ts">
   import MarkdownContent from "$lib/components/markdown-content.svelte";
-  import { mt, type Locale } from "$lib/i18n";
+  import { useMarketingLang, useMarketingT } from "$lib/marketing-context";
   import { localizedPath } from "$lib/locale-path";
   import { SITE_NAME } from "$lib/site";
 
   let { data } = $props();
 
-  const lang = $derived(data.lang as Locale);
-  const t = $derived(
-    (key: Parameters<typeof mt>[0], vars?: Record<string, string | number>) =>
-      mt(key, lang, vars),
-  );
+  const t = useMarketingT();
+  const lang = useMarketingLang();
   const blogHref = $derived(localizedPath(lang, "blog"));
 </script>
 

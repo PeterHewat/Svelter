@@ -1,17 +1,13 @@
 <script lang="ts">
   import TemplateStubPage from "$lib/components/template-stub-page.svelte";
-  import { mt, type Locale } from "$lib/i18n";
+  import { useMarketingT } from "$lib/marketing-context";
   import { marketingContent } from "$lib/marketing-content";
 
-  let { data } = $props();
-
-  const lang = $derived(data.lang as Locale);
-  const t = $derived((key: Parameters<typeof mt>[0]) => mt(key, lang));
+  const t = useMarketingT();
   const stub = marketingContent.stubs.security;
 </script>
 
 <TemplateStubPage
-  {lang}
   titleKey="pages.security.title"
   descriptionKey="meta.securityDescription"
   paragraphs={[stub.intro]}

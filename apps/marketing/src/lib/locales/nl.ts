@@ -20,8 +20,14 @@ const nl: TranslationDictionary = {
   },
   home: {
     heroTitle: "Bouw sneller met {{name}}",
-    heroSecondaryCta: "Lees de blog",
+    heroTagline:
+      "Productieklaar monorepo-sjabloon voor product- en marketingwebsites.",
+    heroScreenshotAlt: "Productscreenshot-placeholder",
     heroMicrocopy: "Probeer gratis, geen account of creditcard nodig",
+    logoBarTagline: "Vertrouwd door teams die met het sjabloon bouwen",
+    ctaTitle: "Klaar om je product te lanceren?",
+    ctaSubtitle:
+      "Kloon het sjabloon, pas de placeholder-inhoud aan en deploy vandaag.",
     howItWorksTitle: "Hoe het werkt",
     metricsTitle: "Gebouwd voor snelheid",
     testimonialTitle: "Wat teams zeggen",
@@ -41,7 +47,6 @@ const nl: TranslationDictionary = {
     featureColumn: "Functie",
     included: "Inbegrepen",
     excluded: "Niet inbegrepen",
-    faqTitle: "Prijs-FAQ",
   },
   blog: {
     title: "Blog",
@@ -62,14 +67,9 @@ const nl: TranslationDictionary = {
     company: "Bedrijf",
     resources: "Bronnen",
     legal: "Juridisch",
-    features: "Functies",
-    pricing: "Prijzen",
     about: "Over ons",
     customers: "Klanten",
-    blog: "Blog",
     security: "Beveiliging",
-    docs: "Documentatie",
-    faq: "FAQ",
     github: "GitHub",
     privacy: "Privacy",
     terms: "Voorwaarden",

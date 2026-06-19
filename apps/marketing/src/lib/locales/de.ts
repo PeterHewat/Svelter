@@ -24,8 +24,14 @@ const de: TranslationDictionary = {
   },
   home: {
     heroTitle: "Schneller entwickeln mit {{name}}",
-    heroSecondaryCta: "Blog lesen",
+    heroTagline:
+      "Produktionsreifes Monorepo-Template für Produkt- und Marketing-Websites.",
+    heroScreenshotAlt: "Platzhalter für Produkt-Screenshot",
     heroMicrocopy: "Kostenlos testen — kein Konto und keine Kreditkarte nötig",
+    logoBarTagline: "Vertraut von Teams, die mit der Vorlage bauen",
+    ctaTitle: "Bereit, Ihr Produkt zu veröffentlichen?",
+    ctaSubtitle:
+      "Klonen Sie die Vorlage, passen Sie die Platzhalterinhalte an und deployen Sie noch heute.",
     howItWorksTitle: "So funktioniert es",
     metricsTitle: "Für Geschwindigkeit gebaut",
     testimonialTitle: "Das sagen Teams",
@@ -45,7 +51,6 @@ const de: TranslationDictionary = {
     featureColumn: "Funktion",
     included: "Enthalten",
     excluded: "Nicht enthalten",
-    faqTitle: "Preis-FAQ",
   },
   blog: {
     title: "Blog",
@@ -66,14 +71,9 @@ const de: TranslationDictionary = {
     company: "Unternehmen",
     resources: "Ressourcen",
     legal: "Rechtliches",
-    features: "Funktionen",
-    pricing: "Preise",
     about: "Über uns",
     customers: "Kunden",
-    blog: "Blog",
     security: "Sicherheit",
-    docs: "Dokumentation",
-    faq: "FAQ",
     github: "GitHub",
     privacy: "Datenschutz",
     terms: "AGB",

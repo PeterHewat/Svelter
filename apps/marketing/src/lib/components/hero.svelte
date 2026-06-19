@@ -1,19 +1,9 @@
 <script lang="ts">
   import ProductFrame from "$lib/components/product-frame.svelte";
-  import { mt, type Locale } from "$lib/i18n";
-  import { marketingContent } from "$lib/marketing-content";
-  import { SITE_NAME, SITE_TAGLINE } from "$lib/site";
+  import { useMarketingT } from "$lib/marketing-context";
+  import { SITE_NAME } from "$lib/site";
 
-  interface Props {
-    lang: Locale;
-  }
-
-  let { lang }: Props = $props();
-
-  const t = $derived(
-    (key: Parameters<typeof mt>[0], vars?: Record<string, string | number>) =>
-      mt(key, lang, vars),
-  );
+  const t = useMarketingT();
 </script>
 
 <section class="marketing-hero">
@@ -27,7 +17,7 @@
       <p
         class="marketing-lead text-muted-foreground mx-auto max-w-2xl leading-relaxed text-balance"
       >
-        {SITE_TAGLINE}
+        {t("home.heroTagline")}
       </p>
       <p class="text-muted-foreground mt-4 text-sm">
         {t("home.heroMicrocopy")}
@@ -37,7 +27,7 @@
     <div class="marketing-media mt-14">
       <ProductFrame
         class="shadow-black/5 shadow-2xl"
-        screenshotAlt={marketingContent.hero.screenshotAlt}
+        screenshotAlt={t("home.heroScreenshotAlt")}
       />
     </div>
   </div>

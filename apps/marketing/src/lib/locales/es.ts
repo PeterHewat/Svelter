@@ -20,8 +20,14 @@ const es: TranslationDictionary = {
   },
   home: {
     heroTitle: "Construye más rápido con {{name}}",
-    heroSecondaryCta: "Leer el blog",
+    heroTagline:
+      "Plantilla monorepo lista para producción para sitios de producto y marketing.",
+    heroScreenshotAlt: "Marcador de captura de pantalla del producto",
     heroMicrocopy: "Pruébalo gratis, sin cuenta ni tarjeta de crédito",
+    logoBarTagline: "Equipos de confianza que construyen con la plantilla",
+    ctaTitle: "¿Listo para lanzar tu producto?",
+    ctaSubtitle:
+      "Clona la plantilla, personaliza el contenido de marcador y despliega hoy.",
     howItWorksTitle: "Cómo funciona",
     metricsTitle: "Hecho para ir rápido",
     testimonialTitle: "Lo que dicen los equipos",
@@ -41,7 +47,6 @@ const es: TranslationDictionary = {
     featureColumn: "Función",
     included: "Incluido",
     excluded: "No incluido",
-    faqTitle: "FAQ de precios",
   },
   blog: {
     title: "Blog",
@@ -62,14 +67,9 @@ const es: TranslationDictionary = {
     company: "Empresa",
     resources: "Recursos",
     legal: "Legal",
-    features: "Características",
-    pricing: "Precios",
     about: "Acerca de",
     customers: "Clientes",
-    blog: "Blog",
     security: "Seguridad",
-    docs: "Documentación",
-    faq: "FAQ",
     github: "GitHub",
     privacy: "Privacidad",
     terms: "Términos",

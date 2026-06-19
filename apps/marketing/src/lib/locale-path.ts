@@ -39,12 +39,3 @@ export function switchLocalePath(
   segments[0] = targetLocale;
   return `/${segments.join("/")}`;
 }
-
-/**
- * Prerender entry list for every supported marketing locale.
- */
-export function localeEntries(): Array<{ lang: Locale }> {
-  return (["en", "es", "fr", "de", "pt", "it", "nl", "pl", "ru"] as const).map(
-    (lang) => ({ lang }),
-  );
-}

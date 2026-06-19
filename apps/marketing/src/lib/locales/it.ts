@@ -20,8 +20,14 @@ const it: TranslationDictionary = {
   },
   home: {
     heroTitle: "Sviluppa più velocemente con {{name}}",
-    heroSecondaryCta: "Leggi il blog",
+    heroTagline:
+      "Template monorepo pronto per la produzione per siti prodotto e marketing.",
+    heroScreenshotAlt: "Segnaposto screenshot prodotto",
     heroMicrocopy: "Provalo gratis, senza account né carta di credito",
+    logoBarTagline: "Scelto dai team che costruiscono con il template",
+    ctaTitle: "Pronto a pubblicare il tuo prodotto?",
+    ctaSubtitle:
+      "Clona il template, personalizza i contenuti placeholder e pubblica oggi.",
     howItWorksTitle: "Come funziona",
     metricsTitle: "Progettato per la velocità",
     testimonialTitle: "Cosa dicono i team",
@@ -41,7 +47,6 @@ const it: TranslationDictionary = {
     featureColumn: "Funzionalità",
     included: "Incluso",
     excluded: "Non incluso",
-    faqTitle: "FAQ prezzi",
   },
   blog: {
     title: "Blog",
@@ -62,14 +67,9 @@ const it: TranslationDictionary = {
     company: "Azienda",
     resources: "Risorse",
     legal: "Legale",
-    features: "Funzionalità",
-    pricing: "Prezzi",
     about: "Chi siamo",
     customers: "Clienti",
-    blog: "Blog",
     security: "Sicurezza",
-    docs: "Documentazione",
-    faq: "FAQ",
     github: "GitHub",
     privacy: "Privacy",
     terms: "Termini",

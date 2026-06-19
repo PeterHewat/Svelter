@@ -36,7 +36,14 @@ const en = {
   },
   home: {
     heroTitle: "Build faster with {{name}}",
+    heroTagline:
+      "A production-ready monorepo template for product and marketing websites.",
+    heroScreenshotAlt: "Product app screenshot placeholder",
     heroMicrocopy: "Try it for free, no account or credit card required",
+    logoBarTagline: "Trusted by teams building with the template",
+    ctaTitle: "Ready to ship your product?",
+    ctaSubtitle:
+      "Clone the template, customize the placeholder content, and deploy today.",
     howItWorksTitle: "How it works",
     metricsTitle: "Built for speed",
     testimonialTitle: "What teams are saying",
@@ -56,7 +63,6 @@ const en = {
     featureColumn: "Feature",
     included: "Included",
     excluded: "Not included",
-    faqTitle: "Pricing FAQ",
   },
   blog: {
     title: "Blog",
@@ -87,14 +93,9 @@ const en = {
     company: "Company",
     resources: "Resources",
     legal: "Legal",
-    features: "Features",
-    pricing: "Pricing",
     about: "About",
     customers: "Customers",
-    blog: "Blog",
     security: "Security",
-    docs: "Docs",
-    faq: "FAQ",
     github: "GitHub",
     privacy: "Privacy",
     terms: "Terms",

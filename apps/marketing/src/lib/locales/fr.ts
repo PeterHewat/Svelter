@@ -20,8 +20,14 @@ const fr: TranslationDictionary = {
   },
   home: {
     heroTitle: "Développez plus vite avec {{name}}",
-    heroSecondaryCta: "Lire le blog",
+    heroTagline:
+      "Modèle monorepo prêt pour la production pour sites produit et marketing.",
+    heroScreenshotAlt: "Image de remplacement de capture produit",
     heroMicrocopy: "Essayez gratuitement, sans compte ni carte bancaire",
+    logoBarTagline: "Adopté par les équipes qui construisent avec le modèle",
+    ctaTitle: "Prêt à lancer votre produit ?",
+    ctaSubtitle:
+      "Clonez le modèle, personnalisez le contenu placeholder et déployez aujourd'hui.",
     howItWorksTitle: "Comment ça marche",
     metricsTitle: "Conçu pour la rapidité",
     testimonialTitle: "Ce que disent les équipes",
@@ -41,7 +47,6 @@ const fr: TranslationDictionary = {
     featureColumn: "Fonctionnalité",
     included: "Inclus",
     excluded: "Non inclus",
-    faqTitle: "FAQ tarifs",
   },
   blog: {
     title: "Blog",
@@ -62,14 +67,9 @@ const fr: TranslationDictionary = {
     company: "Entreprise",
     resources: "Ressources",
     legal: "Mentions légales",
-    features: "Fonctionnalités",
-    pricing: "Tarifs",
     about: "À propos",
     customers: "Clients",
-    blog: "Blog",
     security: "Sécurité",
-    docs: "Documentation",
-    faq: "FAQ",
     github: "GitHub",
     privacy: "Confidentialité",
     terms: "Conditions",

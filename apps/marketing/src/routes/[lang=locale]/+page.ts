@@ -1,5 +1,1 @@
-import { localeEntries } from "$lib/locale-path";
-
-export function entries() {
-  return localeEntries();
-}
+export { localeEntries as entries } from "$lib/i18n";

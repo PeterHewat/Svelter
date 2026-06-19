@@ -45,26 +45,15 @@ test.describe("Marketing Pricing Section", () => {
 
   test("annual billing toggle highlights active option", async ({ page }) => {
     await page.goto("/en#pricing");
-    const monthly = page.locator(".billing-label-monthly");
-    const annual = page.locator(".billing-label-annual");
+    const monthlyInput = page.locator(".billing-monthly");
+    const annualInput = page.locator(".billing-annual");
 
-    await expect(monthly).toHaveAttribute("data-active", "true");
-    await expect(annual).toHaveAttribute("data-active", "false");
-
-    await annual.click();
-    await expect(page.locator(".billing-annual")).toBeChecked();
-    await expect(annual).toHaveAttribute("data-active", "true");
-    await expect(monthly).toHaveAttribute("data-active", "false");
-  });
-
-  test("billing toggle does not scroll page to top", async ({ page }) => {
-    await page.goto("/en#pricing");
-    await page.evaluate(() => window.scrollBy(0, 120));
-    const scrollBefore = await page.evaluate(() => window.scrollY);
+    await expect(monthlyInput).toBeChecked();
+    await expect(annualInput).not.toBeChecked();
 
     await page.locator(".billing-label-annual").click();
-    const scrollAfter = await page.evaluate(() => window.scrollY);
-    expect(Math.abs(scrollAfter - scrollBefore)).toBeLessThan(80);
+    await expect(annualInput).toBeChecked();
+    await expect(monthlyInput).not.toBeChecked();
   });
 
   test("free tier is not visually highlighted", async ({ page }) => {

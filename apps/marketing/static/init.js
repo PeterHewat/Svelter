@@ -6,21 +6,26 @@
 (function () {
   var THEME_KEY = "theme";
   var I18N_KEY = "i18n";
-  var SUPPORTED_LOCALES = {
-    en: true,
-    es: true,
-    fr: true,
-    de: true,
-    pt: true,
-    it: true,
-    nl: true,
-    pl: true,
-    ru: true,
-  };
+  // Keep in sync with SUPPORTED_LOCALES / MARKETING_LOCALES in src/lib/i18n.ts
+  var SUPPORTED_LOCALES = [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt",
+    "it",
+    "nl",
+    "pl",
+    "ru",
+  ];
+
+  function isSupportedLocale(lang) {
+    return SUPPORTED_LOCALES.indexOf(lang) !== -1;
+  }
 
   function localeFromPath(path) {
     var match = /^\/([a-z]{2})(?:\/|$)/.exec(path);
-    if (match && SUPPORTED_LOCALES[match[1]]) {
+    if (match && isSupportedLocale(match[1])) {
       return match[1];
     }
     return null;
@@ -35,7 +40,7 @@
           parsed &&
           parsed.state &&
           parsed.state.locale &&
-          SUPPORTED_LOCALES[parsed.state.locale]
+          isSupportedLocale(parsed.state.locale)
         ) {
           return parsed.state.locale;
         }
@@ -55,7 +60,7 @@
 
   function getBrowserLocale() {
     var lang = (navigator.language || "").split("-")[0];
-    return SUPPORTED_LOCALES[lang] ? lang : "en";
+    return isSupportedLocale(lang) ? lang : "en";
   }
 
   function resolvePreferredLocale() {
@@ -249,7 +254,7 @@
   function applyCrossAppPrefsFromUrl() {
     var params = new URLSearchParams(location.search);
     var lang = params.get("lang");
-    if (lang && SUPPORTED_LOCALES[lang]) {
+    if (lang && isSupportedLocale(lang)) {
       writeLocale(lang);
     }
     var theme = params.get("theme");
@@ -384,33 +389,6 @@
           details.open = false;
         });
     });
-  }
-
-  function wirePricingBilling() {
-    function syncBillingLabels() {
-      document
-        .querySelectorAll('.pricing-table-root input[name="pricing-billing"]')
-        .forEach(function (input) {
-          var label = input.closest(".billing-label");
-          if (label) {
-            label.setAttribute("data-active", input.checked ? "true" : "false");
-          }
-        });
-    }
-
-    document
-      .querySelectorAll('.pricing-table-root input[name="pricing-billing"]')
-      .forEach(function (input) {
-        input.addEventListener("change", function () {
-          syncBillingLabels();
-          var scrollY = window.scrollY;
-          requestAnimationFrame(function () {
-            window.scrollTo(0, scrollY);
-          });
-        });
-      });
-
-    syncBillingLabels();
   }
 
   function wireTestimonialCarousel() {
@@ -700,7 +678,7 @@
           return;
         }
         var lang = el.getAttribute("data-lang") || pageLocale;
-        if (lang && SUPPORTED_LOCALES[lang]) {
+        if (lang && isSupportedLocale(lang)) {
           url.searchParams.set("lang", lang);
         }
         url.searchParams.set("theme", theme);
@@ -709,10 +687,6 @@
         /* ignore */
       }
     });
-  }
-
-  function wireProductAppLinks() {
-    syncProductAppLinks();
   }
 
   function wireChrome() {
@@ -725,9 +699,8 @@
     });
     wireLocaleLinks();
     wireLocaleMenus();
-    wirePricingBilling();
     wireTestimonialCarousel();
-    wireProductAppLinks();
+    syncProductAppLinks();
     requestAnimationFrame(enableThemeTransition);
   }
 

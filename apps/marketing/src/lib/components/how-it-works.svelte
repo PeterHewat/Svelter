@@ -1,18 +1,9 @@
 <script lang="ts">
   import Section from "$lib/components/section.svelte";
-  import { mt, type Locale } from "$lib/i18n";
+  import { useMarketingT } from "$lib/marketing-context";
   import { marketingContent } from "$lib/marketing-content";
 
-  interface Props {
-    lang: Locale;
-  }
-
-  let { lang }: Props = $props();
-
-  const t = $derived(
-    (key: Parameters<typeof mt>[0], vars?: Record<string, string | number>) =>
-      mt(key, lang, vars),
-  );
+  const t = useMarketingT();
 </script>
 
 <Section title={t("home.howItWorksTitle")}>
