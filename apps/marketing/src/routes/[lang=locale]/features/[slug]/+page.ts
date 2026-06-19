@@ -1,4 +1,4 @@
-import { error } from "@sveltejs/kit";
+import { error, redirect } from "@sveltejs/kit";
 import {
   getFeatureDeepDive,
   getFeatureDeepDiveSlugs,
@@ -17,5 +17,5 @@ export const load: PageLoad = ({ params }) => {
   if (!feature) {
     error(404, "Feature not found");
   }
-  return { feature };
+  redirect(308, `/${params.lang}#${feature.slug}`);
 };

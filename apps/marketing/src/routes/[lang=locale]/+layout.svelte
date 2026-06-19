@@ -4,6 +4,7 @@
   import MarketingNav from "$lib/components/marketing-nav.svelte";
   import { MARKETING_LOCALES, mt, type Locale } from "$lib/i18n";
   import { switchLocalePath } from "$lib/locale-path";
+  import { productAppOrigin } from "$lib/product-links";
   import { SITE_NAME } from "$lib/site";
 
   let { data, children } = $props();
@@ -19,6 +20,7 @@
 
 <svelte:head>
   <link rel="icon" href="/favicon.svg" />
+  <meta name="product-app-origin" content={productAppOrigin()} />
   <link rel="canonical" href="{data.origin}{data.pathname}" />
   {#each MARKETING_LOCALES as locale (locale)}
     <link

@@ -3,17 +3,17 @@ import { webDevOrigin } from "@repo/config/dev-ports";
 import { productAppHref } from "./product-links";
 
 describe("productAppHref", () => {
-  it("builds signup URL from config", () => {
-    expect(productAppHref()).toBe(`${webDevOrigin}/sign-up`);
+  it("builds product app root URL", () => {
+    expect(productAppHref()).toBe(`${webDevOrigin}/`);
   });
 
-  it("builds login URL to product app home", () => {
-    expect(productAppHref({ kind: "login" })).toBe(`${webDevOrigin}/`);
+  it("forwards locale for cross-app preference sync", () => {
+    expect(productAppHref({ lang: "fr" })).toBe(`${webDevOrigin}/?lang=fr`);
   });
 
-  it("appends UTM params when campaign is set", () => {
-    expect(productAppHref({ utmCampaign: "hero" })).toBe(
-      `${webDevOrigin}/sign-up?utm_source=marketing&utm_medium=cta&utm_campaign=hero`,
+  it("forwards resolved theme when provided", () => {
+    expect(productAppHref({ lang: "en", theme: "dark" })).toBe(
+      `${webDevOrigin}/?lang=en&theme=dark`,
     );
   });
 });

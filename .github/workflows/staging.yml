@@ -47,6 +47,7 @@ jobs:
           cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           pages_project_name: ${{ secrets.CF_PAGES_PROJECT_WEB }}
+          marketing_pages_project_name: ${{ secrets.CF_PAGES_PROJECT_MARKETING }}
           deploy_branch: staging
 
   deploy-marketing-staging:
@@ -62,6 +63,7 @@ jobs:
           cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           pages_project_name: ${{ secrets.CF_PAGES_PROJECT_MARKETING }}
+          web_pages_project_name: ${{ secrets.CF_PAGES_PROJECT_WEB }}
           deploy_branch: staging
 
   e2e:

@@ -1,10 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { PRODUCT_NAME } from "@repo/config/product";
-import { mt } from "../src/lib/i18n";
+import { PRODUCT_NAME, PRODUCT_TAGLINE } from "@repo/config/product";
 import { productAppHref } from "../src/lib/product-links";
 
-const enTitle = `${PRODUCT_NAME} - ${mt("home.titleSuffix", "en")}`;
-const signupHref = productAppHref({ kind: "signup", utmCampaign: "hero" });
+const enTitle = `${PRODUCT_NAME} - ${PRODUCT_TAGLINE}`;
 
 test.describe("Marketing Home Page", () => {
   test("redirects / to browser or default locale", async ({ page }) => {
@@ -67,29 +65,31 @@ test.describe("Marketing Home Page", () => {
         name: new RegExp(`build faster with ${PRODUCT_NAME}`, "i"),
       }),
     ).toBeVisible();
-    await expect(page.getByText(/production-ready monorepo/i)).toBeVisible();
-    await expect(page.getByText(/no credit card required/i)).toBeVisible();
+    await expect(
+      page.getByText(/production-ready monorepo template/i),
+    ).toBeVisible();
+    await expect(page.getByText(/try it for free/i)).toBeVisible();
   });
 
-  test("hero Start free links to product signup URL", async ({ page }) => {
-    await page.goto("/en");
-    const heroCta = page
-      .locator("section")
-      .filter({ hasText: /build faster with/i })
-      .getByRole("link", { name: /start free/i });
-    await expect(heroCta).toHaveAttribute("href", signupHref);
-  });
-
-  test("nav Start free links to product signup URL", async ({ page }) => {
+  test("nav Dashboard links to product app with locale", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
-    await page.goto("/en");
+    await page.goto("/fr");
     const navCta = page
-      .getByRole("navigation", { name: /main navigation/i })
-      .getByRole("link", { name: /start free/i });
-    await expect(navCta).toHaveAttribute(
-      "href",
-      productAppHref({ kind: "signup", utmCampaign: "nav" }),
-    );
+      .getByRole("link", { name: /^tableau de bord$/i })
+      .last();
+    const href = await navCta.getAttribute("href");
+    expect(href).toBeTruthy();
+    const url = new URL(href!);
+    expect(url.searchParams.get("lang")).toBe("fr");
+    expect(url.searchParams.get("theme")).toMatch(/^(light|dark)$/);
+  });
+
+  test("strips cross-app pref params from the address bar after load", async ({
+    page,
+  }) => {
+    await page.goto("/en?theme=dark&lang=en");
+    await expect(page).toHaveURL(/\/en\/?$/);
+    await expect(page.locator("html")).toHaveClass(/dark/);
   });
 
   test("shows mobile nav links without JavaScript", async ({ browser }) => {
@@ -100,17 +100,14 @@ test.describe("Marketing Home Page", () => {
     const page = await context.newPage();
     await page.goto("/en");
     await expect(
-      page.getByRole("link", { name: /start free/i }).first(),
+      page.getByRole("link", { name: /^dashboard$/i }).first(),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /start free/i }).first(),
-    ).toHaveAttribute(
-      "href",
-      productAppHref({ kind: "signup", utmCampaign: "nav" }),
-    );
+      page.getByRole("link", { name: /^dashboard$/i }).first(),
+    ).toHaveAttribute("href", productAppHref({ lang: "en" }));
     await page.locator("[data-nav-menu] summary").click();
     await expect(
-      page.locator("[data-nav-menu]").getByRole("link", { name: /features/i }),
+      page.locator("[data-nav-menu]").getByRole("link", { name: /^docs$/i }),
     ).toBeVisible();
     await context.close();
   });
@@ -119,6 +116,39 @@ test.describe("Marketing Home Page", () => {
     await page.goto("/en");
     const description = page.locator('head > meta[name="description"]').first();
     await expect(description).toHaveAttribute("content", /monorepo template/i);
+  });
+
+  test("preserves scroll position when switching locale with JavaScript", async ({
+    page,
+  }) => {
+    await page.goto("/en");
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    const scrollBefore = await page.evaluate(() => window.scrollY);
+    expect(scrollBefore).toBeGreaterThan(500);
+
+    await page.locator("[data-locale-menu] summary").click();
+    await page.getByRole("link", { name: "Français" }).click();
+    await expect(page).toHaveURL(/\/fr\/?$/);
+
+    const scrollAfter = await page.evaluate(() => window.scrollY);
+    expect(scrollAfter).toBeGreaterThan(500);
+    expect(Math.abs(scrollAfter - scrollBefore)).toBeLessThan(80);
+  });
+
+  test("preserves hash when switching locale with JavaScript", async ({
+    page,
+  }) => {
+    await page.goto("/en#pricing");
+    await expect(
+      page.getByRole("heading", { name: "Pricing", exact: true }),
+    ).toBeInViewport();
+
+    await page.locator("[data-locale-menu] summary").click();
+    await page.getByRole("link", { name: "Français" }).click();
+    await expect(page).toHaveURL(/\/fr#pricing$/);
+    await expect(
+      page.getByRole("heading", { name: /tarifs/i }),
+    ).toBeInViewport();
   });
 
   test("should set html lang from locale", async ({ page }) => {
@@ -131,13 +161,14 @@ test.describe("Marketing Home Page", () => {
     await expect(page.getByRole("heading", { name: /^blog$/i })).toBeVisible();
   });
 
-  test("homepage pricing teaser renders 3 tiers", async ({ page }) => {
+  test("homepage pricing section renders 3 tiers", async ({ page }) => {
     await page.goto("/en");
     const pricingHeading = page.getByRole("heading", {
-      name: /simple, transparent pricing/i,
+      name: "Pricing",
+      exact: true,
     });
     await expect(pricingHeading).toBeVisible();
-    const pricing = page.locator("section").filter({ has: pricingHeading });
+    const pricing = page.locator("section#pricing .monthly-cards");
     await expect(
       pricing.getByRole("heading", { name: "Free", exact: true }),
     ).toBeVisible();
@@ -149,6 +180,25 @@ test.describe("Marketing Home Page", () => {
     ).toBeVisible();
   });
 
+  test("nav links features, pricing, and FAQ to homepage anchors", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto("/en");
+    const nav = page.getByRole("navigation", { name: /main navigation/i });
+    await expect(
+      nav.getByRole("link", { name: /^features$/i }),
+    ).toHaveAttribute("href", "/en#features");
+    await expect(nav.getByRole("link", { name: /^pricing$/i })).toHaveAttribute(
+      "href",
+      "/en#pricing",
+    );
+    await expect(nav.getByRole("link", { name: /^faq$/i })).toHaveAttribute(
+      "href",
+      "/en#faq",
+    );
+  });
+
   test("homepage FAQ includes JSON-LD", async ({ page }) => {
     await page.goto("/en");
     const schema = page.locator('script[type="application/ld+json"]');
@@ -156,5 +206,6 @@ test.describe("Marketing Home Page", () => {
     const content = await schema.textContent();
     expect(content).toContain("FAQPage");
     expect(content).toContain("Is the free plan really free?");
+    expect(content).toContain("Can I stay on the free plan?");
   });
 });

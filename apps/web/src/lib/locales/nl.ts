@@ -29,6 +29,7 @@ const nl: TranslationDictionary = {
     main: "Hoofdnavigatie",
     tasks: "Taken",
     home: "Home",
+    website: "Website",
   },
   auth: {
     openAuth: "Inloggen",

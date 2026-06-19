@@ -6,6 +6,9 @@
 @source "../../../packages/utils/src/focus.ts";
 
 @theme {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-primary: hsl(var(--primary));
@@ -22,7 +25,11 @@
 }
 
 body {
-  @apply bg-background text-foreground min-h-screen antialiased;
+  @apply bg-background text-foreground min-h-screen font-sans antialiased;
+}
+
+html {
+  scrollbar-gutter: stable;
 }
 
 @layer base {

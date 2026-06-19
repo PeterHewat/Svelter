@@ -12,6 +12,17 @@ export function localizedPath(locale: Locale, path = ""): string {
 }
 
 /**
+ * Build a locale-prefixed homepage URL with a hash fragment (e.g. `/en#pricing`).
+ *
+ * @param locale - Locale segment
+ * @param fragment - Section id without `#`
+ */
+export function localizedAnchor(locale: Locale, fragment: string): string {
+  const id = fragment.replace(/^#/, "");
+  return `${localizedPath(locale)}#${id}`;
+}
+
+/**
  * Swap the locale segment in the current pathname.
  *
  * @param pathname - Current URL pathname (e.g. `/en/blog/hello-world`)

@@ -8,7 +8,7 @@ export const blogPostSchema = z.object({
   title: z.string(),
   description: z.string(),
   pubDate: z.coerce.date(),
-  /** `article` (default) or `changelog` — filter tabs on `/blog`. */
+  /** `article` (default) or `changelog` — shown as a badge on blog list/detail. */
   type: blogPostTypeSchema.optional().default("article"),
   /** Changelog release version (e.g. `0.1.0`). */
   version: z.string().optional(),

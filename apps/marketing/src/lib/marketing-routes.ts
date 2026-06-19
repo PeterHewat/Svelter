@@ -1,4 +1,5 @@
 import type { Locale } from "@repo/utils/i18n";
+import { getDocSlugs } from "$lib/docs";
 import { getFeatureDeepDiveSlugs } from "$lib/marketing-content";
 import { localizedPath } from "$lib/locale-path";
 import { getAllPosts } from "$lib/posts";
@@ -20,11 +21,11 @@ export const MARKETING_STATIC_ROUTES = [
   "",
   "pricing",
   "features",
-  "integrations",
   "customers",
   "security",
   "about",
   "blog",
+  "docs",
   "legal/privacy",
   "legal/terms",
 ] as const;
@@ -35,11 +36,13 @@ export const MARKETING_STATIC_ROUTES = [
 export function getMarketingPaths(): string[] {
   const featureSlugs = getFeatureDeepDiveSlugs();
   const postSlugs = getAllPosts().map((post) => post.slug);
+  const docSlugs = getDocSlugs();
 
   return MARKETING_LOCALES.flatMap((locale) => [
     ...MARKETING_STATIC_ROUTES.map((route) => localizedPath(locale, route)),
     ...featureSlugs.map((slug) => localizedPath(locale, `features/${slug}`)),
     ...postSlugs.map((slug) => localizedPath(locale, `blog/${slug}`)),
+    ...docSlugs.map((slug) => localizedPath(locale, `docs/${slug}`)),
   ]);
 }
 

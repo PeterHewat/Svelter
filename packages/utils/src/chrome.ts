@@ -3,11 +3,11 @@ import { focusRing } from "./focus";
 
 /** Fixed site header shell (web + marketing). */
 export const siteHeaderClass =
-  "border-border bg-background/80 fixed top-0 right-0 left-0 z-50 border-b backdrop-blur-sm";
+  "border-border bg-background/80 fixed top-0 right-0 left-0 z-50 w-full border-b backdrop-blur-sm";
 
 /** Primary nav row inside the site header. */
 export const siteNavClass =
-  "container mx-auto flex items-center justify-between px-4 py-3";
+  "flex w-full items-center justify-between gap-2 px-6 py-3";
 
 /** Main content offset for the fixed header. */
 export const siteMainClass = "flex-1 pt-20";
@@ -68,6 +68,16 @@ export const languageSwitcherSizes = {
 export const languageSwitcherSelectClass =
   "text-foreground min-w-0 cursor-pointer appearance-none border-0 bg-transparent focus:outline-none";
 
+/** Icon-only language switcher shell (fixed square, no visible locale label). */
+export const languageSwitcherIconOnlyClass =
+  "relative w-10 justify-center gap-0 p-0";
+
+/** Native select overlaid on the icon-only switcher (invisible, still clickable). */
+export const languageSwitcherOverlaySelectClass = cn(
+  languageSwitcherSelectClass,
+  "absolute inset-0 cursor-pointer opacity-0",
+);
+
 /** `<details>` language menu (marketing, no-JS friendly). */
 export const languageSwitcherDetailsClass = cn(
   languageSwitcherBaseClass,
@@ -77,6 +87,12 @@ export const languageSwitcherDetailsClass = cn(
 /** Summary row inside the language `<details>` menu. */
 export const languageSwitcherSummaryClass = cn(
   "flex min-w-0 cursor-pointer list-none items-center gap-2 outline-none [&::-webkit-details-marker]:hidden",
+);
+
+/** Icon-only summary that fills the square switcher shell (full hit target). */
+export const languageSwitcherIconOnlySummaryClass = cn(
+  languageSwitcherSummaryClass,
+  "absolute inset-0 flex items-center justify-center gap-0",
 );
 
 /** Dropdown panel for locale links. */
@@ -89,6 +105,12 @@ export const languageSwitcherMenuCheckSlotClass =
 
 /** Locale link inside the language menu. */
 export const languageSwitcherMenuLinkClass = cn(
-  "text-foreground hover:bg-primary/15 flex cursor-pointer items-center gap-2 rounded-sm px-3 py-1.5 text-sm",
+  "text-foreground hover:bg-primary/15 flex w-full cursor-pointer items-center gap-2 rounded-sm px-3 py-1.5 text-sm",
   focusRing,
+);
+
+/** Locale menu row for `<button>` items (matches link styling). */
+export const languageSwitcherMenuItemClass = cn(
+  languageSwitcherMenuLinkClass,
+  "border-0 bg-transparent font-inherit text-left",
 );

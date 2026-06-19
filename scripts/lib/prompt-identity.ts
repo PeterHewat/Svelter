@@ -9,7 +9,10 @@ import {
   isValidApexDomain,
   normalizeApexDomainInput,
 } from "../../packages/config/validate-domain";
-import { fetchGitHubRepoDescription } from "./github-repo-meta";
+import {
+  fetchGitHubRepoDescription,
+  setGitHubRepoDescription,
+} from "./github-repo-meta";
 import { pagesProjectNames } from "./hosting-project-spec";
 import { shouldOfferLicenseRemoval } from "./license-identity";
 import { writeProductName } from "./product-name";
@@ -82,23 +85,54 @@ async function promptOptionalApexDomain(
 }
 
 /**
+ * Writes `PRODUCT_TAGLINE` to config and syncs the GitHub About description.
+ *
+ * @param root - Repository root
+ * @param config - Setup config with tagline and optional `github`
+ */
+async function syncTaglineToArtifacts(
+  root: string,
+  config: SetupConfig,
+): Promise<void> {
+  if (writeProductTagline(root, config.productTagLine)) {
+    console.log(
+      `✓ Updated packages/config/product.ts tagline → "${config.productTagLine}"`,
+    );
+  }
+  if (config.github) {
+    const synced = await setGitHubRepoDescription(
+      config.github,
+      config.productTagLine,
+    );
+    if (synced) {
+      console.log(
+        `✓ Updated GitHub repo description → "${config.productTagLine}"`,
+      );
+    } else {
+      console.log(
+        "○ GitHub repo description not updated — run `gh auth login` and re-run setup",
+      );
+    }
+  }
+}
+
+/**
  * Persists identity config and applies product name / tagline files.
  *
  * @param root - Repository root
  * @param config - Setup config to write
  */
-function persistIdentityConfig(root: string, config: SetupConfig): void {
+async function persistIdentityConfig(
+  root: string,
+  config: SetupConfig,
+): Promise<void> {
   writeSetupConfig(root, config);
   if (writeProductName(root, config.productName)) {
     console.log(
       `✓ Updated packages/config/product.ts → "${config.productName}"`,
     );
   }
-  if (writeProductTagline(root, config.productTagLine)) {
-    console.log(
-      `✓ Updated packages/config/product.ts tagline → "${config.productTagLine}"`,
-    );
-  }
+  await syncTaglineToArtifacts(root, config);
   console.log(`✓ Wrote .svelter/setup.json`);
   printHostnameTable(
     productNameToSlug(config.productName),
@@ -144,6 +178,7 @@ export async function runIdentityWizard(
     if (JSON.stringify(refreshed) !== JSON.stringify(existing)) {
       writeSetupConfig(root, refreshed);
     }
+    await syncTaglineToArtifacts(root, refreshed);
     return refreshed;
   }
 
@@ -162,10 +197,11 @@ export async function runIdentityWizard(
       existing.removeMitLicense,
     );
     if (apexDomain && apexDomain !== existing.apexDomain) {
-      persistIdentityConfig(root, config);
+      await persistIdentityConfig(root, config);
     } else if (JSON.stringify(config) !== JSON.stringify(existing)) {
       writeSetupConfig(root, config);
     }
+    await syncTaglineToArtifacts(root, config);
     return config;
   }
 
@@ -186,7 +222,7 @@ export async function runIdentityWizard(
     existing?.productTagLine ??
     taglineFromGitHub ??
     taglineFromFile ??
-    "Modern Monorepo Starter";
+    "A production-ready monorepo template for product and marketing websites.";
   const productTagLine = await promptLine("Product tagline (PRODUCT_TAGLINE)", {
     defaultValue: defaultTagline,
   });
@@ -210,6 +246,6 @@ export async function runIdentityWizard(
     existing,
     removeMitLicense,
   );
-  persistIdentityConfig(root, config);
+  await persistIdentityConfig(root, config);
   return config;
 }

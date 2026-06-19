@@ -57,25 +57,13 @@
   {/if}
 </svelte:head>
 
-<Section title={t(titleKey)} class="bg-muted/30">
-  <div class="mx-auto max-w-3xl divide-y rounded-xl border">
-    {#each items as item, index (item.question)}
-      <details class="group px-6 py-4" open={index === 0}>
-        <summary
-          class="cursor-pointer list-none font-medium [&::-webkit-details-marker]:hidden"
-        >
-          <span class="flex items-center justify-between gap-4">
-            {item.question}
-            <span
-              class="text-muted-foreground shrink-0 text-xl leading-none group-open:rotate-45"
-              aria-hidden="true">+</span
-            >
-          </span>
-        </summary>
-        <p class="text-muted-foreground mt-3 pr-8 text-sm leading-relaxed">
-          {item.answer}
-        </p>
-      </details>
+<Section id="faq" title={t(titleKey)}>
+  <div class="mx-auto max-w-3xl space-y-10">
+    {#each items as item (item.question)}
+      <div>
+        <h3 class="text-foreground text-lg font-semibold">{item.question}</h3>
+        <p class="text-muted-foreground mt-2 leading-relaxed">{item.answer}</p>
+      </div>
     {/each}
   </div>
 </Section>

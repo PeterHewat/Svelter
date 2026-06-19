@@ -4,6 +4,7 @@ import {
   type BlogPostType,
 } from "./blog-schema";
 import { parseFrontmatter } from "./frontmatter";
+import { renderMarkdown } from "./markdown";
 
 const posts = import.meta.glob("../content/blog/*.md", {
   eager: true,
@@ -14,6 +15,7 @@ const posts = import.meta.glob("../content/blog/*.md", {
 export type BlogPost = BlogPostMeta & {
   slug: string;
   content: string;
+  html: string;
 };
 
 function slugFromPath(path: string): string {
@@ -26,7 +28,12 @@ function loadPosts(): BlogPost[] {
     .map(([path, raw]) => {
       const { data, content } = parseFrontmatter(raw);
       const meta = blogPostSchema.parse(data);
-      return { ...meta, slug: slugFromPath(path), content };
+      return {
+        ...meta,
+        slug: slugFromPath(path),
+        content,
+        html: renderMarkdown(content),
+      };
     })
     .sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
 }

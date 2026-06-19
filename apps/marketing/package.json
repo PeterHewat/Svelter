@@ -23,6 +23,7 @@
     "@repo/tokens": "workspace:*",
     "@repo/ui-svelte": "workspace:*",
     "@repo/utils": "workspace:*",
+    "marked": "^18.0.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {

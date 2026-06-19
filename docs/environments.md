@@ -103,6 +103,20 @@ Enable sign-in providers in the **Clerk dashboard** (Google, email, etc.). Activ
 
 Details: [ci-cd.md](./ci-cd.md#repository-secrets).
 
+### Cross-app origins (marketing ↔ product)
+
+Marketing is static — origins are **baked at build time** via `PUBLIC_PRODUCT_APP_URL` and `PUBLIC_MARKETING_ORIGIN`. Local defaults live in `@repo/config/dev-ports`; CI derives hostnames from Pages project names (`deriveAppOrigins` in `@repo/config/app-origins`). With an apex domain configured in setup, production release uses `https://{apex}` (web) and `https://www.{apex}` (marketing) via the `APEX_DOMAIN` GitHub secret.
+
+| Tier           | Product                        | Marketing                            |
+| -------------- | ------------------------------ | ------------------------------------ |
+| Dev            | `localhost:3000`               | `localhost:3001`                     |
+| Preview        | `localhost:4000`               | `localhost:4001`                     |
+| Staging        | `staging.{slug}-web.pages.dev` | `staging.{slug}-marketing.pages.dev` |
+| Prod (no apex) | `{slug}-web.pages.dev`         | `{slug}-marketing.pages.dev`         |
+| Prod (apex)    | `foobar.com`                   | `www.foobar.com`                     |
+
+Details: [configuration.md](../../apps/marketing/src/content/docs/configuration.md) (in-site docs) and `packages/config/app-origins.ts`.
+
 ## First-time checklist
 
 1. `bun run setup` through Convex, Clerk, Cloudflare Pages, GitHub + **production** environment secrets.

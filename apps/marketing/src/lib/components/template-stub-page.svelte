@@ -35,7 +35,7 @@
   {/if}
 </svelte:head>
 
-<div class="container mx-auto px-4 py-16">
+<div class="marketing-container py-16">
   <p
     class="border-primary/30 bg-primary/5 text-primary mb-6 inline-block rounded-md border px-3 py-1 text-sm"
   >

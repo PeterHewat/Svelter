@@ -14,7 +14,7 @@
   <meta name="description" content={t("meta.blogDescription")} />
 </svelte:head>
 
-<div class="container mx-auto px-4 py-16">
-  <h1 class="mb-8 text-4xl font-bold">{t("blog.title")}</h1>
+<div class="marketing-container py-16 md:py-20">
+  <h1 class="mb-10 text-4xl font-semibold tracking-tight">{t("blog.title")}</h1>
   <BlogIndex {lang} posts={data.posts} />
 </div>

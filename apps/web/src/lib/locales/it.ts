@@ -29,6 +29,7 @@ const it: TranslationDictionary = {
     main: "Navigazione principale",
     tasks: "Attività",
     home: "Home",
+    website: "Sito web",
   },
   auth: {
     openAuth: "Accedi",

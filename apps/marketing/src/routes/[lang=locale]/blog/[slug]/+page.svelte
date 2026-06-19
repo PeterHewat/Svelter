@@ -1,4 +1,5 @@
 <script lang="ts">
+  import MarkdownContent from "$lib/components/markdown-content.svelte";
   import { mt, type Locale } from "$lib/i18n";
   import { localizedPath } from "$lib/locale-path";
   import { SITE_NAME } from "$lib/site";
@@ -18,9 +19,11 @@
   <meta name="description" content={data.post.description} />
 </svelte:head>
 
-<article class="container mx-auto max-w-2xl px-4 py-16">
+<article class="marketing-container max-w-2xl py-16 md:py-20">
   <header class="mb-8">
-    <h1 class="mb-2 text-4xl font-bold">{data.post.title}</h1>
+    <h1 class="mb-2 text-4xl font-semibold tracking-tight">
+      {data.post.title}
+    </h1>
     <p class="text-muted-foreground text-sm">
       {new Date(data.post.pubDate).toLocaleDateString(lang)}
       {#if data.post.type === "changelog" && data.post.version}
@@ -31,12 +34,13 @@
       {/if}
     </p>
   </header>
-  <div
-    class="prose prose-neutral dark:prose-invert max-w-none whitespace-pre-wrap"
-  >
-    {data.post.content}
-  </div>
+  <MarkdownContent html={data.post.html} />
   <p class="mt-12">
-    <a href={blogHref} class="text-primary underline">{t("blog.back")}</a>
+    <a
+      href={blogHref}
+      class="text-foreground text-sm underline underline-offset-4"
+    >
+      {t("blog.back")}
+    </a>
   </p>
 </article>

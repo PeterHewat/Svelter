@@ -1,36 +1,26 @@
 <script lang="ts">
   import { cn } from "@repo/utils";
-  import {
-    productAppHref,
-    type ProductAppHrefOptions,
-    type ProductLinkKind,
-  } from "$lib/product-links";
+  import type { Locale } from "$lib/i18n";
+  import { productAppHref } from "$lib/product-links";
   import type { Snippet } from "svelte";
   import type { HTMLAnchorAttributes } from "svelte/elements";
 
   type Props = Omit<HTMLAnchorAttributes, "href" | "class"> & {
     class?: string;
-    kind?: ProductLinkKind;
-    utmCampaign?: ProductAppHrefOptions["utmCampaign"];
+    lang?: Locale;
     children?: Snippet;
   };
 
-  let {
-    kind = "signup",
-    utmCampaign,
-    class: className,
-    children,
-    ...rest
-  }: Props = $props();
+  let { lang, class: className, children, ...rest }: Props = $props();
 
-  const href = $derived(productAppHref({ kind, utmCampaign }));
+  const href = $derived(productAppHref({ lang }));
 </script>
 
 <a
   {href}
   class={cn(className)}
-  rel="noopener noreferrer"
-  target="_blank"
+  data-product-app-link
+  data-lang={lang}
   {...rest}
 >
   {#if children}

@@ -17,23 +17,23 @@
 
 <div
   class={cn(
-    "border-border bg-card overflow-hidden rounded-xl border shadow-lg",
+    "border-border bg-card w-full overflow-hidden rounded-2xl border shadow-sm",
     className,
   )}
 >
   <div
-    class="border-border bg-muted/60 flex items-center gap-2 border-b px-4 py-2.5"
+    class="border-border bg-muted/40 flex items-center gap-2 border-b px-4 py-2"
     aria-hidden="true"
   >
-    <span class="bg-muted-foreground/40 h-2.5 w-2.5 rounded-full"></span>
-    <span class="bg-muted-foreground/40 h-2.5 w-2.5 rounded-full"></span>
-    <span class="bg-muted-foreground/40 h-2.5 w-2.5 rounded-full"></span>
-    <span class="text-muted-foreground ml-2 truncate text-xs"
+    <span class="bg-muted-foreground/30 h-2 w-2 rounded-full"></span>
+    <span class="bg-muted-foreground/30 h-2 w-2 rounded-full"></span>
+    <span class="bg-muted-foreground/30 h-2 w-2 rounded-full"></span>
+    <span class="text-muted-foreground ml-2 truncate text-xs font-medium"
       >app.example.com</span
     >
   </div>
   <div
-    class="bg-muted/30 relative flex aspect-video items-center justify-center"
+    class="bg-muted/20 relative flex aspect-16/10 items-center justify-center"
     role="img"
     aria-label={screenshotAlt}
   >
@@ -41,7 +41,7 @@
       {@render children()}
     {:else}
       <div
-        class="from-primary/15 to-muted h-full w-full bg-gradient-to-br"
+        class="from-accent/40 to-muted/60 h-full w-full bg-linear-to-br"
       ></div>
     {/if}
   </div>

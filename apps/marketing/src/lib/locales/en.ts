@@ -4,15 +4,15 @@ import type { TranslationDictionary } from "@repo/utils";
 const en = {
   meta: {
     homeDescription:
-      "A production-ready monorepo template for product and marketing with SvelteKit, Clerk, Convex, and Tailwind.",
+      "A production-ready monorepo template for product and marketing websites.",
     pricingDescription:
-      "Compare Free, Pro, and Business plans. Start free with transparent template limits.",
+      "Compare Free, Pro, and Business plans. Transparent template limits.",
     blogDescription:
       "Product updates, changelog releases, and template articles from the marketing site.",
+    docsDescription:
+      "Documentation for installing, configuring, and deploying the template.",
     featuresDescription:
       "Template feature overview and example deep-dive routes — replace with your product areas in v1.",
-    integrationsDescription:
-      "Placeholder integrations page for partner logos and connectors.",
     customersDescription:
       "Customer stories stub — add real logos and case studies in v1.",
     securityDescription:
@@ -29,29 +29,22 @@ const en = {
     features: "Features",
     pricing: "Pricing",
     blog: "Blog",
-    logIn: "Log in",
-    startFree: "Start free",
+    faq: "FAQ",
     docs: "Docs",
+    dashboard: "Dashboard",
     github: "View on GitHub",
   },
   home: {
-    titleSuffix:
-      "SvelteKit + Convex + Clerk + Tailwind + Bun monorepo starter for your product app and marketing site",
     heroTitle: "Build faster with {{name}}",
-    heroSubtitle:
-      "A production-ready monorepo template for product and marketing.",
-    heroCta: "Start free",
-    heroSecondaryCta: "Read the blog",
-    heroMicrocopy: "No credit card required",
+    heroMicrocopy: "Try it for free, no account or credit card required",
     howItWorksTitle: "How it works",
     metricsTitle: "Built for speed",
-    pricingTeaserTitle: "Simple, transparent pricing",
-    pricingTeaserLink: "Compare all plans",
+    testimonialTitle: "What teams are saying",
+    testimonialPrev: "Previous testimonial",
+    testimonialNext: "Next testimonial",
     freeTierBadge: "Free forever",
     popularTierBadge: "Most popular",
-    integrationsTitle: "Works with your stack",
-    integrationsLink: "View integrations",
-    faqTitle: "Frequently asked questions",
+    faqTitle: "Frequently Asked Questions",
   },
   pricing: {
     subtitle: "Choose the plan that fits your team.",
@@ -63,18 +56,20 @@ const en = {
     featureColumn: "Feature",
     included: "Included",
     excluded: "Not included",
-    enterpriseContact: "Contact sales",
     faqTitle: "Pricing FAQ",
   },
   blog: {
     title: "Blog",
     back: "← Back to blog",
-    filterLabel: "Filter posts",
-    filterAll: "All",
-    filterArticles: "Articles",
-    filterChangelog: "Changelog",
     changelogVersion: "v{{version}}",
-    empty: "No posts in this category yet.",
+    changelogLabel: "Changelog",
+  },
+  docs: {
+    title: "Documentation",
+    intro:
+      "Guides for local setup, configuration, and deployment. Content is English-only in the template — translate in v1 if needed.",
+    back: "← All docs",
+    sidebar: "Documentation navigation",
   },
   features: {
     deepDivesTitle: "Feature deep-dives",
@@ -94,12 +89,12 @@ const en = {
     legal: "Legal",
     features: "Features",
     pricing: "Pricing",
-    integrations: "Integrations",
     about: "About",
     customers: "Customers",
     blog: "Blog",
     security: "Security",
-    docs: "Documentation",
+    docs: "Docs",
+    faq: "FAQ",
     github: "GitHub",
     privacy: "Privacy",
     terms: "Terms",
@@ -107,10 +102,10 @@ const en = {
   pages: {
     features: { title: "Features" },
     pricing: { title: "Pricing" },
-    integrations: { title: "Integrations" },
     customers: { title: "Customers" },
     security: { title: "Security" },
     about: { title: "About" },
+    docs: { title: "Documentation" },
     privacy: { title: "Privacy Policy" },
     terms: { title: "Terms of Service" },
   },

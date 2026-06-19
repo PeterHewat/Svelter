@@ -29,6 +29,7 @@ const ru: TranslationDictionary = {
     main: "Основная навигация",
     tasks: "Задачи",
     home: "Главная",
+    website: "Сайт",
   },
   auth: {
     openAuth: "Войти",

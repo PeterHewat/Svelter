@@ -3,7 +3,7 @@
   import { marketingContent } from "$lib/marketing-content";
 </script>
 
-<Section class="border-border border-b py-12 md:py-16">
+<Section class="marketing-section-y-compact">
   <p
     class="text-muted-foreground mb-8 text-center text-sm font-medium tracking-wide uppercase"
   >

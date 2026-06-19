@@ -56,6 +56,27 @@ test.describe("Home Page", () => {
     });
   });
 
+  test.describe("Navigation", () => {
+    test("footer copyright links to the marketing site", async ({ page }) => {
+      await page.goto("/en");
+      const link = page.getByRole("contentinfo").getByRole("link", {
+        name: /© \d{4}/,
+      });
+      await expect(link).toHaveAttribute(
+        "href",
+        "http://localhost:3001/en?theme=light",
+      );
+    });
+
+    test("strips cross-app pref params from the address bar after load", async ({
+      page,
+    }) => {
+      await page.goto("/?lang=fr&theme=dark");
+      await expect(page).toHaveURL("/");
+      await expect(page.locator("html")).toHaveClass(/dark/);
+    });
+  });
+
   test.describe("Accessibility", () => {
     test("has proper heading hierarchy", async ({ page }) => {
       expect(await page.locator("h1").count()).toBe(1);

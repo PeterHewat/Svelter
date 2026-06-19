@@ -43,6 +43,11 @@
       "types": "./src/chrome.ts",
       "import": "./src/chrome.ts",
       "default": "./src/chrome.ts"
+    },
+    "./cross-app-prefs": {
+      "types": "./src/cross-app-prefs.ts",
+      "import": "./src/cross-app-prefs.ts",
+      "default": "./src/cross-app-prefs.ts"
     }
   },
   "scripts": {

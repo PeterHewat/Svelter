@@ -24,6 +24,7 @@ const utilsSubpathTargets = {
   "@repo/utils/storage": "packages/utils/src/storage.ts",
   "@repo/utils/focus": "packages/utils/src/focus.ts",
   "@repo/utils/chrome": "packages/utils/src/chrome.ts",
+  "@repo/utils/cross-app-prefs": "packages/utils/src/cross-app-prefs.ts",
 } as const;
 
 export type RepoAliasKey = keyof typeof aliasTargets;

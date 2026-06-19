@@ -1,6 +1,5 @@
 <script lang="ts">
   import { cn } from "@repo/utils";
-  import ProductAppLink from "$lib/components/product-app-link.svelte";
   import type { PricingTier } from "$lib/marketing-content";
   import { mt, type Locale } from "$lib/i18n";
 
@@ -63,11 +62,4 @@
       </li>
     {/each}
   </ul>
-  <ProductAppLink
-    kind="signup"
-    utmCampaign={`pricing-${tier.id}`}
-    class="bg-primary text-primary-foreground hover:bg-primary/90 mt-6 inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium"
-  >
-    {t("home.heroCta")}
-  </ProductAppLink>
 </article>
