@@ -28,7 +28,11 @@ function readProductAppUrlFromEnv(): string | undefined {
     }
   }
 
-  return trimOrigin(import.meta.env.PUBLIC_PRODUCT_APP_URL);
+  if (typeof import.meta !== "undefined" && import.meta.env) {
+    return trimOrigin(import.meta.env.PUBLIC_PRODUCT_APP_URL);
+  }
+
+  return undefined;
 }
 
 /** @see readProductAppUrlFromEnv */
@@ -40,7 +44,11 @@ function readMarketingOriginFromEnv(): string | undefined {
     }
   }
 
-  return trimOrigin(import.meta.env.PUBLIC_MARKETING_ORIGIN);
+  if (typeof import.meta !== "undefined" && import.meta.env) {
+    return trimOrigin(import.meta.env.PUBLIC_MARKETING_ORIGIN);
+  }
+
+  return undefined;
 }
 
 /**
