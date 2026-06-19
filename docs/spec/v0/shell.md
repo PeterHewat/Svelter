@@ -25,7 +25,7 @@ F-02 is **complete for the v0 template** at **Demo** status. The product app shi
 
 - **Per-locale routing URLs** on the product app (e.g. `/fr/tasks`) — marketing uses `/[lang]/` separately; product SPA stays single-path
 - **Server-side locale detection** — locale is client-chosen only
-- **Full locale parity** when you add product keys — register and translate new keys per fork (marketing has the same EN-first pattern for new PLG copy)
+- **Full locale parity** when you add product keys — register and translate new keys per fork (marketing has the same EN-first pattern for new marketing copy)
 
 ## After fork
 

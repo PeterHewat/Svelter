@@ -2,11 +2,11 @@
 
 ## Goal
 
-Turn a Svelter fork into **your** B2B SaaS: real positioning, assets, pricing, content, and legal — using the v0 **PLG** (product-led growth) marketing shell without rebuilding it.
+Turn a Svelter fork into **your** B2B SaaS: real positioning, assets, pricing, content, and legal — using the v0 marketing shell without rebuilding it.
 
 **Audience:** You (or any adopter) after a fresh start from the template — typically a solo dev spinning up a new product idea.
 
-**Prerequisite:** [v0](../v0/README.md) complete in the fork (or merged from upstream), especially [marketing-plg.md](../v0/marketing-plg.md).
+**Prerequisite:** [v0](../v0/README.md) complete in the fork (or merged from upstream), especially [marketing.md](../v0/marketing.md).
 
 ## Definition of done
 
@@ -18,7 +18,6 @@ Turn a Svelter fork into **your** B2B SaaS: real positioning, assets, pricing, c
 - [ ] Blog: delete template samples; publish your articles and changelog as you ship
 - [ ] Legal pages reviewed (privacy, terms) — not template lorem
 - [ ] Locales: translate new marketing keys if you ship non-English markets
-- [ ] Analytics chosen and installed (e.g. Plausible, Fathom) if desired
 - [ ] Deploy marketing + product apps to production URLs
 
 ## Epics (typical order)
@@ -27,13 +26,13 @@ Turn a Svelter fork into **your** B2B SaaS: real positioning, assets, pricing, c
 
 ## Open decisions (per product)
 
-| Decision                | When to decide                                         |
-| ----------------------- | ------------------------------------------------------ |
-| Which nav pages to keep | After positioning — drop unused stubs                  |
-| i18n breadth            | Ship EN first; add locales when needed                 |
-| Enterprise / sales      | Only if PLG (product-led growth) alone is insufficient |
-| Status page             | When you have uptime to show                           |
-| CMS                     | Post-launch if markdown in-repo is tight               |
+| Decision                | When to decide                                       |
+| ----------------------- | ---------------------------------------------------- |
+| Which nav pages to keep | After positioning — drop unused stubs                |
+| i18n breadth            | Ship EN first; add locales when needed               |
+| Enterprise / sales      | Only if self-serve acquisition alone is insufficient |
+| Status page             | When you have uptime to show                         |
+| CMS                     | Post-launch if markdown in-repo is tight             |
 
 ## Not v1 (later product phases)
 

@@ -26,3 +26,32 @@ export async function fetchGitHubRepoDescription(
   }
   return text;
 }
+
+/**
+ * Sets the GitHub repository About description via `gh api` (best effort).
+ *
+ * @param github - Parsed GitHub remote or setup `github` block
+ * @param description - Repository description (GitHub max 350 characters)
+ * @returns Whether the API call succeeded
+ */
+export async function setGitHubRepoDescription(
+  github: Pick<GitHubRepo, "org" | "repo">,
+  description: string,
+): Promise<boolean> {
+  const proc = Bun.spawn(
+    [
+      "gh",
+      "api",
+      "-X",
+      "PATCH",
+      `repos/${github.org}/${github.repo}`,
+      "-f",
+      `description=${description}`,
+    ],
+    {
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
+  return (await proc.exited) === 0;
+}

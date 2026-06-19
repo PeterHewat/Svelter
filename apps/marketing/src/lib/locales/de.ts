@@ -6,6 +6,10 @@ const de: TranslationDictionary = {
       "Produktionsreifes Monorepo-Template für Produkt und Marketing mit SvelteKit, Clerk, Convex und Tailwind.",
     pricingDescription:
       "Vergleichen Sie Free-, Pro- und Business-Tarife. Starten Sie kostenlos mit transparenten Limits.",
+    blogDescription:
+      "Produktupdates, Changelog-Releases und Artikel von der Marketing-Website.",
+    docsDescription:
+      "Dokumentation zur Installation, Konfiguration und zum Deployment der Vorlage.",
   },
   nav: {
     main: "Hauptnavigation",
@@ -13,28 +17,28 @@ const de: TranslationDictionary = {
     features: "Funktionen",
     pricing: "Preise",
     blog: "Blog",
-    logIn: "Anmelden",
-    startFree: "Kostenlos starten",
-    docs: "Dokumentation",
+    faq: "FAQ",
+    docs: "Docs",
+    dashboard: "Dashboard",
     github: "Auf GitHub ansehen",
   },
   home: {
-    titleSuffix:
-      "SvelteKit + Convex + Clerk + Tailwind + Bun Monorepo für Produkt-App und Marketing-Website",
     heroTitle: "Schneller entwickeln mit {{name}}",
-    heroSubtitle:
-      "Ein produktionsreifes Monorepo-Template für Produkt und Marketing.",
-    heroCta: "Kostenlos starten",
-    heroSecondaryCta: "Blog lesen",
-    heroMicrocopy: "Keine Kreditkarte erforderlich",
+    heroTagline:
+      "Produktionsreifes Monorepo-Template für Produkt- und Marketing-Websites.",
+    heroScreenshotAlt: "Platzhalter für Produkt-Screenshot",
+    heroMicrocopy: "Kostenlos testen — kein Konto und keine Kreditkarte nötig",
+    logoBarTagline: "Vertraut von Teams, die mit der Vorlage bauen",
+    ctaTitle: "Bereit, Ihr Produkt zu veröffentlichen?",
+    ctaSubtitle:
+      "Klonen Sie die Vorlage, passen Sie die Platzhalterinhalte an und deployen Sie noch heute.",
     howItWorksTitle: "So funktioniert es",
     metricsTitle: "Für Geschwindigkeit gebaut",
-    pricingTeaserTitle: "Einfache, transparente Preise",
-    pricingTeaserLink: "Alle Pläne vergleichen",
+    testimonialTitle: "Das sagen Teams",
+    testimonialPrev: "Vorheriges Testimonial",
+    testimonialNext: "Nächstes Testimonial",
     freeTierBadge: "Für immer kostenlos",
     popularTierBadge: "Am beliebtesten",
-    integrationsTitle: "Passt zu Ihrem Stack",
-    integrationsLink: "Integrationen ansehen",
     faqTitle: "Häufig gestellte Fragen",
   },
   pricing: {
@@ -47,12 +51,19 @@ const de: TranslationDictionary = {
     featureColumn: "Funktion",
     included: "Enthalten",
     excluded: "Nicht enthalten",
-    enterpriseContact: "Vertrieb kontaktieren",
-    faqTitle: "Preis-FAQ",
   },
   blog: {
     title: "Blog",
     back: "← Zurück zum Blog",
+    changelogVersion: "v{{version}}",
+    changelogLabel: "Changelog",
+  },
+  docs: {
+    title: "Dokumentation",
+    intro:
+      "Anleitungen für lokale Einrichtung, Konfiguration und Deployment. Inhalt in der Vorlage nur auf Englisch.",
+    back: "← Alle Dokumente",
+    sidebar: "Dokumentationsnavigation",
   },
   footer: {
     copyright: "© {{year}} {{name}}",
@@ -60,14 +71,9 @@ const de: TranslationDictionary = {
     company: "Unternehmen",
     resources: "Ressourcen",
     legal: "Rechtliches",
-    features: "Funktionen",
-    pricing: "Preise",
-    integrations: "Integrationen",
     about: "Über uns",
     customers: "Kunden",
-    blog: "Blog",
     security: "Sicherheit",
-    docs: "Dokumentation",
     github: "GitHub",
     privacy: "Datenschutz",
     terms: "AGB",
@@ -75,10 +81,10 @@ const de: TranslationDictionary = {
   pages: {
     features: { title: "Funktionen" },
     pricing: { title: "Preise" },
-    integrations: { title: "Integrationen" },
     customers: { title: "Kunden" },
     security: { title: "Sicherheit" },
     about: { title: "Über uns" },
+    docs: { title: "Dokumentation" },
     privacy: { title: "Datenschutzerklärung" },
     terms: { title: "Nutzungsbedingungen" },
   },

@@ -13,10 +13,10 @@ Implementation-ready specs: the acceptance criteria, UI surfaces, routes/APIs, a
 
 **Phase meaning in this template:**
 
-| Phase | Where             | Purpose                                                                                               |
-| ----- | ----------------- | ----------------------------------------------------------------------------------------------------- |
-| `v0`  | Upstream template | **Complete starter** — tasks demo, product shell (demo), PLG (product-led growth) marketing (shipped) |
-| `v1`  | **After fork**    | **Launch your product** — copy, assets, pricing, legal, deploy                                        |
+| Phase | Where             | Purpose                                                                           |
+| ----- | ----------------- | --------------------------------------------------------------------------------- |
+| `v0`  | Upstream template | **Complete starter** — tasks demo, product shell (demo), marketing site (shipped) |
+| `v1`  | **After fork**    | **Launch your product** — copy, assets, pricing, legal, deploy                    |
 
 Create a new `vN/` folder only when that phase is scheduled — keep earlier phases as matrix rows plus a summary in the human-oriented docs until then.
 
@@ -33,9 +33,9 @@ Create a new `vN/` folder only when that phase is scheduled — keep earlier pha
 
 ## Glossary
 
-| Term    | Meaning                                                                                                                                                                                                                       |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **PLG** | **Product-led growth** — acquisition and conversion driven by self-serve signup, public pricing, and using the product (not sales-led “book a demo” as the primary motion). See [v0/marketing-plg.md](./v0/marketing-plg.md). |
+| Term    | Meaning                                                                                                                                                                                                               |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **PLG** | **Product-led growth** — acquisition and conversion driven by self-serve signup, public pricing, and using the product (not sales-led “book a demo” as the primary motion). See [v0/marketing.md](./v0/marketing.md). |
 
 ## How to use
 

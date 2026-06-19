@@ -1,10 +1,7 @@
-import { localeEntries } from "$lib/locale-path";
+export { localeEntries as entries } from "$lib/i18n";
+
 import { getAllPosts } from "$lib/posts";
 import type { PageLoad } from "./$types";
-
-export function entries() {
-  return localeEntries();
-}
 
 export const load: PageLoad = () => {
   return { posts: getAllPosts() };

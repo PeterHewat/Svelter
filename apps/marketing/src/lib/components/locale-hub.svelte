@@ -20,10 +20,7 @@
   const hubTitle = mt("language.hubTitle", "en");
 </script>
 
-<nav
-  class={cn("container mx-auto px-4 py-16", className)}
-  aria-label={hubTitle}
->
+<nav class={cn("marketing-container py-16", className)} aria-label={hubTitle}>
   <h1 class="text-foreground mb-6 text-2xl font-semibold">{hubTitle}</h1>
   <ul class="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
     {#each MARKETING_LOCALES as locale (locale)}

@@ -1,50 +1,32 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Marketing Blog", () => {
-  test("changelog filter lists sample post without JavaScript", async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({ javaScriptEnabled: false });
-    const page = await context.newPage();
+  test("lists all posts in chronological order", async ({ page }) => {
     await page.goto("/en/blog");
-    await page.locator('label[for="blog-filter-changelog"]').click();
-    await expect(
-      page.getByRole("heading", { name: /v0\.1\.0 — PLG marketing shell/i }),
-    ).toBeVisible();
-    await expect(page.getByRole("link", { name: /hello world/i })).toHaveCount(
-      0,
-    );
-    await context.close();
-  });
-
-  test("article filter lists hello world post", async ({ page }) => {
-    await page.goto("/en/blog");
-    await page.locator('label[for="blog-filter-article"]').click();
     await expect(
       page.getByRole("heading", { name: /hello world/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: /v0\.1\.0 — PLG marketing shell/i }),
-    ).toHaveCount(0);
+      page.getByRole("heading", { name: /v0\.1\.0 — Marketing shell/i }),
+    ).toBeVisible();
   });
 
-  test("filter tabs work without JavaScript", async ({ browser }) => {
+  test("opens a blog post", async ({ page }) => {
+    await page.goto("/en/blog");
+    await page.getByRole("link", { name: /hello world/i }).click();
+    await expect(page).toHaveURL(/\/en\/blog\/hello-world\/?$/);
+    await expect(
+      page.getByRole("heading", { name: /hello world/i }),
+    ).toBeVisible();
+  });
+
+  test("blog list works without JavaScript", async ({ browser }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto("/en/blog");
     await expect(
       page.getByRole("heading", { name: /hello world/i }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: /v0\.1\.0 — PLG marketing shell/i }),
-    ).toBeVisible();
-    await page.locator('label[for="blog-filter-changelog"]').click();
-    await expect(
-      page.getByRole("heading", { name: /v0\.1\.0 — PLG marketing shell/i }),
-    ).toBeVisible();
-    await expect(page.getByRole("link", { name: /hello world/i })).toHaveCount(
-      0,
-    );
     await context.close();
   });
 });

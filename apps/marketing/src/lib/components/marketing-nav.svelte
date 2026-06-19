@@ -2,52 +2,43 @@
   import { cn } from "@repo/utils";
   import {
     iconButtonClass,
-    iconSlotClass,
     languageSwitcherDetailsClass,
+    languageSwitcherIconOnlyClass,
+    languageSwitcherIconOnlySummaryClass,
     languageSwitcherMenuCheckSlotClass,
     languageSwitcherMenuClass,
     languageSwitcherMenuLinkClass,
     languageSwitcherSizes,
-    languageSwitcherSummaryClass,
     navLinkClass,
     navSecondaryLinkClass,
     siteHeaderClass,
     siteNavClass,
   } from "@repo/utils/chrome";
-  import { focusRing } from "@repo/utils/focus";
   import ProductAppLink from "$lib/components/product-app-link.svelte";
-  import {
-    MARKETING_LOCALES,
-    mt,
-    SUPPORTED_LOCALES,
-    type Locale,
-  } from "$lib/i18n";
+  import { MARKETING_LOCALES, SUPPORTED_LOCALES } from "$lib/i18n";
+  import { useMarketingLang, useMarketingT } from "$lib/marketing-context";
+  import { productNavLinks } from "$lib/marketing-nav-links";
   import { localizedPath, switchLocalePath } from "$lib/locale-path";
   import { SITE_NAME } from "$lib/site";
 
   interface Props {
-    lang: Locale;
     pathname: string;
   }
 
-  let { lang, pathname }: Props = $props();
+  let { pathname }: Props = $props();
 
-  const t = $derived(
-    (key: Parameters<typeof mt>[0], vars?: Record<string, string | number>) =>
-      mt(key, lang, vars),
-  );
+  const t = useMarketingT();
+  const lang = useMarketingLang();
   const homeHref = $derived(localizedPath(lang));
-  const featuresHref = $derived(localizedPath(lang, "features"));
-  const pricingHref = $derived(localizedPath(lang, "pricing"));
-  const blogHref = $derived(localizedPath(lang, "blog"));
+  const navLinks = $derived(
+    productNavLinks.map((link) => ({
+      href: link.href(lang),
+      label: t(link.labelKey),
+    })),
+  );
 
   const primaryCtaClass =
-    "bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 shrink-0 items-center rounded-md px-4 text-sm font-medium";
-  const navLinks = $derived([
-    { href: featuresHref, label: t("nav.features") },
-    { href: pricingHref, label: t("nav.pricing") },
-    { href: blogHref, label: t("nav.blog") },
-  ] as const);
+    "bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 shrink-0 items-center rounded-lg px-4 text-sm font-medium transition-colors";
 </script>
 
 <header class={siteHeaderClass}>
@@ -57,34 +48,17 @@
         {SITE_NAME}
       </a>
 
-      <div class="hidden items-center gap-4 md:flex">
-        {#each navLinks as link (link.href)}
-          <a href={link.href} class={navSecondaryLinkClass}>
-            {link.label}
-          </a>
-        {/each}
-      </div>
-    </div>
-
-    <div class="flex items-center gap-2">
-      <ProductAppLink
-        kind="signup"
-        utmCampaign="nav"
-        class={cn(primaryCtaClass, "md:hidden")}
-      >
-        {t("nav.startFree")}
-      </ProductAppLink>
-
       <details
         class={cn(
           languageSwitcherDetailsClass,
           languageSwitcherSizes.md,
-          "relative md:hidden",
+          languageSwitcherIconOnlyClass,
+          "nav:hidden",
         )}
         data-nav-menu
       >
         <summary
-          class={languageSwitcherSummaryClass}
+          class={languageSwitcherIconOnlySummaryClass}
           aria-label={t("nav.menu")}
         >
           <svg
@@ -111,24 +85,29 @@
               </a>
             </li>
           {/each}
-          <li>
-            <ProductAppLink
-              kind="login"
-              utmCampaign="nav"
-              class={languageSwitcherMenuLinkClass}
-            >
-              {t("nav.logIn")}
-            </ProductAppLink>
-          </li>
         </ul>
       </details>
 
+      <div class="hidden items-center gap-4 nav:flex">
+        {#each navLinks as link (link.href)}
+          <a href={link.href} class={navSecondaryLinkClass}>
+            {link.label}
+          </a>
+        {/each}
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
       <details
-        class={cn(languageSwitcherDetailsClass, languageSwitcherSizes.md)}
+        class={cn(
+          languageSwitcherDetailsClass,
+          languageSwitcherSizes.md,
+          languageSwitcherIconOnlyClass,
+        )}
         data-locale-menu
       >
         <summary
-          class={languageSwitcherSummaryClass}
+          class={languageSwitcherIconOnlySummaryClass}
           aria-label={t("language.select")}
         >
           <svg
@@ -149,9 +128,6 @@
             <path d="m22 22-5-10-5 10" />
             <path d="M14 18h6" />
           </svg>
-          <span class="hidden truncate sm:inline"
-            >{SUPPORTED_LOCALES[lang]}</span
-          >
         </summary>
         <ul class={languageSwitcherMenuClass} role="list">
           {#each MARKETING_LOCALES as locale (locale)}
@@ -219,20 +195,9 @@
         </svg>
       </button>
 
-      <div class="hidden items-center gap-2 md:flex">
-        <ProductAppLink
-          kind="login"
-          utmCampaign="nav"
-          class={cn(navSecondaryLinkClass, focusRing, "px-2 py-1")}
-        >
-          {t("nav.logIn")}
-        </ProductAppLink>
-        <ProductAppLink kind="signup" utmCampaign="nav" class={primaryCtaClass}>
-          {t("nav.startFree")}
-        </ProductAppLink>
-      </div>
-
-      <div class={cn(iconSlotClass, "md:hidden")} aria-hidden="true"></div>
+      <ProductAppLink {lang} class={primaryCtaClass}>
+        {t("nav.dashboard")}
+      </ProductAppLink>
     </div>
   </nav>
 </header>

@@ -1,9 +1,9 @@
-import { error } from "@sveltejs/kit";
+import { error, redirect } from "@sveltejs/kit";
 import {
   getFeatureDeepDive,
   getFeatureDeepDiveSlugs,
 } from "$lib/marketing-content";
-import { localeEntries } from "$lib/locale-path";
+import { localeEntries } from "$lib/i18n";
 import type { PageLoad } from "./$types";
 
 export function entries() {
@@ -17,5 +17,5 @@ export const load: PageLoad = ({ params }) => {
   if (!feature) {
     error(404, "Feature not found");
   }
-  return { feature };
+  redirect(308, `/${params.lang}#${feature.slug}`);
 };

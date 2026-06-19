@@ -13,10 +13,22 @@
 ## Project conventions
 
 - Merge Tailwind with `cn()` from `@repo/utils` — not raw `clsx` / `twMerge`
+- **Tailwind v4** — see [Tailwind v4](#tailwind-v4) (semantic tokens, canonical class names; no v3 utilities)
 - **Env (three layers):** `loadWebEnv` in `apps/web/src/lib/web-env.ts`; `requireEnv` in `convex/lib/env.ts` for Convex dashboard vars — never `process.env` in app code; do not import `@repo/utils` from Convex. See [docs/monorepo-structure.md](docs/monorepo-structure.md).
 - Prefer `@repo/utils/*` subpaths (`/env`, `/theme`, `/i18n`, …) over the root barrel
 - Server state: `convex-svelte` `useQuery` / `useConvexClient().mutation` — not `useEffect` + `fetch`
 - Root `package.json` `overrides`: keep [docs/dependency-overrides.md](docs/dependency-overrides.md) in sync when pins change
+
+## Tailwind v4
+
+This repo uses **Tailwind CSS v4** (`@import "tailwindcss"` + `@theme` in each app's `app.css`). Do not use v3 class names.
+
+- **Semantic tokens** from `@theme`: `bg-background`, `text-foreground`, `border-border`, `bg-muted`, `text-muted-foreground`, `bg-card`, `bg-primary`, `ring-ring`, etc. — not raw colors or arbitrary hex.
+- **Gradients:** `bg-linear-to-*` (e.g. `bg-linear-to-br`), not `bg-gradient-to-*`.
+- **Aspect ratio:** `aspect-16/10`, not `aspect-[16/10]`; prefer `@theme` tokens like `aspect-video` when they fit.
+- **Shrink/grow:** `shrink-0` / `grow`, not `flex-shrink-0` / `flex-grow`.
+- **Before adding classes:** grep existing components (`packages/utils/src/chrome.ts`, `packages/ui-svelte/`) and match their patterns.
+- **After editing `.svelte` / `.css`:** if IntelliSense warns "can be written as …", use the suggested canonical form before finishing.
 
 ## Dependency source (opensrc)
 
@@ -51,12 +63,15 @@ Committed symlinks: `.claude` → `.agents`, `CLAUDE.md` → `AGENTS.md`. Setup 
 
 Before ending a turn, run what applies to your edits:
 
-| Change                         | Command                                    |
-| ------------------------------ | ------------------------------------------ |
-| Docs / Markdown only           | `bunx prettier --write <touched paths>`    |
-| `scripts/**` only              | Prettier on touched paths + `bun run lint` |
-| Any `.ts` / `.js` / `.svelte`  | Prettier + `bun run check`                 |
-| Task complete or broad changes | `bun run verify`                           |
+| Change                           | Command                                                              |
+| -------------------------------- | -------------------------------------------------------------------- |
+| `apps/marketing/src/content/**`  | Prettier on touched paths + `bun run --filter @repo/marketing build` |
+| Docs / Markdown only (elsewhere) | `bunx prettier --write <touched paths>`                              |
+| `scripts/**` only                | Prettier on touched paths + `bun run lint`                           |
+| Any `.ts` / `.js` / `.svelte`    | Prettier + `bun run check`                                           |
+| Task complete or broad changes   | `bun run verify`                                                     |
+
+Marketing content is prerendered at build time — SvelteKit crawls every `<a href>` and fails on 404s or missing fragment IDs. `bun run verify` does not run the marketing build; CI does.
 
 Use `bunx prettier --write` (not `bun run format`, which is check-only).
 

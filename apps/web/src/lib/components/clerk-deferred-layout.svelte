@@ -16,10 +16,12 @@
   interface Props {
     publishableKey: string;
     copyright: string;
+    marketingHomeHref?: string;
     children: import("svelte").Snippet;
   }
 
-  let { publishableKey, copyright, children }: Props = $props();
+  let { publishableKey, copyright, marketingHomeHref, children }: Props =
+    $props();
 
   const { t } = useTranslation();
 
@@ -69,7 +71,7 @@
       <main class={siteMainContainerClass}>
         {@render children()}
       </main>
-      <SiteFooter {copyright} />
+      <SiteFooter {copyright} homeHref={marketingHomeHref} />
     </div>
   </AuthShell>
 {:else}
@@ -84,6 +86,6 @@
         {@render children()}
       {/if}
     </main>
-    <SiteFooter {copyright} />
+    <SiteFooter {copyright} homeHref={marketingHomeHref} />
   </div>
 {/if}

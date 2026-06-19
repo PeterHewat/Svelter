@@ -17,6 +17,11 @@ import ru from "./locales/ru";
 
 export type MarketingTranslationKey = FlattenKeys<typeof en>;
 
+export type MarketingT = (
+  key: MarketingTranslationKey,
+  vars?: Record<string, string | number>,
+) => string;
+
 export const MARKETING_LOCALES = Object.keys(SUPPORTED_LOCALES) as Locale[];
 
 export const DEFAULT_MARKETING_LOCALE: Locale = "en";
@@ -54,6 +59,22 @@ export function mt(
 ): string {
   ensureMarketingI18n();
   return t(key, variables, locale);
+}
+
+/**
+ * Returns a translator function bound to a locale.
+ *
+ * @param locale - Target locale from the URL
+ */
+export function createMarketingT(locale: Locale): MarketingT {
+  return (key, vars) => mt(key, locale, vars);
+}
+
+/**
+ * Prerender entry list for every supported marketing locale.
+ */
+export function localeEntries(): Array<{ lang: Locale }> {
+  return MARKETING_LOCALES.map((lang) => ({ lang }));
 }
 
 export { SUPPORTED_LOCALES, type Locale };

@@ -23,6 +23,7 @@ import {
   type CloudflareSetupMeta,
   type SetupConfig,
 } from "./setup-config";
+import { hasApexDomain } from "../../packages/config/validate-domain";
 
 const CLOUDFLARE_DEPLOY_SECRETS = [
   "CLOUDFLARE_API_TOKEN",
@@ -195,6 +196,22 @@ export async function ensureCloudflareGithubSecretsSynced(
     meta.accountId,
     meta,
   );
+  if (allOk && hasApexDomain(setup.apexDomain)) {
+    const github = resolveGitHubRepo(root);
+    if (github) {
+      const apexOk = await ghSecretSetEnv(
+        root,
+        "production",
+        "APEX_DOMAIN",
+        setup.apexDomain!,
+      );
+      console.log(
+        apexOk
+          ? "✓ production / APEX_DOMAIN"
+          : "○ Failed production / APEX_DOMAIN",
+      );
+    }
+  }
   if (allOk) {
     markCloudflareGithubSecretsSynced(root);
     console.log(

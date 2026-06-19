@@ -1,8 +1,12 @@
 <script lang="ts">
   import { cn } from "@repo/utils";
   import {
-    languageSwitcherBaseClass,
-    languageSwitcherSelectClass,
+    languageSwitcherDetailsClass,
+    languageSwitcherIconOnlyClass,
+    languageSwitcherIconOnlySummaryClass,
+    languageSwitcherMenuCheckSlotClass,
+    languageSwitcherMenuClass,
+    languageSwitcherMenuItemClass,
     languageSwitcherSizes,
   } from "@repo/utils/chrome";
   import {
@@ -35,49 +39,105 @@
 
   const store = useI18nStore;
   let locale = $state(store.getState().locale);
+  let detailsEl = $state<HTMLDetailsElement | undefined>();
 
   onMount(() => {
     locale = store.getState().locale;
-    return store.subscribe((state) => {
+    const unsubscribe = store.subscribe((state) => {
       locale = state.locale;
     });
+
+    function handleDocumentClick(event: MouseEvent) {
+      if (!detailsEl?.open) {
+        return;
+      }
+      const target = event.target;
+      if (!(target instanceof Element) || !detailsEl.contains(target)) {
+        detailsEl.open = false;
+      }
+    }
+
+    function handleDocumentKeydown(event: KeyboardEvent) {
+      if (event.key === "Escape" && detailsEl?.open) {
+        detailsEl.open = false;
+      }
+    }
+
+    document.addEventListener("click", handleDocumentClick);
+    document.addEventListener("keydown", handleDocumentKeydown);
+
+    return () => {
+      unsubscribe();
+      document.removeEventListener("click", handleDocumentClick);
+      document.removeEventListener("keydown", handleDocumentKeydown);
+    };
   });
 
-  function handleChange(event: Event) {
-    const value = (event.currentTarget as HTMLSelectElement).value as Locale;
+  function selectLocale(value: Locale) {
     store.getState().setLocale(value);
+    if (detailsEl) {
+      detailsEl.open = false;
+    }
   }
 </script>
 
-<div class={cn(languageSwitcherBaseClass, wrapperSizeClasses[size], className)}>
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class={cn("text-muted-foreground shrink-0", iconSizeClasses[size])}
-    aria-hidden="true"
-  >
-    <path d="m5 8 6 6" />
-    <path d="m4 14 6-6 2-3" />
-    <path d="M2 5h12" />
-    <path d="M7 2h1" />
-    <path d="m22 22-5-10-5 10" />
-    <path d="M14 18h6" />
-  </svg>
-  <select
-    id="language-switcher"
-    name="locale"
-    value={locale}
-    onchange={handleChange}
-    class={languageSwitcherSelectClass}
-    aria-label={ariaLabel}
-  >
+<details
+  bind:this={detailsEl}
+  class={cn(
+    languageSwitcherDetailsClass,
+    languageSwitcherIconOnlyClass,
+    wrapperSizeClasses[size],
+    className,
+  )}
+>
+  <summary class={languageSwitcherIconOnlySummaryClass} aria-label={ariaLabel}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class={cn("text-muted-foreground shrink-0", iconSizeClasses[size])}
+      aria-hidden="true"
+    >
+      <path d="m5 8 6 6" />
+      <path d="m4 14 6-6 2-3" />
+      <path d="M2 5h12" />
+      <path d="M7 2h1" />
+      <path d="m22 22-5-10-5 10" />
+      <path d="M14 18h6" />
+    </svg>
+  </summary>
+  <ul class={languageSwitcherMenuClass} role="list">
     {#each Object.keys(SUPPORTED_LOCALES) as loc (loc)}
-      <option value={loc}>{SUPPORTED_LOCALES[loc as Locale]}</option>
+      <li>
+        <button
+          type="button"
+          class={languageSwitcherMenuItemClass}
+          onclick={() => selectLocale(loc as Locale)}
+          aria-current={loc === locale ? "true" : undefined}
+        >
+          <span class={languageSwitcherMenuCheckSlotClass} aria-hidden="true">
+            {#if loc === locale}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="h-4 w-4"
+              >
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            {/if}
+          </span>
+          {SUPPORTED_LOCALES[loc as Locale]}
+        </button>
+      </li>
     {/each}
-  </select>
-</div>
+  </ul>
+</details>

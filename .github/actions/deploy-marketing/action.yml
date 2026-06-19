@@ -11,8 +11,15 @@ inputs:
   pages_project_name:
     description: Cloudflare Pages project name for apps/marketing
     required: true
+  web_pages_project_name:
+    description: Cloudflare Pages project name for apps/web (product app origin)
+    required: true
   deploy_branch:
     description: Preview branch label (e.g. staging); omit for production
+    required: false
+    default: ""
+  apex_domain:
+    description: Optional apex domain for production custom origins (e.g. foobar.com)
     required: false
     default: ""
 
@@ -25,14 +32,22 @@ runs:
         CLOUDFLARE_API_TOKEN: ${{ inputs.cloudflare_api_token }}
         CLOUDFLARE_ACCOUNT_ID: ${{ inputs.cloudflare_account_id }}
         CF_PAGES_PROJECT_MARKETING: ${{ inputs.pages_project_name }}
+        CF_PAGES_PROJECT_WEB: ${{ inputs.web_pages_project_name }}
         DEPLOY_BRANCH: ${{ inputs.deploy_branch }}
+        APEX_DOMAIN: ${{ inputs.apex_domain }}
       run: |
         set -euo pipefail
-        if [ -n "${DEPLOY_BRANCH:-}" ]; then
-          export PUBLIC_MARKETING_ORIGIN="https://${DEPLOY_BRANCH}.${CF_PAGES_PROJECT_MARKETING}.pages.dev"
-        else
-          export PUBLIC_MARKETING_ORIGIN="https://${CF_PAGES_PROJECT_MARKETING}.pages.dev"
-        fi
+        eval "$(bun -e "
+        import { deriveAppOrigins } from '@repo/config/app-origins';
+        const origins = deriveAppOrigins({
+          webProject: process.env.CF_PAGES_PROJECT_WEB ?? '',
+          marketingProject: process.env.CF_PAGES_PROJECT_MARKETING ?? '',
+          stagingBranch: process.env.DEPLOY_BRANCH?.trim() || undefined,
+          apexDomain: process.env.APEX_DOMAIN?.trim() || undefined,
+        });
+        console.log('export PUBLIC_PRODUCT_APP_URL=' + JSON.stringify(origins.product));
+        console.log('export PUBLIC_MARKETING_ORIGIN=' + JSON.stringify(origins.marketing));
+        ")"
         bun run --filter @repo/marketing build
         BRANCH_ARGS=()
         if [ -n "${DEPLOY_BRANCH:-}" ]; then

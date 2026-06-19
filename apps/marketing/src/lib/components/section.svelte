@@ -12,10 +12,15 @@
   let { class: className, title, id, children }: Props = $props();
 </script>
 
-<section {id} class={cn("py-16 md:py-24", className)}>
-  <div class="container mx-auto px-4">
+<section
+  {id}
+  class={cn("marketing-section-y", id && "scroll-mt-24", className)}
+>
+  <div class="marketing-container">
     {#if title}
-      <h2 class="mb-12 text-center text-3xl font-bold tracking-tight">
+      <h2
+        class="marketing-section-title mb-8 text-center font-semibold tracking-tight text-balance"
+      >
         {title}
       </h2>
     {/if}

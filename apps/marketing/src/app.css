@@ -6,6 +6,12 @@
 @source "../../../packages/utils/src/focus.ts";
 
 @theme {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --breakpoint-nav: 32rem;
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-primary: hsl(var(--primary));
@@ -24,73 +30,81 @@
 }
 
 body {
-  @apply bg-background text-foreground min-h-screen antialiased;
+  @apply bg-background text-foreground min-h-screen font-sans antialiased;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+main {
+  overflow-anchor: auto;
 }
 
 /** System dark mode when JS has not set an explicit `.light` / `.dark` override. */
 @media (prefers-color-scheme: dark) {
   html:not(.dark):not(.light) {
     color-scheme: dark;
-    --background: 222 47% 11%;
+    --background: 222 47% 6%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
+    --card: 222 47% 9%;
     --card-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
+    --primary: 0 0% 100%;
     --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 17%;
+    --secondary: 217 33% 14%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
+    --muted: 217 33% 14%;
     --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 234 50% 16%;
+    --accent-foreground: 234 89% 74%;
     --destructive: 0 62% 50%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 224 76% 48%;
+    --border: 217 33% 16%;
+    --input: 217 33% 16%;
+    --ring: 234 89% 64%;
   }
 }
 
 html.dark {
   color-scheme: dark;
-  --background: 222 47% 11%;
+  --background: 222 47% 6%;
   --foreground: 210 40% 98%;
-  --card: 222 47% 11%;
+  --card: 222 47% 9%;
   --card-foreground: 210 40% 98%;
-  --primary: 217 91% 60%;
+  --primary: 0 0% 100%;
   --primary-foreground: 222 47% 11%;
-  --secondary: 217 33% 17%;
+  --secondary: 217 33% 14%;
   --secondary-foreground: 210 40% 98%;
-  --muted: 217 33% 17%;
+  --muted: 217 33% 14%;
   --muted-foreground: 215 20% 65%;
-  --accent: 217 33% 17%;
-  --accent-foreground: 210 40% 98%;
+  --accent: 234 50% 16%;
+  --accent-foreground: 234 89% 74%;
   --destructive: 0 62% 50%;
   --destructive-foreground: 210 40% 98%;
-  --border: 217 33% 17%;
-  --input: 217 33% 17%;
-  --ring: 224 76% 48%;
+  --border: 217 33% 16%;
+  --input: 217 33% 16%;
+  --ring: 234 89% 64%;
 }
 
 html.light {
   color-scheme: light;
-  --background: 0 0% 100%;
+  --background: 60 9% 98%;
   --foreground: 222 47% 11%;
   --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;
-  --primary: 221 83% 53%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
+  --primary: 222 47% 11%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 60 5% 96%;
   --secondary-foreground: 222 47% 11%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222 47% 11%;
+  --muted: 60 5% 96%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 234 89% 96%;
+  --accent-foreground: 234 89% 40%;
   --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 221 83% 53%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 234 89% 54%;
 }
 
 @media (scripting: none) {
@@ -103,6 +117,176 @@ html.light {
   a:focus-visible,
   button:focus-visible {
     @apply ring-ring rounded-sm ring-2 outline-none;
+  }
+}
+
+@layer components {
+  /** Full-width shell that grows smoothly with the viewport (no stepped container). */
+  .marketing-container {
+    @apply mx-auto w-full px-6;
+    max-width: 80rem;
+  }
+
+  /** Product screenshot / browser frame width cap. */
+  .marketing-media {
+    @apply mx-auto w-full;
+    max-width: 64rem;
+  }
+
+  .marketing-section-y {
+    padding-top: clamp(2rem, 1.5vw + 1rem, 3rem);
+    padding-bottom: clamp(3.5rem, 2.5vw + 2rem, 5.5rem);
+  }
+
+  .marketing-section-y-compact {
+    padding-top: clamp(1.25rem, 1vw + 0.5rem, 2rem);
+    padding-bottom: clamp(2.5rem, 2vw + 1.25rem, 3.5rem);
+  }
+
+  /** Hero sits below the fixed header — lighter top padding than other sections. */
+  .marketing-hero {
+    padding-top: clamp(1rem, 0.75vw + 0.5rem, 1.5rem);
+    padding-bottom: clamp(3.5rem, 2.5vw + 2rem, 5.5rem);
+  }
+
+  .marketing-display {
+    font-size: clamp(2.25rem, 2.8vw + 1.25rem, 3.75rem);
+    line-height: 1.08;
+  }
+
+  .marketing-lead {
+    font-size: clamp(1.125rem, 0.45vw + 1rem, 1.25rem);
+  }
+
+  .marketing-section-title {
+    font-size: clamp(1.875rem, 1.2vw + 1.35rem, 2.25rem);
+    line-height: 1.15;
+  }
+
+  .prose-marketing {
+    @apply text-foreground leading-relaxed;
+  }
+
+  .prose-marketing > :first-child {
+    @apply mt-0;
+  }
+
+  .prose-marketing h2 {
+    @apply mt-10 mb-4 text-2xl font-semibold tracking-tight;
+  }
+
+  .prose-marketing h3 {
+    @apply mt-8 mb-3 text-xl font-semibold tracking-tight;
+  }
+
+  .prose-marketing p {
+    @apply text-muted-foreground my-4;
+  }
+
+  .prose-marketing ul,
+  .prose-marketing ol {
+    @apply text-muted-foreground my-4 list-inside list-disc space-y-2 pl-1;
+  }
+
+  .prose-marketing ol {
+    @apply list-decimal;
+  }
+
+  .prose-marketing a {
+    @apply text-foreground underline underline-offset-4 hover:opacity-80;
+  }
+
+  .prose-marketing code {
+    @apply bg-muted rounded px-1.5 py-0.5 font-mono text-sm;
+  }
+
+  .prose-marketing pre {
+    @apply bg-card border-border my-6 overflow-x-auto rounded-lg border p-4;
+  }
+
+  .prose-marketing pre code {
+    @apply bg-transparent p-0;
+  }
+
+  .prose-marketing blockquote {
+    @apply border-border text-muted-foreground my-6 border-l-4 pl-4 italic;
+  }
+
+  .pricing-table-root .billing-input {
+    @apply sr-only;
+  }
+
+  .pricing-table-root .monthly-cards,
+  .pricing-table-root .annual-cards {
+    @apply mx-auto max-w-5xl gap-6 md:grid-cols-3;
+  }
+
+  .pricing-table-root .monthly-cards {
+    display: grid;
+  }
+
+  .pricing-table-root .annual-cards {
+    display: none;
+  }
+
+  .pricing-table-root:has(.billing-annual:checked) .monthly-cards {
+    display: none;
+  }
+
+  .pricing-table-root:has(.billing-annual:checked) .annual-cards {
+    display: grid;
+  }
+
+  .pricing-table-root .billing-label {
+    @apply text-muted-foreground;
+  }
+
+  .pricing-table-root .billing-label-monthly:has(:checked),
+  .pricing-table-root .billing-label-annual:has(:checked) {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  }
+
+  .testimonial-quote {
+    display: inline-grid;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .testimonial-attribution {
+    display: grid;
+  }
+
+  .testimonial-quote-ghost,
+  .testimonial-quote-visible,
+  .testimonial-attribution-ghost,
+  .testimonial-attribution-visible {
+    grid-area: 1 / 1;
+  }
+
+  .testimonial-attribution-visible {
+    opacity: 0;
+  }
+
+  .testimonial-attribution-visible.is-visible {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .testimonial-attribution-visible.is-visible {
+      animation: testimonial-attribution-fade-in 1s ease-out both;
+    }
+  }
+}
+
+@keyframes testimonial-attribution-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }
 

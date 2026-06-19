@@ -32,6 +32,7 @@ const en = {
     main: "Main navigation",
     tasks: "Tasks",
     home: "Home",
+    website: "Website",
   },
   auth: {
     openAuth: "Sign in",

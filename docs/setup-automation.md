@@ -179,7 +179,7 @@ Setup probes these at the start of each interactive run. Missing tools print mac
 ```mermaid
 flowchart TD
   start[bun run setup] --> cli[CLI prerequisites gh convex wrangler clerk]
-  cli --> identity[Prompt product name + optional apex domain]
+  cli --> identity[Prompt product name tagline optional apex]
   identity --> scaffold[Copy .env.local if missing]
   scaffold --> clerk[Clerk CLI or dashboard keys]
   clerk --> convex{Convex linked?}
@@ -200,6 +200,8 @@ flowchart TD
   prodSecrets --> done
   checklist --> done
 ```
+
+Identity also writes `PRODUCT_TAGLINE` to `packages/config/product.ts`, the marketing hero and page title, and the GitHub repo **About** description (via `gh api` when `gh auth login` is active).
 
 ---
 
