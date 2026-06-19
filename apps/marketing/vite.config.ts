@@ -31,6 +31,7 @@ const githubRepoUrl = resolveGithubRepoUrl({
 });
 
 export default defineConfig({
+  envPrefix: ["PUBLIC_"],
   define: {
     __GITHUB_REPO_URL__: JSON.stringify(githubRepoUrl),
   },
