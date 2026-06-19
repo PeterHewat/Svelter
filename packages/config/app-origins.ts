@@ -10,32 +10,37 @@ import {
   pagesStagingHostname,
 } from "./hostnames";
 
-const PUBLIC_PRODUCT_APP_URL = "PUBLIC_PRODUCT_APP_URL";
-const PUBLIC_MARKETING_ORIGIN = "PUBLIC_MARKETING_ORIGIN";
+function trimOrigin(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : undefined;
+}
 
 /**
  * Read a build-time origin from Node (`process.env`) or Vite (`import.meta.env`).
+ *
+ * Uses static property access so Vite can inline `PUBLIC_*` vars in client bundles.
  */
-function readEnvOrigin(key: string): string | undefined {
-  let value: string | undefined;
-
+function readProductAppUrlFromEnv(): string | undefined {
   if (typeof process !== "undefined" && process.env) {
-    value = process.env[key];
-  }
-
-  if (!value && typeof import.meta !== "undefined" && import.meta.env) {
-    const viteEnv = import.meta.env as Record<
-      string,
-      string | boolean | undefined
-    >;
-    const candidate = viteEnv[key];
-    if (typeof candidate === "string") {
-      value = candidate;
+    const fromProcess = trimOrigin(process.env.PUBLIC_PRODUCT_APP_URL);
+    if (fromProcess) {
+      return fromProcess;
     }
   }
 
-  const trimmed = value?.trim();
-  return trimmed && trimmed.length > 0 ? trimmed : undefined;
+  return trimOrigin(import.meta.env.PUBLIC_PRODUCT_APP_URL);
+}
+
+/** @see readProductAppUrlFromEnv */
+function readMarketingOriginFromEnv(): string | undefined {
+  if (typeof process !== "undefined" && process.env) {
+    const fromProcess = trimOrigin(process.env.PUBLIC_MARKETING_ORIGIN);
+    if (fromProcess) {
+      return fromProcess;
+    }
+  }
+
+  return trimOrigin(import.meta.env.PUBLIC_MARKETING_ORIGIN);
 }
 
 /**
@@ -44,7 +49,7 @@ function readEnvOrigin(key: string): string | undefined {
  * Precedence: `PUBLIC_PRODUCT_APP_URL` → local dev default (`localhost:3000`).
  */
 export function resolveProductAppOrigin(): string {
-  return readEnvOrigin(PUBLIC_PRODUCT_APP_URL) ?? webDevOrigin;
+  return readProductAppUrlFromEnv() ?? webDevOrigin;
 }
 
 /**
@@ -53,7 +58,7 @@ export function resolveProductAppOrigin(): string {
  * Precedence: `PUBLIC_MARKETING_ORIGIN` → local dev default (`localhost:3001`).
  */
 export function resolveMarketingOrigin(): string {
-  return readEnvOrigin(PUBLIC_MARKETING_ORIGIN) ?? marketingDevOrigin;
+  return readMarketingOriginFromEnv() ?? marketingDevOrigin;
 }
 
 export type DeriveAppOriginsInput = {
