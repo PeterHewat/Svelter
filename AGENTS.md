@@ -80,6 +80,7 @@ Use `bunx prettier --write` (not `bun run format`, which is check-only).
 - If a tool fails, analyze the error and retry with correction if possible
 - Do not blame the user or environment; adapt and find alternatives
 - If truly blocked, state what failed and one concrete next step — factually, without rhetorical questions
+- **CLI stuck:** If a CLI command hangs, times out, or needs auth you do not have (e.g. `bunx clerk api …`), **ask the user to run it** and paste the output — do not probe undocumented API paths or install extra packages as a workaround
 
 <!-- convex-ai-start -->
 

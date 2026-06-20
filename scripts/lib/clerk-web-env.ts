@@ -4,41 +4,32 @@ import { readEnvFile, upsertEnvKeys } from "./env-file";
 /** Canonical SvelteKit public env key for Clerk publishable key. */
 export const PUBLIC_CLERK_PUBLISHABLE_KEY = "PUBLIC_CLERK_PUBLISHABLE_KEY";
 
-/** Legacy key written by `clerk env pull` (Vite-style). */
-export const VITE_CLERK_PUBLISHABLE_KEY = "VITE_CLERK_PUBLISHABLE_KEY";
-
 /** Canonical SvelteKit public env key for Convex URL. */
 export const PUBLIC_CONVEX_URL = "PUBLIC_CONVEX_URL";
-
-/** Legacy Convex URL key from older templates. */
-export const VITE_CONVEX_URL = "VITE_CONVEX_URL";
 
 const WEB_ENV = "apps/web/.env.local";
 
 /**
- * Reads the Clerk publishable key from web env (`PUBLIC_*` preferred).
+ * Reads the Clerk publishable key from web env.
  *
  * @param webEnv - Parsed `apps/web/.env.local` contents
  */
 export function readClerkPublishableKey(
   webEnv: Record<string, string>,
 ): string | undefined {
-  const value =
-    webEnv[PUBLIC_CLERK_PUBLISHABLE_KEY]?.trim() ||
-    webEnv[VITE_CLERK_PUBLISHABLE_KEY]?.trim();
+  const value = webEnv[PUBLIC_CLERK_PUBLISHABLE_KEY]?.trim();
   return value || undefined;
 }
 
 /**
- * Reads the Convex URL from web env (`PUBLIC_*` preferred).
+ * Reads the Convex URL from web env.
  *
  * @param webEnv - Parsed `apps/web/.env.local` contents
  */
 export function readConvexUrlFromWebEnv(
   webEnv: Record<string, string>,
 ): string | undefined {
-  const value =
-    webEnv[PUBLIC_CONVEX_URL]?.trim() || webEnv[VITE_CONVEX_URL]?.trim();
+  const value = webEnv[PUBLIC_CONVEX_URL]?.trim();
   return value || undefined;
 }
 
@@ -53,15 +44,9 @@ export function normalizeClerkPulledWebEnv(root: string): void {
 
   const publishable =
     webEnv[PUBLIC_CLERK_PUBLISHABLE_KEY]?.trim() ||
-    webEnv[VITE_CLERK_PUBLISHABLE_KEY]?.trim();
+    webEnv.VITE_CLERK_PUBLISHABLE_KEY?.trim();
   if (publishable && !isPlaceholderEnvValue(publishable)) {
     updates[PUBLIC_CLERK_PUBLISHABLE_KEY] = publishable;
-  }
-
-  const convexUrl =
-    webEnv[PUBLIC_CONVEX_URL]?.trim() || webEnv[VITE_CONVEX_URL]?.trim();
-  if (convexUrl && !isPlaceholderEnvValue(convexUrl)) {
-    updates[PUBLIC_CONVEX_URL] = convexUrl;
   }
 
   if (Object.keys(updates).length > 0) {
@@ -82,7 +67,6 @@ export function normalizeClerkProductionEnv(
   const env = readEnvFile(root, relPath);
   const publishable =
     env[PUBLIC_CLERK_PUBLISHABLE_KEY]?.trim() ||
-    env[VITE_CLERK_PUBLISHABLE_KEY]?.trim() ||
     env.CLERK_PUBLISHABLE_KEY?.trim() ||
     "";
   const secretKey = env.CLERK_SECRET_KEY?.trim() || "";

@@ -58,6 +58,10 @@ async function reportClerkJwtTemplate(secretKey: string): Promise<void> {
   const jwtTemplate = await ensureClerkConvexJwtTemplate(secretKey);
   if (jwtTemplate.ok && jwtTemplate.created) {
     console.log('✓ Created Clerk JWT template "convex" (Convex + Clerk auth)');
+  } else if (jwtTemplate.ok && jwtTemplate.updated) {
+    console.log(
+      '✓ Updated Clerk JWT template "convex" (profile claims including picture)',
+    );
   } else if (jwtTemplate.ok) {
     console.log('✓ Clerk JWT template "convex" present');
   } else {

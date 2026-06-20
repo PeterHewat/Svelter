@@ -1,10 +1,4 @@
-import {
-  mkdirSync,
-  mkdtempSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "bun:test";
@@ -35,18 +29,7 @@ describe("agent-links", () => {
     );
   });
 
-  it("migrates legacy .claude/skills symlink layout to .claude → .agents", () => {
-    root = mkdtempSync(join(tmpdir(), "svelter-agent-links-"));
-    mkdirSync(join(root, ".agents/skills"), { recursive: true });
-    mkdirSync(join(root, ".claude"), { recursive: true });
-    symlinkSync("../.agents/skills", join(root, ".claude/skills"));
-    ensureClaudeAgentsLink(root);
-    expect(isSymlinkTo(join(root, ".claude"), join(root, ".agents"))).toBe(
-      true,
-    );
-  });
-
-  it("replaces a real .claude/skills directory with .claude → .agents", () => {
+  it("replaces an existing .claude directory with .claude → .agents", () => {
     root = mkdtempSync(join(tmpdir(), "svelter-agent-links-"));
     const claudeSkills = join(root, ".claude/skills");
     mkdirSync(claudeSkills, { recursive: true });

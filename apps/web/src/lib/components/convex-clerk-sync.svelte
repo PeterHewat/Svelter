@@ -1,54 +1,121 @@
 <script lang="ts">
+  import { api } from "$convex/_generated/api";
   import { useConvexClient } from "convex-svelte";
   import { useClerkContext } from "svelte-clerk/client";
-  import { convexClerkReady } from "$lib/convex-clerk-ready.svelte";
+  import {
+    clearAnonymousTokenCache,
+    clearStoredAnonUserId,
+    convexAuthModeFromClerk,
+    readStoredAnonUserId,
+    resolveAnonymousConvexToken,
+  } from "$lib/anonymous-auth";
   import { isAuthEnabled } from "$lib/backend";
+  import { convexAuthReady } from "$lib/convex-clerk-ready.svelte";
+  import { convexSiteUrl } from "$lib/convex-site-url";
+  import { loadWebEnv } from "$lib/web-env";
 
   if (!isAuthEnabled()) {
-    convexClerkReady.ready = true;
+    convexAuthReady.ready = true;
   } else {
     const client = useConvexClient();
     const clerk = useClerkContext();
+    const { convexUrl } = loadWebEnv();
+
+    let graduating = $state(false);
+
+    const authMode = $derived.by(() => {
+      const { isLoaded, auth, session } = clerk;
+      return convexAuthModeFromClerk({
+        isLoaded,
+        userId: auth.userId,
+        hasSession: Boolean(session),
+      });
+    });
+
+    async function syncClerkUserRow() {
+      if (graduating) {
+        return;
+      }
+      graduating = true;
+      try {
+        const guestTokenIdentifier = readStoredAnonUserId();
+        if (guestTokenIdentifier) {
+          await client.mutation(api.users.mergeGuestSessionIntoAccount, {
+            guestTokenIdentifier,
+          });
+          clearStoredAnonUserId();
+          clearAnonymousTokenCache();
+        } else {
+          await client.mutation(api.users.syncCurrentUser, {});
+        }
+      } catch {
+        /* invalid guest id or already merged */
+        clearStoredAnonUserId();
+      } finally {
+        graduating = false;
+      }
+    }
 
     $effect(() => {
-      const { isLoaded, auth, session } = clerk;
-      void auth.userId;
-      void auth.orgId;
-      void auth.orgRole;
+      const mode = authMode;
 
-      if (!isLoaded || !auth.userId || !session) {
-        convexClerkReady.ready = false;
-        client.setAuth(
-          async () => null,
-          () => {
-            convexClerkReady.ready = false;
-          },
-        );
+      if (mode === "idle") {
+        convexAuthReady.ready = false;
         return;
       }
 
       let active = true;
-      convexClerkReady.ready = false;
+      convexAuthReady.ready = false;
 
-      client.setAuth(
-        async ({ forceRefreshToken }) => {
-          try {
-            if (auth.sessionClaims?.aud === "convex") {
-              return await session.getToken({ skipCache: forceRefreshToken });
+      if (mode === "clerk") {
+        clearAnonymousTokenCache();
+        client.setAuth(
+          async ({ forceRefreshToken }) => {
+            const { session } = clerk;
+            if (!session) {
+              return null;
             }
-            return await session.getToken({
-              template: "convex",
-              skipCache: forceRefreshToken,
+            try {
+              return await session.getToken({
+                template: "convex",
+                skipCache: forceRefreshToken,
+              });
+            } catch {
+              return null;
+            }
+          },
+          (confirmed) => {
+            if (!active) return;
+            if (!confirmed) {
+              convexAuthReady.ready = false;
+              return;
+            }
+            void syncClerkUserRow().finally(() => {
+              if (active) {
+                convexAuthReady.ready = true;
+              }
             });
-          } catch {
-            return null;
-          }
-        },
-        (confirmed) => {
-          if (!active) return;
-          convexClerkReady.ready = confirmed;
-        },
-      );
+          },
+        );
+      } else if (convexUrl) {
+        const siteUrl = convexSiteUrl(convexUrl);
+        client.setAuth(
+          async ({ forceRefreshToken }) => {
+            try {
+              return await resolveAnonymousConvexToken(
+                siteUrl,
+                forceRefreshToken,
+              );
+            } catch {
+              return null;
+            }
+          },
+          (confirmed) => {
+            if (!active) return;
+            convexAuthReady.ready = confirmed;
+          },
+        );
+      }
 
       return () => {
         active = false;

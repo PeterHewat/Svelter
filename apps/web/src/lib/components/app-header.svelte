@@ -9,7 +9,6 @@
     siteHeaderClass,
     siteNavClass,
   } from "@repo/utils/chrome";
-  import { focusRing } from "@repo/utils/focus";
   import { openAuthModal } from "$lib/auth-ui.svelte";
   import { isAuthEnabled } from "$lib/backend";
   import { useTranslation } from "$lib/i18n";
@@ -67,13 +66,7 @@
             aria-hidden="true">{t("nav.tasks")}</span
           >
         {:else}
-          <button
-            type="button"
-            class={cn(navSecondaryLinkClass, focusRing)}
-            onclick={() => handleOpenAuth("/tasks")}
-          >
-            {t("nav.tasks")}
-          </button>
+          <a href="/tasks" class={navSecondaryLinkClass}>{t("nav.tasks")}</a>
         {/if}
       {/if}
     </div>

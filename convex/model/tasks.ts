@@ -1,8 +1,16 @@
 import { ConvexError } from "convex/values";
-import type { Doc, Id } from "../_generated/dataModel";
+import type { Id } from "../_generated/dataModel";
 import { parseOptionalDescription, parseTitle } from "../lib/validation";
 
-type TaskDoc = Doc<"tasks">;
+type TaskDoc = {
+  _id: Id<"tasks">;
+  userId: Id<"users">;
+  title: string;
+  description?: string;
+  completed: boolean;
+  createdAt: number;
+  updatedAt: number;
+};
 
 type TaskDbReader = {
   get: (id: Id<"tasks">) => Promise<TaskDoc | null>;
@@ -13,14 +21,14 @@ type TaskDbReader = {
  *
  * @param db - Database reader
  * @param taskId - Task document id
- * @param userId - Authenticated Clerk user id
+ * @param userId - Owner user document id
  * @returns The task document
  * @throws ConvexError when the task is missing or not owned by the user
  */
 export async function getOwnedTask(
   db: TaskDbReader,
   taskId: Id<"tasks">,
-  userId: string,
+  userId: Id<"users">,
 ): Promise<TaskDoc> {
   const task = await db.get(taskId);
   if (!task) {
@@ -39,10 +47,10 @@ export async function getOwnedTask(
  * @param completed - Optional completion filter
  * @returns Filtered task list
  */
-export function filterTasksByCompleted(
-  tasks: TaskDoc[],
+export function filterTasksByCompleted<T extends { completed: boolean }>(
+  tasks: T[],
   completed?: boolean,
-): TaskDoc[] {
+): T[] {
   if (completed === undefined) {
     return tasks;
   }
@@ -53,15 +61,15 @@ export function filterTasksByCompleted(
  * Builds insert payload for a new task.
  *
  * @param args - Raw create args
- * @param userId - Owner Clerk user id
+ * @param userId - Owner user document id
  * @param now - Timestamp for createdAt/updatedAt
  * @returns Document fields for insert
  */
 export function buildTaskInsert(
   args: { title: string; description?: string },
-  userId: string,
+  userId: Id<"users">,
   now: number,
-): Omit<TaskDoc, "_id" | "_creationTime"> {
+) {
   return {
     title: parseTitle(args.title),
     description: parseOptionalDescription(args.description),

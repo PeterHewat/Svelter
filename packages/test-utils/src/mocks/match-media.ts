@@ -8,15 +8,15 @@ export interface MockMatchMedia {
   matches: boolean;
   /** The media query string */
   media: string;
-  /** Callback for deprecated addListener */
+  /** Callback for MediaQueryList `addListener` (older DOM API) */
   onchange: ((this: MediaQueryList, ev: MediaQueryListEvent) => unknown) | null;
   /** Add event listener */
   addEventListener: ReturnType<typeof vi.fn>;
   /** Remove event listener */
   removeEventListener: ReturnType<typeof vi.fn>;
-  /** Deprecated: Add listener */
+  /** MediaQueryList `addListener` (older DOM API) */
   addListener: ReturnType<typeof vi.fn>;
-  /** Deprecated: Remove listener */
+  /** MediaQueryList `removeListener` (older DOM API) */
   removeListener: ReturnType<typeof vi.fn>;
   /** Dispatch event */
   dispatchEvent: ReturnType<typeof vi.fn>;
@@ -44,8 +44,8 @@ export function mockMatchMedia(
     onchange: null,
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
-    addListener: vi.fn(), // Deprecated
-    removeListener: vi.fn(), // Deprecated
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
     dispatchEvent: vi.fn(),
   });
 }

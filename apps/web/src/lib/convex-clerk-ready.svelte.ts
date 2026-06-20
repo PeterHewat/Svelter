@@ -1,6 +1,6 @@
 /**
- * True once the Convex client has a confirmed Clerk session token.
+ * True once the Convex client has a confirmed auth token (Clerk or guest).
  */
-export const convexClerkReady = $state({
+export const convexAuthReady = $state({
   ready: false,
 });

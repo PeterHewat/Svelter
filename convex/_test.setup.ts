@@ -8,5 +8,6 @@ export const modules = import.meta.glob([
   "./schema.ts",
   "./http.ts",
   "./tasks.ts",
+  "./users.ts",
   "./_generated/**/*.js",
 ]);

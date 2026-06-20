@@ -91,6 +91,14 @@ const it: TranslationDictionary = {
     listLabel: "Le tue attività",
     toggleComplete: "Segna «{{title}}» come completata",
     delete: "Elimina «{{title}}»",
+    guestLimit: "{{count}} / {{limit}} attività ospite",
+    guestLimitReached:
+      "Limite ospite raggiunto ({{limit}} attività). Crea un account per aggiungerne.",
+    signUpToContinue: "Registrati per continuare",
+    accountConvexLabel: "Profilo salvato in Convex",
+    anonymous: "Anonimo",
+    guestSession: "Sessione ospite",
+    noEmail: "Nessuna email sincronizzata",
   },
   footer: {
     copyright: "© {{year}} {{name}}",

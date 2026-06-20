@@ -67,8 +67,7 @@ export function isSymlinkTo(path: string, expectedTarget: string): boolean {
  * Ensures `.claude` points at `.agents` so Cursor, Claude Code, and Convex `ai-files`
  * share one skills tree (`.claude/skills` → `.agents/skills`).
  *
- * Replaces a real `.claude` directory (e.g. after Convex wrote only under `.claude/skills`)
- * or the legacy `.claude/skills` → `.agents/skills` layout.
+ * Replaces a real `.claude` directory (e.g. after Convex wrote only under `.claude/skills`).
  *
  * @param root - Repository root
  */

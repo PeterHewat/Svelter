@@ -76,17 +76,6 @@
       return true;
     }
 
-    if (path === "/blog") {
-      location.replace("/" + locale + "/blog");
-      return true;
-    }
-
-    var blogPost = /^\/blog\/([^/]+)$/.exec(path);
-    if (blogPost) {
-      location.replace("/" + locale + "/blog/" + blogPost[1]);
-      return true;
-    }
-
     return false;
   }
 
