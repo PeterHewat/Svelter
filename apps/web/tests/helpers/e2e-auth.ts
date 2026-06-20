@@ -12,8 +12,7 @@ export const tasksE2EEnvMessage =
 export function clerkPublishableKeyForE2E(): string | undefined {
   return (
     process.env.CLERK_PUBLISHABLE_KEY ??
-    process.env.PUBLIC_CLERK_PUBLISHABLE_KEY ??
-    process.env.VITE_CLERK_PUBLISHABLE_KEY
+    process.env.PUBLIC_CLERK_PUBLISHABLE_KEY
   );
 }
 
@@ -27,9 +26,7 @@ export function getTasksE2EConfigIssues(): string[] {
 
   const issues: string[] = [];
   const publishableKey = clerkPublishableKeyForE2E();
-  const convexUrl =
-    process.env.PUBLIC_CONVEX_URL?.trim() ||
-    process.env.VITE_CONVEX_URL?.trim();
+  const convexUrl = process.env.PUBLIC_CONVEX_URL?.trim();
   const email = process.env.E2E_USER_EMAIL?.trim();
   const secret = process.env.CLERK_SECRET_KEY?.trim();
 

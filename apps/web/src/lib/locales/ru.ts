@@ -92,6 +92,14 @@ const ru: TranslationDictionary = {
     listLabel: "Ваши задачи",
     toggleComplete: "Отметить «{{title}}» выполненной",
     delete: "Удалить «{{title}}»",
+    guestLimit: "{{count}} / {{limit}} гостевых задач",
+    guestLimitReached:
+      "Достигнут гостевой лимит ({{limit}} задач). Создайте аккаунт, чтобы добавить больше.",
+    signUpToContinue: "Зарегистрироваться, чтобы продолжить",
+    accountConvexLabel: "Профиль сохранён в Convex",
+    anonymous: "Аноним",
+    guestSession: "Гостевая сессия",
+    noEmail: "Email не синхронизирован",
   },
   footer: {
     copyright: "© {{year}} {{name}}",

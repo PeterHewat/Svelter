@@ -52,6 +52,7 @@ After Convex is linked, interactive setup walks through Clerk:
 2. Enable the [Convex integration](https://dashboard.clerk.com/apps/setup/convex) in Clerk.
 3. Setup uploads `CLERK_JWT_ISSUER_DOMAIN` to Convex and Clerk keys to `apps/web/.env.local`.
 4. Enable sign-in methods (Google, email/password, etc.) in the Clerk dashboard — no per-provider cloud consoles.
+5. With `CLERK_SECRET_KEY` set, setup prints the Convex webhook URL, then prompts for the signing secret (or reads it from `apps/web/.env.local`) and syncs to Convex — [setup-automation.md](./setup-automation.md#clerk-webhook-to-convex-profile-sync).
 
 For Playwright tasks E2E: run `bun run setup` to create a Clerk test user and write `E2E_USER_EMAIL` to `apps/web/.env.local`, plus `CLERK_SECRET_KEY` for the testing helper.
 

@@ -96,10 +96,6 @@ export function resolveProdConvexUrl(
  */
 export function readConvexUrlFromRootEnv(root: string): string | null {
   const rootEnv = readEnvFile(root, ".env.local");
-  const fromUrl = rootEnv.VITE_CONVEX_URL?.trim();
-  if (fromUrl?.includes(".convex.cloud")) {
-    return fromUrl;
-  }
   const deployment = rootEnv.CONVEX_DEPLOYMENT;
   if (!deployment) {
     return null;

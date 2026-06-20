@@ -43,7 +43,6 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? webDevOrigin;
 const clerkPublishableKey = clerkPublishableKeyForE2E();
 const convexUrl =
   process.env.PUBLIC_CONVEX_URL ??
-  process.env.VITE_CONVEX_URL ??
   (isPlaywrightUiOnly() ? "https://test-project.convex.cloud" : "");
 const uiOnly = isPlaywrightUiOnly();
 

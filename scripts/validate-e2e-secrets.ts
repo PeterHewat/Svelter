@@ -31,7 +31,6 @@ if (syncIssues.length > 0) {
 
 const publishableKey =
   process.env.PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() ||
-  process.env.VITE_CLERK_PUBLISHABLE_KEY?.trim() ||
   readClerkPublishableKey(readEnvFile(process.cwd(), "apps/web/.env.local")) ||
   "";
 const secretKey = process.env.CLERK_SECRET_KEY!.trim();

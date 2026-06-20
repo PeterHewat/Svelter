@@ -11,6 +11,8 @@ export const CLERK_API_KEYS =
   "https://dashboard.clerk.com/last-active?path=api-keys";
 export const CLERK_JWT_TEMPLATES =
   "https://dashboard.clerk.com/last-active?path=jwt-templates";
+export const CLERK_WEBHOOKS =
+  "https://dashboard.clerk.com/last-active?path=webhooks";
 
 /**
  * Clerk application dashboard URL when an app id is known.

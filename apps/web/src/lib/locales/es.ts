@@ -91,6 +91,14 @@ const es: TranslationDictionary = {
     listLabel: "Tus tareas",
     toggleComplete: "Marcar «{{title}}» como completada",
     delete: "Eliminar «{{title}}»",
+    guestLimit: "{{count}} / {{limit}} tareas de invitado",
+    guestLimitReached:
+      "Límite de invitado alcanzado ({{limit}} tareas). Crea una cuenta para añadir más.",
+    signUpToContinue: "Regístrate para continuar",
+    accountConvexLabel: "Perfil guardado en Convex",
+    anonymous: "Anónimo",
+    guestSession: "Sesión de invitado",
+    noEmail: "Sin correo sincronizado",
   },
   footer: {
     copyright: "© {{year}} {{name}}",

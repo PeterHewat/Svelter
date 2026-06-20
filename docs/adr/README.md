@@ -8,7 +8,7 @@ Architecture Decision Records are short text documents that capture a decision, 
 
 - **Context**: What situation led to this decision?
 - **Decision**: What did we decide?
-- **Status**: Proposed, accepted, deprecated, superseded
+- **Status**: Proposed, accepted, superseded
 - **Consequences**: What are the positive/negative outcomes?
 
 ## Template for New ADRs
@@ -20,7 +20,7 @@ Copy this template when creating new ADR files (name them `001-decision-title.md
 
 ## Status
 
-[Proposed | Accepted | Deprecated | Superseded]
+[Proposed | Accepted | Superseded]
 
 ## Context
 

@@ -93,6 +93,14 @@ const nl: TranslationDictionary = {
     listLabel: "Jouw taken",
     toggleComplete: "Markeer «{{title}}» als voltooid",
     delete: "Verwijder «{{title}}»",
+    guestLimit: "{{count}} / {{limit}} gasttaken",
+    guestLimitReached:
+      "Gastlimiet bereikt ({{limit}} taken). Maak een account om meer toe te voegen.",
+    signUpToContinue: "Registreren om door te gaan",
+    accountConvexLabel: "Profiel opgeslagen in Convex",
+    anonymous: "Anoniem",
+    guestSession: "Gastsessie",
+    noEmail: "Geen e-mail gesynchroniseerd",
   },
   footer: {
     copyright: "© {{year}} {{name}}",

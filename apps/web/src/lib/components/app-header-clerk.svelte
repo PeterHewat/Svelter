@@ -5,7 +5,6 @@
     iconSlotClass,
     navSecondaryLinkClass,
   } from "@repo/utils/chrome";
-  import { focusRing } from "@repo/utils/focus";
   import { UserButton, useClerkContext } from "svelte-clerk/client";
   import { openAuthModal } from "$lib/auth-ui.svelte";
   import { useAppAuth } from "$lib/use-app-auth.svelte";
@@ -33,16 +32,8 @@
       <span class={cn(navSecondaryLinkClass, "invisible")} aria-hidden="true"
         >{t("nav.tasks")}</span
       >
-    {:else if auth.isAuthenticated}
-      <a href="/tasks" class={navSecondaryLinkClass}>{t("nav.tasks")}</a>
     {:else}
-      <button
-        type="button"
-        class={cn(navSecondaryLinkClass, focusRing)}
-        onclick={() => handleOpenAuth("/tasks")}
-      >
-        {t("nav.tasks")}
-      </button>
+      <a href="/tasks" class={navSecondaryLinkClass}>{t("nav.tasks")}</a>
     {/if}
   {:else if auth.isLoading}
     <div class={iconSlotClass}>

@@ -1,6 +1,9 @@
 import { v } from "convex/values";
+import { ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireUserId } from "./lib/auth";
+import { requireUser } from "./lib/auth";
+import { ANONYMOUS_TASK_LIMIT } from "./lib/constants";
+import { isGuestUser } from "./model/users";
 import {
   buildTaskInsert,
   buildTaskPatch,
@@ -19,11 +22,11 @@ export const list = query({
     completed: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireUserId(ctx);
+    const user = await requireUser(ctx);
 
     const tasks = await ctx.db
       .query("tasks")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .order("desc")
       .collect();
 
@@ -44,10 +47,23 @@ export const create = mutation({
     description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireUserId(ctx);
+    const user = await requireUser(ctx);
+
+    if (isGuestUser(user)) {
+      const existing = await ctx.db
+        .query("tasks")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .collect();
+      if (existing.length >= ANONYMOUS_TASK_LIMIT) {
+        throw new ConvexError(
+          `Guest task limit reached (${ANONYMOUS_TASK_LIMIT})`,
+        );
+      }
+    }
+
     const now = Date.now();
 
-    return await ctx.db.insert("tasks", buildTaskInsert(args, userId, now));
+    return await ctx.db.insert("tasks", buildTaskInsert(args, user._id, now));
   },
 });
 
@@ -66,8 +82,8 @@ export const update = mutation({
     completed: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireUserId(ctx);
-    const task = await getOwnedTask(ctx.db, args.id, userId);
+    const user = await requireUser(ctx);
+    const task = await getOwnedTask(ctx.db, args.id, user._id);
     const now = Date.now();
 
     await ctx.db.patch(args.id, buildTaskPatch(task, args, now));
@@ -88,8 +104,8 @@ export const remove = mutation({
     id: v.id("tasks"),
   },
   handler: async (ctx, args) => {
-    const userId = await requireUserId(ctx);
-    await getOwnedTask(ctx.db, args.id, userId);
+    const user = await requireUser(ctx);
+    await getOwnedTask(ctx.db, args.id, user._id);
     await ctx.db.delete(args.id);
     return args.id;
   },

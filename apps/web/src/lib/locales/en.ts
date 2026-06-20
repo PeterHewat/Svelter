@@ -67,8 +67,8 @@ const en = {
     features: {
       title: "Features",
       svelte: "SvelteKit SPA with file routes",
-      convex: "Convex sample tasks API (enable with env)",
-      auth: "Clerk sign-in (social + email) with Convex backend",
+      convex: "Convex sample tasks — try as guest or sign in",
+      auth: "Clerk sign-in upgrades guest tasks to your account",
       tailwind: "Tailwind v4 with shared tokens",
       i18n: "Internationalization (9 languages)",
       themes: "Light and dark themes",
@@ -87,13 +87,21 @@ const en = {
   },
   tasks: {
     title: "Tasks",
-    subtitle: "Sample vertical slice: Convex mutations and Clerk auth",
+    subtitle: "Try the demo as a guest, then sign up to keep your tasks",
     newPlaceholder: "What needs to be done?",
     add: "Add task",
     empty: "No tasks yet. Add one above.",
     listLabel: "Your tasks",
     toggleComplete: "Mark “{{title}}” complete",
     delete: "Delete “{{title}}”",
+    guestLimit: "{{count}} / {{limit}} guest tasks",
+    guestLimitReached:
+      "Guest limit reached ({{limit}} tasks). Create an account to add more.",
+    signUpToContinue: "Sign up to continue",
+    accountConvexLabel: "Profile stored in Convex",
+    anonymous: "Anonymous",
+    guestSession: "Guest session",
+    noEmail: "No email synced",
   },
   footer: {
     copyright: "© {{year}} {{name}}",

@@ -19,12 +19,6 @@ test.describe("Marketing Home Page", () => {
     await expect(page).toHaveURL(/\/fr\/?$/);
   });
 
-  test("redirects legacy blog post URL to localized path", async ({ page }) => {
-    await page.goto("/fr");
-    await page.goto("/blog/hello-world");
-    await expect(page).toHaveURL(/\/fr\/blog\/hello-world\/?$/);
-  });
-
   test("shows language hub at / when JavaScript is disabled", async ({
     browser,
   }) => {

@@ -5,8 +5,8 @@ import schema from "./schema";
 import { modules } from "./_test.setup";
 import { TASK_DESCRIPTION_MAX, TASK_TITLE_MAX } from "./lib/validation";
 
-const userA = { subject: "user_a" };
-const userB = { subject: "user_b" };
+const userA = { subject: "user_a", name: "User A", email: "a@example.com" };
+const userB = { subject: "user_b", name: "User B", email: "b@example.com" };
 
 test("create inserts a task for the signed-in user", async () => {
   const t = convexTest(schema, modules).withIdentity(userA);
@@ -18,7 +18,6 @@ test("create inserts a task for the signed-in user", async () => {
   const task = tasks[0]!;
   expect(task._id).toEqual(id);
   expect(task.title).toBe("Buy groceries");
-  expect(task.userId).toBe("user_a");
   expect(task.completed).toBe(false);
 });
 
@@ -98,7 +97,6 @@ test("list returns tasks for the same Clerk user across sessions", async () => {
 
   expect(tasks).toHaveLength(1);
   expect(tasks[0]!._id).toEqual(id);
-  expect(tasks[0]!.userId).toBe("user_a");
 });
 
 test("update modifies an owned task", async () => {

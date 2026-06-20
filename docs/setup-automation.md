@@ -76,6 +76,7 @@ Also writes `packages/config/product.ts`, rebrands `README.md` when forking from
 | Convex first link        | Setup runs `convex dev --once` (OAuth in the same terminal); sets Clerk issuer and re-pushes                                                                                  |
 | Clerk app creation       | [Clerk CLI](https://clerk.com/docs/cli) (`clerk apps create`, `clerk env pull`) when authenticated; dashboard fallback                                                        |
 | Clerk JWT template       | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual dashboard fallback on failure                                                                                |
+| Clerk webhook → Convex   | Interactive setup prompts for signing secret after Clerk Dashboard steps (or reads web env) — [details](#clerk-webhook-to-convex-profile-sync)                                |
 | Clerk allowed origins    | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual PATCH fallback on failure                                                                                    |
 | Apex domain              | Optional in identity wizard (Enter to skip). Re-run setup to add a domain later.                                                                                              |
 | DNS at registrar         | When apex is set: setup automates zone/domains/DNS via API, prints Cloudflare nameservers, and **pauses** until you confirm registrar delegation (`cloudflare.dnsConfigured`) |
@@ -84,12 +85,12 @@ Also writes `packages/config/product.ts`, rebrands `README.md` when forking from
 
 ### Feasibility summary
 
-| Category    | Examples                                                                                                                                             |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Script**  | `PRODUCT_NAME`, `.env.local`, `convex env set`, deploy keys, `gh secret set`, `gh label create`, Pages domains via API, Clerk JWT template + origins |
-| **Guided**  | Clerk CLI `env pull` or paste keys, inline Convex link, `wrangler login` or Cloudflare API token paste, DNS, E2E user                                |
-| **Manual**  | Account signup, registrar nameserver change (when apex is set), Clerk auth methods, `release-*` release approval, org GitHub policies                |
-| **Blocked** | Clerk setup without CLI login or dashboard access                                                                                                    |
+| Category    | Examples                                                                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Script**  | `PRODUCT_NAME`, `.env.local`, `convex env set`, deploy keys, `gh secret set`, `gh label create`, Pages domains via API, Clerk JWT template + origins + webhook prep |
+| **Guided**  | Clerk CLI `env pull` or paste keys, inline Convex link, `wrangler login` or Cloudflare API token paste, DNS, E2E user                                               |
+| **Manual**  | Account signup, registrar nameserver change (when apex is set), Clerk auth methods, `release-*` release approval, org GitHub policies                               |
+| **Blocked** | Clerk setup without CLI login or dashboard access                                                                                                                   |
 
 ---
 
@@ -115,10 +116,31 @@ Without an apex, setup can defer Clerk Production and still sync Convex + Cloudf
 | API keys (Development)        | [API keys](https://dashboard.clerk.com/last-active?path=api-keys)           |
 | API keys (Production)         | Same path; switch instance to Production                                    |
 | JWT templates → Convex preset | [JWT templates](https://dashboard.clerk.com/last-active?path=jwt-templates) |
+| Webhooks (manual fallback)    | [Webhooks](https://dashboard.clerk.com/last-active?path=webhooks)           |
 | Allowed origins (Development) | `PATCH /v1/instance` with `sk_test_…` (setup does this automatically)       |
 | Integrations → Convex         | [Integrations](https://dashboard.clerk.com/last-active?path=integrations)   |
 
 After the app exists, setup pulls or prompts for `PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`, derives `CLERK_JWT_ISSUER_DOMAIN`, and uploads it to Convex before the first successful function push. If Convex linking provisions a deployment before the issuer is set, setup detects the linked deployment, sets the env var, and retries the push automatically.
+
+#### Clerk webhook to Convex profile sync
+
+Convex stores Clerk profile fields (`firstName`, `lastName`, `email`, `imageUrl`) for queries. JWT claims seed them on sign-in; the webhook keeps them authoritative when users change profile data in Clerk.
+
+When `CLERK_SECRET_KEY` and a linked Convex deployment are present, setup (after the first Convex push):
+
+1. Prints the webhook URL: `https://<deployment>.convex.site/clerk-webhook`
+2. If `CLERK_WEBHOOK_SIGNING_SECRET` is in `apps/web/.env.local`, uploads it to the **dev** Convex deployment. On an interactive run, setup prompts for the signing secret after you create the endpoint (Enter to skip).
+
+Create the endpoint in the [Clerk Dashboard](https://dashboard.clerk.com/last-active?path=webhooks):
+
+1. **Add endpoint** → paste the URL from setup output
+2. Subscribe to `user.created`, `user.updated`, `user.deleted`
+3. Copy **Signing secret** → paste when setup prompts, or set `CLERK_WEBHOOK_SIGNING_SECRET` in `apps/web/.env.local` and re-run setup
+4. Run `bun run dev:convex` and send a test event
+
+**Production:** repeat for the Production Clerk instance and prod Convex deployment URL after the Production setup step — Development and Production use separate webhook endpoints and signing secrets.
+
+Without the webhook, profile fields still populate on sign-in from JWT claims; they will not update when the user changes avatar or name in Clerk until the next sign-in.
 
 ### Convex
 

@@ -1,0 +1,181 @@
+/* eslint-disable no-console -- CLI */
+import { isPlaceholderEnvValue } from "../../packages/config/env-placeholders";
+import { isClerkSecretKey } from "./clerk-instance";
+import {
+  CLERK_CONVEX_WEBHOOK_PATH,
+  CLERK_USER_WEBHOOK_EVENTS,
+  ensureClerkSvixApp,
+} from "./clerk-convex-webhook";
+import { readConvexUrlFromWebEnv } from "./clerk-web-env";
+import { getConvexEnvVar, setConvexEnvVar } from "./convex-env";
+import { isConvexLinked } from "./convex-link";
+import { readConvexUrlFromRootEnv } from "./convex-url";
+import { upsertEnvKeys, readEnvFile } from "./env-file";
+import { printManualAction } from "./manual-action";
+import { CLERK_WEBHOOKS } from "./platform-urls";
+import { maskSecret, promptSecret } from "./prompt";
+import { normalizeEnvPaste } from "./env-paste";
+import { convexSiteUrlFromCloudUrl } from "./sync-anon-auth";
+
+const WEB_ENV = "apps/web/.env.local";
+
+export type SyncClerkWebhookResult = {
+  configured: boolean;
+  changed: boolean;
+};
+
+/**
+ * Builds the Convex HTTP webhook URL from a `.convex.cloud` deployment URL.
+ *
+ * @param convexCloudUrl - Value of `PUBLIC_CONVEX_URL`
+ */
+export function clerkConvexWebhookUrl(convexCloudUrl: string): string {
+  const origin = convexSiteUrlFromCloudUrl(convexCloudUrl);
+  return `${origin}${CLERK_CONVEX_WEBHOOK_PATH}`;
+}
+
+/**
+ * Uploads `CLERK_WEBHOOK_SIGNING_SECRET` to Convex when it differs from the dev deployment.
+ *
+ * @param root - Repository root
+ * @param signingSecret - Webhook signing secret (`whsec_…`)
+ */
+async function syncSigningSecretToConvex(
+  root: string,
+  signingSecret: string,
+): Promise<SyncClerkWebhookResult> {
+  const existingConvexSecret = await getConvexEnvVar(
+    root,
+    "CLERK_WEBHOOK_SIGNING_SECRET",
+  );
+  if (existingConvexSecret === signingSecret) {
+    return { configured: true, changed: false };
+  }
+
+  const { ok } = await setConvexEnvVar(
+    root,
+    "CLERK_WEBHOOK_SIGNING_SECRET",
+    signingSecret,
+    false,
+  );
+  if (ok) {
+    console.log("✓ Convex CLERK_WEBHOOK_SIGNING_SECRET set on dev deployment");
+  }
+  return { configured: ok, changed: ok };
+}
+
+/**
+ * Ensures the Clerk Svix app exists, guides webhook endpoint setup, and syncs
+ * `CLERK_WEBHOOK_SIGNING_SECRET` to Convex (from env or an interactive prompt).
+ *
+ * @param root - Repository root
+ * @param interactive - When true, prompt for the signing secret after dashboard steps
+ */
+export async function syncClerkWebhookEnv(
+  root: string,
+  interactive = false,
+): Promise<SyncClerkWebhookResult> {
+  const unchanged: SyncClerkWebhookResult = {
+    configured: false,
+    changed: false,
+  };
+
+  if (!isConvexLinked(root)) {
+    return unchanged;
+  }
+
+  const webEnv = readEnvFile(root, WEB_ENV);
+  const secretKey = webEnv.CLERK_SECRET_KEY?.trim();
+  if (
+    !secretKey ||
+    isPlaceholderEnvValue(secretKey) ||
+    !isClerkSecretKey(secretKey)
+  ) {
+    return unchanged;
+  }
+
+  const convexUrl =
+    readConvexUrlFromRootEnv(root) ?? readConvexUrlFromWebEnv(webEnv);
+  if (!convexUrl || isPlaceholderEnvValue(convexUrl)) {
+    return unchanged;
+  }
+
+  const webhookUrl = clerkConvexWebhookUrl(convexUrl);
+  console.log("\nClerk webhook → Convex");
+
+  const svixApp = await ensureClerkSvixApp(secretKey);
+  if (!svixApp.ok) {
+    console.log(`○ Could not prepare Clerk webhooks: ${svixApp.message}`);
+  }
+
+  const events = CLERK_USER_WEBHOOK_EVENTS.join(", ");
+  const existingConvexSecret = await getConvexEnvVar(
+    root,
+    "CLERK_WEBHOOK_SIGNING_SECRET",
+  );
+  let webSigningSecret = isPlaceholderEnvValue(
+    webEnv.CLERK_WEBHOOK_SIGNING_SECRET,
+  )
+    ? undefined
+    : webEnv.CLERK_WEBHOOK_SIGNING_SECRET?.trim();
+
+  if (webSigningSecret) {
+    return syncSigningSecretToConvex(root, webSigningSecret);
+  }
+
+  if (existingConvexSecret) {
+    console.log("✓ Convex CLERK_WEBHOOK_SIGNING_SECRET already set");
+    return { configured: true, changed: false };
+  }
+
+  const manualSteps = [
+    `Webhooks: ${CLERK_WEBHOOKS}`,
+    `Endpoint URL: ${webhookUrl}`,
+    `Events: ${events}`,
+    "Copy the endpoint Signing secret (whsec_…)",
+  ];
+
+  printManualAction("Add Clerk webhook endpoint for Convex profile sync", [
+    ...manualSteps,
+    interactive
+      ? "Paste the signing secret when prompted below (Enter to skip and finish later)"
+      : "Re-run `bun run setup` interactively to paste the signing secret, or set CLERK_WEBHOOK_SIGNING_SECRET in apps/web/.env.local",
+  ]);
+
+  if (!interactive) {
+    return { configured: svixApp.ok, changed: false };
+  }
+
+  const existingWebSecret = webEnv.CLERK_WEBHOOK_SIGNING_SECRET;
+  const rawSecret = await promptSecret(
+    "CLERK_WEBHOOK_SIGNING_SECRET (whsec_…)",
+    {
+      defaultValue: isPlaceholderEnvValue(existingWebSecret)
+        ? undefined
+        : existingWebSecret,
+      displayDefault:
+        existingWebSecret && !isPlaceholderEnvValue(existingWebSecret)
+          ? maskSecret(existingWebSecret)
+          : undefined,
+      hint: "Clerk Dashboard → Webhooks → your endpoint → Signing secret",
+    },
+  );
+  webSigningSecret = normalizeEnvPaste(
+    "CLERK_WEBHOOK_SIGNING_SECRET",
+    rawSecret,
+  ).trim();
+
+  if (!webSigningSecret.startsWith("whsec_")) {
+    console.log(
+      "○ Skipped webhook signing secret — add endpoint in Clerk, then re-run setup",
+    );
+    return { configured: svixApp.ok, changed: false };
+  }
+
+  upsertEnvKeys(root, WEB_ENV, {
+    CLERK_WEBHOOK_SIGNING_SECRET: webSigningSecret,
+  });
+  console.log(`✓ Saved CLERK_WEBHOOK_SIGNING_SECRET → ${WEB_ENV}`);
+
+  return syncSigningSecretToConvex(root, webSigningSecret);
+}

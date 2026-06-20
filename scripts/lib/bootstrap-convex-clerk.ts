@@ -9,6 +9,8 @@ import { printManualAction } from "./manual-action";
 import { CONVEX_DASHBOARD } from "./platform-urls";
 import { productNameToSlug } from "./repo-identity";
 import { syncClerkConvexFromWebEnv } from "./sync-clerk-convex";
+import { syncAnonymousAuthEnv } from "./sync-anon-auth";
+import { syncClerkWebhookEnv } from "./sync-clerk-webhook";
 import type { SetupCliContext } from "./setup-cli";
 import type { SetupConfig } from "./setup-config";
 
@@ -64,12 +66,18 @@ export async function bootstrapConvexClerk(
   const sync = await syncClerkConvexFromWebEnv(root, {
     issuerDomain: issuerDomain ?? undefined,
   });
+  const anonSync = await syncAnonymousAuthEnv(root);
 
-  if (sync.issuerChanged || pushDeferred) {
+  if (sync.issuerChanged || anonSync.changed || pushDeferred) {
     await pushConvexDevOnce(root);
-  } else if (sync.issuerConfigured) {
+  } else if (sync.issuerConfigured && !anonSync.changed) {
     console.log("✓ Convex auth already configured — skip push");
   } else {
+    await pushConvexDevOnce(root);
+  }
+
+  const webhookSync = await syncClerkWebhookEnv(root, interactive);
+  if (webhookSync.changed) {
     await pushConvexDevOnce(root);
   }
 }
