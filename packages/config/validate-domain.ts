@@ -44,3 +44,33 @@ export function isValidApexDomain(input: string): boolean {
 export function hasApexDomain(apexDomain?: string | null): boolean {
   return Boolean(apexDomain && isValidApexDomain(apexDomain));
 }
+
+/**
+ * Product app origin baked into apex marketing builds (no-JS CTAs).
+ *
+ * @param apexDomain - `APEX_DOMAIN` at marketing release build time
+ */
+export function bakedApexProductOrigin(
+  apexDomain: string | undefined | null,
+): string | null {
+  const trimmed = apexDomain?.trim();
+  if (!trimmed) {
+    return null;
+  }
+  return `https://${normalizeApexDomainInput(trimmed)}`;
+}
+
+/**
+ * Marketing site origin baked into apex builds (canonical / hreflang).
+ *
+ * @param apexDomain - `APEX_DOMAIN` at marketing release build time
+ */
+export function bakedApexMarketingOrigin(
+  apexDomain: string | undefined | null,
+): string | null {
+  const trimmed = apexDomain?.trim();
+  if (!trimmed) {
+    return null;
+  }
+  return `https://www.${normalizeApexDomainInput(trimmed)}`;
+}

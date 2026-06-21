@@ -20,15 +20,8 @@ inputs:
   pages_project_name:
     description: Cloudflare Pages project name for apps/web
     required: true
-  marketing_pages_project_name:
-    description: Cloudflare Pages project name for apps/marketing (marketing site origin)
-    required: true
   deploy_branch:
     description: Preview branch label (e.g. staging); omit for production
-    required: false
-    default: ""
-  apex_domain:
-    description: Optional apex domain for production custom origins (e.g. foobar.com)
     required: false
     default: ""
 
@@ -44,9 +37,7 @@ runs:
         CLOUDFLARE_API_TOKEN: ${{ inputs.cloudflare_api_token }}
         CLOUDFLARE_ACCOUNT_ID: ${{ inputs.cloudflare_account_id }}
         CF_PAGES_PROJECT_WEB: ${{ inputs.pages_project_name }}
-        CF_PAGES_PROJECT_MARKETING: ${{ inputs.marketing_pages_project_name }}
         DEPLOY_BRANCH: ${{ inputs.deploy_branch }}
-        APEX_DOMAIN: ${{ inputs.apex_domain }}
       run: |
         set -euo pipefail
         if [ -z "${PUBLIC_CONVEX_URL:-}" ]; then
@@ -61,16 +52,6 @@ runs:
           echo "::error::CONVEX_DEPLOY_KEY is required for web deploy (convex/_generated is not committed)."
           exit 1
         fi
-        eval "$(bun -e "
-        import { deriveAppOrigins } from '@repo/config/app-origins';
-        const origins = deriveAppOrigins({
-          webProject: process.env.CF_PAGES_PROJECT_WEB ?? '',
-          marketingProject: process.env.CF_PAGES_PROJECT_MARKETING ?? '',
-          stagingBranch: process.env.DEPLOY_BRANCH?.trim() || undefined,
-          apexDomain: process.env.APEX_DOMAIN?.trim() || undefined,
-        });
-        console.log('export PUBLIC_MARKETING_ORIGIN=' + JSON.stringify(origins.marketing));
-        ")"
         bun scripts/generate-convex.ts
         bun run --filter @repo/web build
         BRANCH_ARGS=()

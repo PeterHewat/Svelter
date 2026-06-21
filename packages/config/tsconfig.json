@@ -20,6 +20,8 @@
     "validate-domain.ts",
     "validate-domain.test.ts",
     "hostnames.ts",
+    "cross-app-origin.ts",
+    "cross-app-origin.test.ts",
     "e2e-auth.ts"
   ],
   "exclude": ["dist"]

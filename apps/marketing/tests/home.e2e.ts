@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { PRODUCT_NAME, PRODUCT_TAGLINE } from "@repo/config/product";
-import { productAppHref } from "../src/lib/product-links";
 
 const enTitle = `${PRODUCT_NAME} - ${PRODUCT_TAGLINE}`;
 
@@ -74,6 +73,7 @@ test.describe("Marketing Home Page", () => {
     const href = await navCta.getAttribute("href");
     expect(href).toBeTruthy();
     const url = new URL(href!);
+    expect(url.origin).toBe("http://localhost:3000");
     expect(url.searchParams.get("lang")).toBe("fr");
     expect(url.searchParams.get("theme")).toMatch(/^(light|dark)$/);
   });
@@ -98,7 +98,7 @@ test.describe("Marketing Home Page", () => {
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: /^dashboard$/i }).first(),
-    ).toHaveAttribute("href", productAppHref({ lang: "en" }));
+    ).toHaveAttribute("href", "#");
     await page.locator("[data-nav-menu] summary").click();
     await expect(
       page.locator("[data-nav-menu]").getByRole("link", { name: /^docs$/i }),

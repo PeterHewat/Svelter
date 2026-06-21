@@ -1,6 +1,11 @@
 import adapter from "@sveltejs/adapter-static";
+import { bakedApexMarketingOrigin } from "@repo/config/validate-domain";
 import { marketingDevOrigin } from "@repo/config/dev-ports";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+
+const apexMarketingOrigin = bakedApexMarketingOrigin(
+  process.env.APEX_DOMAIN?.trim(),
+);
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -13,8 +18,8 @@ const config = {
     }),
     prerender: {
       entries: ["*", "/sitemap.xml"],
-      // Baked into hreflang / canonical URLs at build time (see deploy-marketing action).
-      origin: process.env.PUBLIC_MARKETING_ORIGIN ?? marketingDevOrigin,
+      // Apex release only — canonical / hreflang for production SEO.
+      origin: apexMarketingOrigin ?? marketingDevOrigin,
     },
   },
 };

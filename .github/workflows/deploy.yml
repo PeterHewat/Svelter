@@ -84,8 +84,6 @@ jobs:
           cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           pages_project_name: ${{ secrets.CF_PAGES_PROJECT_WEB }}
-          marketing_pages_project_name: ${{ secrets.CF_PAGES_PROJECT_MARKETING }}
-          apex_domain: ${{ secrets.APEX_DOMAIN }}
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -108,7 +106,6 @@ jobs:
           cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           pages_project_name: ${{ secrets.CF_PAGES_PROJECT_MARKETING }}
-          web_pages_project_name: ${{ secrets.CF_PAGES_PROJECT_WEB }}
           apex_domain: ${{ secrets.APEX_DOMAIN }}
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7

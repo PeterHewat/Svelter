@@ -24,4 +24,4 @@ The product app is a client-only SPA (`ssr: false`). Deploy the build output to 
 
 ## CI
 
-The included GitHub Actions workflow builds both apps and sets `PUBLIC_PRODUCT_APP_URL` / `PUBLIC_MARKETING_ORIGIN` on marketing deploys. See [Configuration](./configuration).
+The included GitHub Actions workflow deploys both apps. Cross-app links resolve at runtime; apex release bakes marketing CTAs via `APEX_DOMAIN`. See [Configuration](./configuration).

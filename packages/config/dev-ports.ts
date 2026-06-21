@@ -16,10 +16,3 @@ export const webDevOrigin = `http://localhost:${WEB_DEV_PORT}` as const;
 /** Marketing site origin during local development. */
 export const marketingDevOrigin =
   `http://localhost:${MARKETING_DEV_PORT}` as const;
-
-/** Product web app origin when serving a local production build. */
-export const webPreviewOrigin = `http://localhost:${WEB_PREVIEW_PORT}` as const;
-
-/** Marketing site origin when serving a local production build. */
-export const marketingPreviewOrigin =
-  `http://localhost:${MARKETING_PREVIEW_PORT}` as const;
