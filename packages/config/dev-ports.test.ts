@@ -5,9 +5,7 @@ import {
   WEB_DEV_PORT,
   WEB_PREVIEW_PORT,
   marketingDevOrigin,
-  marketingPreviewOrigin,
   webDevOrigin,
-  webPreviewOrigin,
 } from "./dev-ports";
 
 describe("dev-ports", () => {
@@ -21,12 +19,8 @@ describe("dev-ports", () => {
     expect(MARKETING_PREVIEW_PORT).toBe(MARKETING_DEV_PORT + 1000);
   });
 
-  test("origins match localhost ports", () => {
+  test("origins match localhost dev ports", () => {
     expect(webDevOrigin).toBe(`http://localhost:${WEB_DEV_PORT}`);
     expect(marketingDevOrigin).toBe(`http://localhost:${MARKETING_DEV_PORT}`);
-    expect(webPreviewOrigin).toBe(`http://localhost:${WEB_PREVIEW_PORT}`);
-    expect(marketingPreviewOrigin).toBe(
-      `http://localhost:${MARKETING_PREVIEW_PORT}`,
-    );
   });
 });

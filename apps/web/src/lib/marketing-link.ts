@@ -1,4 +1,4 @@
-import { resolveMarketingOrigin } from "@repo/config/app-origins";
+import { resolveMarketingSiteOrigin } from "@repo/config/cross-app-origin";
 import type { Locale } from "@repo/utils/i18n";
 import {
   appendCrossAppPrefs,
@@ -10,8 +10,18 @@ export type MarketingSiteHrefOptions = {
   theme?: "light" | "dark";
 };
 
+function marketingSiteOriginFromBrowser(): string {
+  if (typeof window === "undefined") {
+    return "http://localhost:3001";
+  }
+
+  return resolveMarketingSiteOrigin(window.location).replace(/\/$/, "");
+}
+
 /**
  * Build an absolute URL to the marketing site from the product app.
+ *
+ * Resolved at runtime from the current URL (port ±1, pages.dev swap, or apex www).
  *
  * @param path - Optional path after the origin (e.g. `en`, `en/docs`)
  * @param options - Optional cross-app preference overrides
@@ -24,7 +34,7 @@ export function marketingSiteHref(
   path = "",
   options: MarketingSiteHrefOptions = {},
 ): string {
-  const origin = resolveMarketingOrigin().replace(/\/$/, "");
+  const origin = marketingSiteOriginFromBrowser();
   const trimmed = path.replace(/^\/+/, "");
   const url = new URL(trimmed ? `/${trimmed}` : "/", origin);
 

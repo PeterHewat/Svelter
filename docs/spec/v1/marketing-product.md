@@ -15,7 +15,7 @@ Replace template placeholders with **product-specific** marketing. The v0 templa
 ### 1. Product identity & config
 
 - [ ] `PRODUCT_NAME`, `PRODUCT_TAGLINE`, `GITHUB_REPO_URL` in `packages/config/product.ts`
-- [ ] `PUBLIC_PRODUCT_APP_URL` / `PUBLIC_MARKETING_ORIGIN` baked correctly for your deploy tier (see `app-origins.ts`)
+- [ ] Cross-app links work end-to-end on your deploy tier (runtime resolution; apex release bakes marketing CTAs via `APEX_DOMAIN` — see `cross-app-origin.ts`)
 - [ ] Clerk, Convex, Cloudflare (or host) env for **your** deployment — see root README
 - [ ] Favicon, OG default image, social handles in footer config / i18n
 

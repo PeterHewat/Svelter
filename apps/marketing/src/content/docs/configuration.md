@@ -20,7 +20,13 @@ The marketing app is static HTML — no runtime secrets. Product URLs and brandi
 
 ### Linking marketing ↔ product app
 
-Marketing CTAs call `resolveProductAppOrigin()` from `@repo/config/app-origins` (via `product-links.ts`). Canonical / hreflang URLs use `PUBLIC_MARKETING_ORIGIN` (see `apps/marketing/svelte.config.js`). The product app links back via `marketingSiteHref()` in `apps/web/src/lib/marketing-link.ts`, which reads `PUBLIC_MARKETING_ORIGIN`.
+Cross-app links are resolved **at runtime** from the current URL (see `@repo/config/cross-app-origin`):
+
+- **Explicit port** (local dev / preview) → sibling port ±1 (`3000↔3001`, `4000↔4001`, etc.).
+- **`*.pages.dev`** → swap `-web` / `-marketing` in the hostname (staging and production).
+- **Apex production** → marketing CTAs are **baked at release build** (`APEX_DOMAIN`); the web app resolves `www.{apex}` at runtime.
+
+No `PUBLIC_*` origin env vars are required for dev, preview, staging, or pages.dev production.
 
 | Tier                               | Product (web app)                      | Marketing site                               |
 | ---------------------------------- | -------------------------------------- | -------------------------------------------- |
@@ -30,19 +36,9 @@ Marketing CTAs call `resolveProductAppOrigin()` from `@repo/config/app-origins` 
 | **Production** (no apex)           | `https://{slug}-web.pages.dev`         | `https://{slug}-marketing.pages.dev`         |
 | **Production** (apex `foobar.com`) | `https://foobar.com`                   | `https://www.foobar.com`                     |
 
-**Local dev** — defaults in `@repo/config/dev-ports`; no env vars needed.
+**Apex release** — `APEX_DOMAIN` is set in the deploy-marketing GitHub Action (via `bun run setup`). This bakes product-app CTA hrefs and canonical / hreflang URLs for production SEO.
 
-**Local preview** — bake preview ports when building marketing:
-
-```bash
-PUBLIC_PRODUCT_APP_URL=http://localhost:4000 \
-PUBLIC_MARKETING_ORIGIN=http://localhost:4001 \
-  bun run --filter @repo/marketing build
-```
-
-**CI (staging / production)** — the deploy-marketing GitHub Action sets both `PUBLIC_*` origins from your Pages project names (and `APEX_DOMAIN` on production release when configured via `bun run setup`). See `packages/config/app-origins.ts` and `docs/environments.md` in the repo root.
-
-Nav **Dashboard** uses `ProductAppLink` → product app root. The product app footer copyright link uses `marketingHomeHref()` (locale + theme query params).
+Nav **Dashboard** uses `ProductAppLink` → product app root (patched by `/init.js` except on apex builds). The product app footer uses `marketingHomeHref()` (locale + theme query params).
 
 ## Shared branding
 

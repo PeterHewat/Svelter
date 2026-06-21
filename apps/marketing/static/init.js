@@ -644,11 +644,35 @@
 
   function readProductAppOrigin() {
     var meta = document.querySelector('meta[name="product-app-origin"]');
-    if (!meta) {
-      return null;
+    if (meta) {
+      var baked = meta.getAttribute("content");
+      if (baked) {
+        return baked.replace(/\/$/, "");
+      }
     }
-    var value = meta.getAttribute("content");
-    return value ? value.replace(/\/$/, "") : null;
+    return resolveSiblingProductOrigin();
+  }
+
+  /**
+   * Keep in sync with resolveProductSiteOrigin in @repo/config/cross-app-origin.
+   */
+  function resolveSiblingProductOrigin() {
+    var port = location.port;
+    if (port !== "" && port !== "443" && port !== "80") {
+      var siblingPort = parseInt(port, 10) - 1;
+      return location.protocol + "//" + location.hostname + ":" + siblingPort;
+    }
+    if (
+      location.hostname.endsWith(".pages.dev") &&
+      location.hostname.indexOf("-marketing.") !== -1
+    ) {
+      return (
+        location.protocol +
+        "//" +
+        location.hostname.replace("-marketing.", "-web.")
+      );
+    }
+    return null;
   }
 
   function syncProductAppLinks() {
@@ -660,13 +684,9 @@
     var theme = resolveTheme(readThemeMode());
 
     document.querySelectorAll("[data-product-app-link]").forEach(function (el) {
-      var href = el.getAttribute("href") || "";
+      var lang = el.getAttribute("data-lang") || pageLocale;
       try {
-        var url = new URL(href);
-        if (url.origin !== productOrigin) {
-          return;
-        }
-        var lang = el.getAttribute("data-lang") || pageLocale;
+        var url = new URL("/", productOrigin);
         if (lang && isSupportedLocale(lang)) {
           url.searchParams.set("lang", lang);
         }

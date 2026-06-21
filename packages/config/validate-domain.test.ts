@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  bakedApexMarketingOrigin,
+  bakedApexProductOrigin,
   hasApexDomain,
   isValidApexDomain,
   normalizeApexDomainInput,
@@ -37,5 +39,19 @@ describe("hasApexDomain", () => {
     expect(hasApexDomain()).toBe(false);
     expect(hasApexDomain("")).toBe(false);
     expect(hasApexDomain("www.example.com")).toBe(false);
+  });
+});
+
+describe("baked apex origins", () => {
+  it("derives product and marketing origins from APEX_DOMAIN", () => {
+    expect(bakedApexProductOrigin("foobar.com")).toBe("https://foobar.com");
+    expect(bakedApexMarketingOrigin("foobar.com")).toBe(
+      "https://www.foobar.com",
+    );
+  });
+
+  it("returns null without apex", () => {
+    expect(bakedApexProductOrigin(undefined)).toBeNull();
+    expect(bakedApexMarketingOrigin("")).toBeNull();
   });
 });

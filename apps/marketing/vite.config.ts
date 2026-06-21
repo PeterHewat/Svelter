@@ -5,6 +5,10 @@ import {
   marketingAliasKeys,
 } from "@repo/config/aliases";
 import {
+  bakedApexMarketingOrigin,
+  bakedApexProductOrigin,
+} from "@repo/config/validate-domain";
+import {
   MARKETING_DEV_PORT,
   MARKETING_PREVIEW_PORT,
 } from "@repo/config/dev-ports";
@@ -30,10 +34,18 @@ const githubRepoUrl = resolveGithubRepoUrl({
   gitRemoteUrl: readGitRemoteUrl(),
 });
 
+const apexDomain = process.env.APEX_DOMAIN?.trim() || null;
+
 export default defineConfig({
   envPrefix: ["PUBLIC_"],
   define: {
     __GITHUB_REPO_URL__: JSON.stringify(githubRepoUrl),
+    __BAKED_PRODUCT_APP_ORIGIN__: JSON.stringify(
+      bakedApexProductOrigin(apexDomain),
+    ),
+    __BAKED_MARKETING_SITE_ORIGIN__: JSON.stringify(
+      bakedApexMarketingOrigin(apexDomain),
+    ),
   },
   plugins: [tailwindcss(), sveltekit()],
   resolve: {
