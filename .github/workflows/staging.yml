@@ -24,7 +24,7 @@ jobs:
     name: Convex (dev)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-bun
       - name: Deploy Convex (development)
         uses: ./.github/actions/deploy-convex
@@ -36,7 +36,7 @@ jobs:
     needs: deploy-convex
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-bun
       - name: Deploy web to Cloudflare Pages (staging)
         uses: ./.github/actions/deploy-web
@@ -54,7 +54,7 @@ jobs:
     needs: deploy-convex
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-bun
       - name: Deploy marketing to Cloudflare Pages (staging)
         uses: ./.github/actions/deploy-marketing
