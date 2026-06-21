@@ -27,10 +27,9 @@ test.describe("Routing", () => {
     ).toBeVisible();
   });
 
-  test("tasks link opens auth modal without navigating", async ({ page }) => {
+  test("tasks link navigates to tasks page", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /^tasks$/i }).click();
-    await expect(page).toHaveURL("/");
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.getByRole("link", { name: /^tasks$/i }).click();
+    await expect(page).toHaveURL("/tasks");
   });
 });
