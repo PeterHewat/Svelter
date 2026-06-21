@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     if: inputs.run_web
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.ref }}
       - uses: ./.github/actions/setup-bun
@@ -108,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     if: inputs.run_marketing
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.ref }}
       - uses: ./.github/actions/setup-bun
