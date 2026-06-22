@@ -12,7 +12,9 @@
     }
 
     const redirect = page.url.searchParams.get("redirect");
-    openAuthModal(redirect && redirect.startsWith("/") ? redirect : undefined);
+    openAuthModal(redirect && redirect.startsWith("/") ? redirect : undefined, {
+      skipOneTap: true,
+    });
     void goto("/", { replaceState: true });
   });
 </script>

@@ -50,7 +50,7 @@
       return;
     }
 
-    openAuthModal(redirectTo);
+    openAuthModal(redirectTo, { skipOneTap: true });
   });
 
   $effect(() => {
@@ -63,6 +63,7 @@
     if (!authModal.pending || !clerk.isLoaded || !clerk.clerk) return;
 
     const redirectTo = resolveRedirectPath(authModal.redirectTo);
+    const skipOneTap = authModal.skipOneTap;
     clearAuthModalPending();
 
     if (clerk.auth.userId) {
@@ -71,6 +72,11 @@
         keepFocus: true,
         noScroll: true,
       });
+      return;
+    }
+
+    if (skipOneTap) {
+      clerk.clerk.openSignIn({ fallbackRedirectUrl: redirectTo });
       return;
     }
 

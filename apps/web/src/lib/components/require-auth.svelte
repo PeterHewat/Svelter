@@ -23,7 +23,7 @@
     // Home is the auth shell; do not reopen the modal here or we overwrite a deep-link redirect.
     if (pathname === "/") return;
 
-    openAuthModal(pathname + page.url.search);
+    openAuthModal(pathname + page.url.search, { skipOneTap: true });
     void goto("/", { replaceState: true });
   });
 </script>
