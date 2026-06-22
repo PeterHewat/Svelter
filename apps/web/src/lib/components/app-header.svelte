@@ -59,33 +59,39 @@
               class={cn(navSecondaryLinkClass, "invisible")}
               aria-hidden="true">{t("nav.tasks")}</span
             >
+            <span
+              class={cn(navSecondaryLinkClass, "invisible")}
+              aria-hidden="true">{t("nav.user")}</span
+            >
           {/if}
         {:else if mode === "loading"}
           <span
             class={cn(navSecondaryLinkClass, "invisible")}
             aria-hidden="true">{t("nav.tasks")}</span
           >
+          <span
+            class={cn(navSecondaryLinkClass, "invisible")}
+            aria-hidden="true">{t("nav.user")}</span
+          >
         {:else}
           <a href="/tasks" class={navSecondaryLinkClass}>{t("nav.tasks")}</a>
+          <a href="/user" class={navSecondaryLinkClass}>{t("nav.user")}</a>
         {/if}
       {/if}
     </div>
     <div class="flex items-center gap-2">
       <LanguageSwitcher ariaLabel={t("language.select")} />
-      <ThemeToggle />
+      <ThemeToggle
+        labels={{
+          switchToLight: t("theme.switchToLight"),
+          switchToDark: t("theme.switchToDark"),
+          switchToLightAria: t("theme.switchToLightAria"),
+          switchToDarkAria: t("theme.switchToDarkAria"),
+        }}
+      />
       {#if isAuthEnabled()}
-        {#if mode === "ready"}
-          {#if ClerkHeader}
-            <ClerkHeader part="actions" />
-          {:else}
-            <div class={iconSlotClass}>
-              <div class="h-10 w-10 shrink-0" aria-hidden="true"></div>
-            </div>
-          {/if}
-        {:else if mode === "loading"}
-          <div class={iconSlotClass}>
-            <div class="h-10 w-10 shrink-0" aria-hidden="true"></div>
-          </div>
+        {#if mode === "ready" && ClerkHeader}
+          <ClerkHeader part="actions" />
         {:else}
           <div class={iconSlotClass}>
             <button
@@ -104,7 +110,7 @@
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                class="h-5 w-5 shrink-0"
+                class="text-muted-foreground h-5 w-5 shrink-0"
                 aria-hidden="true"
               >
                 <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />

@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireUser } from "./lib/auth";
-import { ANONYMOUS_TASK_LIMIT } from "./lib/constants";
+import { ANONYMOUS_TASK_LIMIT, SIGNED_IN_TASK_LIMIT } from "./lib/constants";
 import { isGuestUser } from "./model/users";
 import {
   buildTaskInsert,
@@ -57,6 +57,16 @@ export const create = mutation({
       if (existing.length >= ANONYMOUS_TASK_LIMIT) {
         throw new ConvexError(
           `Guest task limit reached (${ANONYMOUS_TASK_LIMIT})`,
+        );
+      }
+    } else {
+      const existing = await ctx.db
+        .query("tasks")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .collect();
+      if (existing.length >= SIGNED_IN_TASK_LIMIT) {
+        throw new ConvexError(
+          `Signed-in task limit reached (${SIGNED_IN_TASK_LIMIT})`,
         );
       }
     }

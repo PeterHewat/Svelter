@@ -2,6 +2,7 @@
   import { cn } from "@repo/utils";
   import {
     iconButtonClass,
+    iconSlotClass,
     languageSwitcherDetailsClass,
     languageSwitcherIconOnlyClass,
     languageSwitcherIconOnlySummaryClass,
@@ -12,7 +13,6 @@
     navLinkClass,
     navSecondaryLinkClass,
     siteHeaderClass,
-    siteNavClass,
   } from "@repo/utils/chrome";
   import ProductAppLink from "$lib/components/product-app-link.svelte";
   import { MARKETING_LOCALES, SUPPORTED_LOCALES } from "$lib/i18n";
@@ -42,7 +42,10 @@
 </script>
 
 <header class={siteHeaderClass}>
-  <nav class={siteNavClass} aria-label={t("nav.main")}>
+  <nav
+    class="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-6 py-3"
+    aria-label={t("nav.main")}
+  >
     <div class="flex min-w-0 items-center gap-3">
       <a href={homeHref} class={cn("truncate text-lg", navLinkClass)}>
         {SITE_NAME}
@@ -85,6 +88,11 @@
               </a>
             </li>
           {/each}
+          <li>
+            <ProductAppLink {lang} class={languageSwitcherMenuLinkClass}>
+              {t("nav.dashboard")}
+            </ProductAppLink>
+          </li>
         </ul>
       </details>
 
@@ -97,7 +105,13 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-2">
+    <div class="flex justify-center">
+      <ProductAppLink {lang} class={primaryCtaClass}>
+        {t("nav.dashboard")}
+      </ProductAppLink>
+    </div>
+
+    <div class="flex items-center justify-end gap-2">
       <details
         class={cn(
           languageSwitcherDetailsClass,
@@ -109,6 +123,7 @@
         <summary
           class={languageSwitcherIconOnlySummaryClass}
           aria-label={t("language.select")}
+          title={t("language.select")}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -170,9 +185,11 @@
         type="button"
         class={iconButtonClass()}
         data-theme-toggle
-        data-requires-js
-        data-label-light={t("theme.light")}
-        data-label-dark={t("theme.dark")}
+        disabled
+        data-title-light={t("theme.switchToLight")}
+        data-title-dark={t("theme.switchToDark")}
+        data-aria-label-light={t("theme.switchToLightAria")}
+        data-aria-label-dark={t("theme.switchToDarkAria")}
         aria-label={t("theme.toggle")}
         title={t("theme.toggle")}
       >
@@ -184,7 +201,7 @@
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          class="h-5 w-5 shrink-0"
+          class="text-muted-foreground h-5 w-5 shrink-0"
           aria-hidden="true"
           data-theme-toggle-icon
         >
@@ -195,9 +212,31 @@
         </svg>
       </button>
 
-      <ProductAppLink {lang} class={primaryCtaClass}>
-        {t("nav.dashboard")}
-      </ProductAppLink>
+      <div class={iconSlotClass}>
+        <ProductAppLink
+          {lang}
+          auth
+          class={iconButtonClass()}
+          aria-label={t("nav.signIn")}
+          title={t("nav.signIn")}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="text-muted-foreground h-5 w-5 shrink-0"
+            aria-hidden="true"
+          >
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+            <polyline points="10 17 15 12 10 7" />
+            <line x1="15" x2="3" y1="12" y2="12" />
+          </svg>
+        </ProductAppLink>
+      </div>
     </div>
   </nav>
 </header>

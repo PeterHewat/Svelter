@@ -3,6 +3,8 @@ import {
   applyThemeToDOM,
   getSystemTheme,
   resolveTheme,
+  themeToggleAriaLabel,
+  themeToggleTitle,
   useThemeStore,
   type ResolvedTheme,
   type ThemeMode,
@@ -66,6 +68,17 @@ describe("theme utilities", () => {
 
       mockMatchMedia(false);
       expect(resolveTheme("system")).toBe("light");
+    });
+  });
+
+  describe("theme toggle labels", () => {
+    it("builds shared title and aria-label copy", () => {
+      expect(themeToggleTitle("dark", { light: "Light", dark: "Dark" })).toBe(
+        "Switch to Dark",
+      );
+      expect(
+        themeToggleAriaLabel("light", { light: "Clair", dark: "Sombre" }),
+      ).toBe("Switch to Clair theme.");
     });
   });
 

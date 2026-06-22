@@ -28,6 +28,9 @@ describe("buildWebContentSecurityPolicy", () => {
     expect(csp).toContain("https://clerk-telemetry.com");
     expect(csp).toContain("worker-src 'self' blob:");
     expect(csp).toContain("https://img.clerk.com");
+    expect(csp).toContain("https://accounts.google.com/gsi/client");
+    expect(csp).toContain("https://accounts.google.com/gsi/");
+    expect(csp).toContain("https://accounts.google.com/gsi/style");
   });
 
   test("adds production custom Clerk domain when not on accounts.dev", () => {

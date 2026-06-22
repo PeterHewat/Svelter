@@ -40,6 +40,7 @@ export function iconButtonClass(...extra: ClassValue[]): string {
   return cn(
     "border-border bg-background text-foreground inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md border",
     "hover:bg-secondary hover:text-secondary-foreground",
+    "disabled:cursor-not-allowed disabled:opacity-50",
     focusRing,
     ...extra,
   );
@@ -97,7 +98,7 @@ export const languageSwitcherIconOnlySummaryClass = cn(
 
 /** Dropdown panel for locale links. */
 export const languageSwitcherMenuClass =
-  "border-border bg-background absolute top-full right-0 z-50 mt-1 min-w-full rounded-md border py-1 shadow-md";
+  "border-border bg-background absolute top-full left-0 z-50 mt-1 min-w-full rounded-md border py-1 shadow-md";
 
 /** Reserved slot for the current-locale checkmark in the menu. */
 export const languageSwitcherMenuCheckSlotClass =

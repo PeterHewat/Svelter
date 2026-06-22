@@ -16,6 +16,7 @@ const ru: TranslationDictionary = {
     faq: "FAQ",
     docs: "Доки",
     dashboard: "Панель",
+    signIn: "Войти",
     github: "Открыть на GitHub",
   },
   home: {
@@ -28,6 +29,7 @@ const ru: TranslationDictionary = {
     ctaTitle: "Готовы запустить продукт?",
     ctaSubtitle:
       "Клонируйте шаблон, настройте заглушки контента и разверните сегодня.",
+    ctaDashboard: "Перейти в панель",
     howItWorksTitle: "Как это работает",
     metricsTitle: "Создан для скорости",
     testimonialTitle: "Что говорят команды",
@@ -95,6 +97,10 @@ const ru: TranslationDictionary = {
     toggle: "Переключить тему",
     light: "Светлая",
     dark: "Тёмная",
+    switchToLight: "Переключить на светлую тему",
+    switchToDark: "Переключить на тёмную тему",
+    switchToLightAria: "Переключить на светлую тему.",
+    switchToDarkAria: "Переключить на тёмную тему.",
   },
 };
 

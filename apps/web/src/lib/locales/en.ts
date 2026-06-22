@@ -23,6 +23,10 @@ const en = {
     dark: "Dark",
     system: "System",
     toggle: "Toggle theme",
+    switchToLight: "Switch to Light",
+    switchToDark: "Switch to Dark",
+    switchToLightAria: "Switch to Light theme.",
+    switchToDarkAria: "Switch to Dark theme.",
   },
   language: {
     select: "Select language",
@@ -31,6 +35,7 @@ const en = {
   nav: {
     main: "Main navigation",
     tasks: "Tasks",
+    user: "User",
     home: "Home",
     website: "Website",
   },
@@ -87,21 +92,25 @@ const en = {
   },
   tasks: {
     title: "Tasks",
-    subtitle: "Try the demo as a guest, then sign up to keep your tasks",
     newPlaceholder: "What needs to be done?",
     add: "Add task",
     empty: "No tasks yet. Add one above.",
     listLabel: "Your tasks",
     toggleComplete: "Mark “{{title}}” complete",
     delete: "Delete “{{title}}”",
-    guestLimit: "{{count}} / {{limit}} guest tasks",
+    quotaGuest: "Quota: {{count}} / {{limit}} tasks (guest)",
+    quotaSignedIn: "Quota: {{count}} / {{limit}} tasks (signed in)",
     guestLimitReached:
       "Guest limit reached ({{limit}} tasks). Create an account to add more.",
+    signedInLimitReached: "Task limit reached ({{limit}} tasks).",
     signUpToContinue: "Sign up to continue",
     accountConvexLabel: "Profile stored in Convex",
     anonymous: "Anonymous",
     guestSession: "Guest session",
     noEmail: "No email synced",
+  },
+  user: {
+    title: "User",
   },
   footer: {
     copyright: "© {{year}} {{name}}",

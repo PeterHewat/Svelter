@@ -9,6 +9,8 @@ export type ProductAppHrefOptions = {
   lang?: Locale;
   /** Resolved theme override — defaults to stored preference when in the browser. */
   theme?: "light" | "dark";
+  /** When true, opens the product app sign-in dialog via `?auth=login`. */
+  auth?: boolean;
 };
 
 /**
@@ -17,6 +19,9 @@ export type ProductAppHrefOptions = {
  * @returns Absolute product origin, or `null` when resolved at runtime via `init.js`
  */
 export function bakedProductAppOrigin(): string | null {
+  if (typeof __BAKED_PRODUCT_APP_ORIGIN__ === "undefined") {
+    return null;
+  }
   return __BAKED_PRODUCT_APP_ORIGIN__;
 }
 
@@ -37,13 +42,17 @@ export function productAppHref(options: ProductAppHrefOptions = {}): string {
     return "#";
   }
 
-  const { lang, theme } = options;
+  const { lang, theme, auth } = options;
   const url = new URL("/", baked);
 
   appendCrossAppPrefs(url, {
     lang,
     theme: theme ?? readResolvedCrossAppTheme() ?? undefined,
   });
+
+  if (auth) {
+    url.searchParams.set("auth", "login");
+  }
 
   return url.toString();
 }

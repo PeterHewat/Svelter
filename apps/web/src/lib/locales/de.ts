@@ -20,6 +20,10 @@ const de: TranslationDictionary = {
     dark: "Dunkel",
     system: "System",
     toggle: "Thema wechseln",
+    switchToLight: "Zu Hell wechseln",
+    switchToDark: "Zu Dunkel wechseln",
+    switchToLightAria: "Zu hellem Theme wechseln.",
+    switchToDarkAria: "Zu dunklem Theme wechseln.",
   },
   language: {
     select: "Sprache auswählen",
@@ -28,6 +32,7 @@ const de: TranslationDictionary = {
   nav: {
     main: "Hauptnavigation",
     tasks: "Aufgaben",
+    user: "Benutzer",
     home: "Startseite",
     website: "Website",
   },
@@ -86,21 +91,25 @@ const de: TranslationDictionary = {
   },
   tasks: {
     title: "Aufgaben",
-    subtitle: "Vertikaler Schnitt: Convex-Mutationen und Clerk-Auth",
     newPlaceholder: "Was ist zu erledigen?",
     add: "Aufgabe hinzufügen",
     empty: "Noch keine Aufgaben. Oben eine hinzufügen.",
     listLabel: "Ihre Aufgaben",
     toggleComplete: "„{{title}}“ als erledigt markieren",
     delete: "„{{title}}“ löschen",
-    guestLimit: "{{count}} / {{limit}} Gast-Aufgaben",
+    quotaGuest: "Kontingent: {{count}} / {{limit}} Aufgaben (Gast)",
+    quotaSignedIn: "Kontingent: {{count}} / {{limit}} Aufgaben (angemeldet)",
     guestLimitReached:
       "Gastlimit erreicht ({{limit}} Aufgaben). Konto erstellen, um mehr hinzuzufügen.",
+    signedInLimitReached: "Aufgabenlimit erreicht ({{limit}} Aufgaben).",
     signUpToContinue: "Registrieren, um fortzufahren",
     accountConvexLabel: "Profil in Convex gespeichert",
     anonymous: "Anonym",
     guestSession: "Gastsitzung",
     noEmail: "Keine E-Mail synchronisiert",
+  },
+  user: {
+    title: "Benutzer",
   },
   footer: {
     copyright: "© {{year}} {{name}}",

@@ -107,12 +107,6 @@ html.light {
   --ring: 234 89% 54%;
 }
 
-@media (scripting: none) {
-  [data-requires-js] {
-    display: none;
-  }
-}
-
 @layer base {
   a:focus-visible,
   button:focus-visible {

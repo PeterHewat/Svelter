@@ -18,6 +18,17 @@ const CLERK_FRAME_SRC = [
 
 const CLERK_IMG_SRC = ["https://img.clerk.com"] as const;
 
+/** Google Identity Services (One Tap / Sign in with Google). */
+const GOOGLE_IDENTITY_SCRIPT_SRC = [
+  "https://accounts.google.com/gsi/client",
+] as const;
+const GOOGLE_IDENTITY_PARENT_SRC = [
+  "https://accounts.google.com/gsi/",
+] as const;
+const GOOGLE_IDENTITY_STYLE_SRC = [
+  "https://accounts.google.com/gsi/style",
+] as const;
+
 function isPlausibleHostname(hostname: string): boolean {
   return /^[a-zA-Z0-9.-]+$/.test(hostname) && hostname.includes(".");
 }
@@ -59,15 +70,25 @@ export function buildWebContentSecurityPolicy(options?: {
 }): string {
   const clerkFapiOrigin = options?.clerkFapiOrigin?.trim() || null;
 
-  const scriptSrc = ["'self'", "'unsafe-inline'", ...CLERK_SCRIPT_SRC];
+  const scriptSrc = [
+    "'self'",
+    "'unsafe-inline'",
+    ...CLERK_SCRIPT_SRC,
+    ...GOOGLE_IDENTITY_SCRIPT_SRC,
+  ];
   const connectSrc = [
     "'self'",
     "https://*.convex.cloud",
     "wss://*.convex.cloud",
     "https://*.convex.site",
     ...CLERK_CONNECT_SRC,
+    ...GOOGLE_IDENTITY_PARENT_SRC,
   ];
-  const frameSrc = ["'self'", ...CLERK_FRAME_SRC];
+  const frameSrc = [
+    "'self'",
+    ...CLERK_FRAME_SRC,
+    ...GOOGLE_IDENTITY_PARENT_SRC,
+  ];
 
   if (clerkFapiOrigin && !clerkFapiOrigin.includes(".clerk.accounts.")) {
     scriptSrc.push(clerkFapiOrigin);
@@ -78,7 +99,7 @@ export function buildWebContentSecurityPolicy(options?: {
   return [
     "default-src 'self'",
     `script-src ${scriptSrc.join(" ")}`,
-    "style-src 'self' 'unsafe-inline'",
+    `style-src 'self' 'unsafe-inline' ${GOOGLE_IDENTITY_STYLE_SRC.join(" ")}`,
     `img-src 'self' data: https: ${CLERK_IMG_SRC.join(" ")}`,
     "font-src 'self' data:",
     `connect-src ${connectSrc.join(" ")}`,

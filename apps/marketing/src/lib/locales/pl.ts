@@ -16,6 +16,7 @@ const pl: TranslationDictionary = {
     faq: "FAQ",
     docs: "Docs",
     dashboard: "Panel",
+    signIn: "Zaloguj się",
     github: "Zobacz na GitHubie",
   },
   home: {
@@ -27,6 +28,7 @@ const pl: TranslationDictionary = {
     logoBarTagline: "Zaufany przez zespoły budujące na szablonie",
     ctaTitle: "Gotowy, by wdrożyć produkt?",
     ctaSubtitle: "Sklonuj szablon, dostosuj treści zastępcze i wdroż już dziś.",
+    ctaDashboard: "Przejdź do panelu",
     howItWorksTitle: "Jak to działa",
     metricsTitle: "Zbudowany dla szybkości",
     testimonialTitle: "Co mówią zespoły",
@@ -94,6 +96,10 @@ const pl: TranslationDictionary = {
     toggle: "Przełącz motyw",
     light: "Jasny",
     dark: "Ciemny",
+    switchToLight: "Przełącz na jasny motyw",
+    switchToDark: "Przełącz na ciemny motyw",
+    switchToLightAria: "Przełącz na jasny motyw.",
+    switchToDarkAria: "Przełącz na ciemny motyw.",
   },
 };
 

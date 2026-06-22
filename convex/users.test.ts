@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import { api, internal } from "./_generated/api";
-import { ANONYMOUS_TASK_LIMIT } from "./lib/constants";
+import { ANONYMOUS_TASK_LIMIT, SIGNED_IN_TASK_LIMIT } from "./lib/constants";
 import schema from "./schema";
 import { modules } from "./_test.setup";
 
@@ -92,17 +92,21 @@ test("mergeGuestSessionIntoAccount merges into existing account for returning us
   expect(users[0]?.tokenIdentifier).toBe(clerkUser.subject);
 });
 
-test("signed-in users have no task limit", async () => {
+test("signed-in users are limited to SIGNED_IN_TASK_LIMIT tasks", async () => {
   const t = convexTest(schema, modules).withIdentity(clerkUser);
 
-  for (let i = 0; i < ANONYMOUS_TASK_LIMIT + 2; i++) {
+  for (let i = 0; i < SIGNED_IN_TASK_LIMIT; i++) {
     await t.mutation(api.tasks.create, { title: `Task ${i + 1}` });
   }
 
   const status = await t.query(api.users.accountStatus, {});
   expect(status.isGuest).toBe(false);
-  expect(status.taskLimit).toBeNull();
-  expect(status.taskCount).toBe(ANONYMOUS_TASK_LIMIT + 2);
+  expect(status.taskLimit).toBe(SIGNED_IN_TASK_LIMIT);
+  expect(status.taskCount).toBe(SIGNED_IN_TASK_LIMIT);
+
+  await expect(
+    t.mutation(api.tasks.create, { title: "Over limit" }),
+  ).rejects.toThrow(`Signed-in task limit reached (${SIGNED_IN_TASK_LIMIT})`);
 });
 
 test("syncCurrentUser seeds profile fields from JWT claims", async () => {

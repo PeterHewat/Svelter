@@ -20,6 +20,10 @@ const nl: TranslationDictionary = {
     dark: "Donker",
     system: "Systeem",
     toggle: "Thema wisselen",
+    switchToLight: "Schakel over naar licht",
+    switchToDark: "Schakel over naar donker",
+    switchToLightAria: "Schakel over naar licht thema.",
+    switchToDarkAria: "Schakel over naar donker thema.",
   },
   language: {
     select: "Taal selecteren",
@@ -28,6 +32,7 @@ const nl: TranslationDictionary = {
   nav: {
     main: "Hoofdnavigatie",
     tasks: "Taken",
+    user: "Gebruiker",
     home: "Home",
     website: "Website",
   },
@@ -86,21 +91,25 @@ const nl: TranslationDictionary = {
   },
   tasks: {
     title: "Taken",
-    subtitle: "Verticaal voorbeeld: Convex-mutaties en Clerk-auth",
     newPlaceholder: "Wat moet er gedaan worden?",
     add: "Taak toevoegen",
     empty: "Nog geen taken. Voeg er een toe hierboven.",
     listLabel: "Jouw taken",
     toggleComplete: "Markeer «{{title}}» als voltooid",
     delete: "Verwijder «{{title}}»",
-    guestLimit: "{{count}} / {{limit}} gasttaken",
+    quotaGuest: "Quotum: {{count}} / {{limit}} taken (gast)",
+    quotaSignedIn: "Quotum: {{count}} / {{limit}} taken (ingelogd)",
     guestLimitReached:
       "Gastlimiet bereikt ({{limit}} taken). Maak een account om meer toe te voegen.",
+    signedInLimitReached: "Takenlimiet bereikt ({{limit}} taken).",
     signUpToContinue: "Registreren om door te gaan",
     accountConvexLabel: "Profiel opgeslagen in Convex",
     anonymous: "Anoniem",
     guestSession: "Gastsessie",
     noEmail: "Geen e-mail gesynchroniseerd",
+  },
+  user: {
+    title: "Gebruiker",
   },
   footer: {
     copyright: "© {{year}} {{name}}",
