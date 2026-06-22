@@ -80,6 +80,7 @@ export async function resolveAnonymousConvexToken(
 async function requestAnonymousToken(
   siteUrl: string,
   existingUserId: string | null,
+  allowRetry = true,
 ): Promise<AnonymousTokenResponse> {
   const response = await fetch(`${siteUrl}/auth/anonymous`, {
     method: "POST",
@@ -88,6 +89,11 @@ async function requestAnonymousToken(
   });
 
   if (!response.ok) {
+    if (allowRetry && existingUserId) {
+      clearStoredAnonUserId();
+      clearAnonymousTokenCache();
+      return requestAnonymousToken(siteUrl, null, false);
+    }
     throw new Error("Failed to start guest session");
   }
 
@@ -100,17 +106,26 @@ export type ConvexAuthMode = "idle" | "guest" | "clerk";
 
 /**
  * Maps Clerk load state to the Convex auth mode we should configure.
+ *
+ * Avoids `guest` while Clerk session cookies indicate a returning or in-flight
+ * sign-in (e.g. Google One Tap redirect) so we do not race anonymous auth
+ * against `session.getToken({ template: "convex" })`.
  */
 export function convexAuthModeFromClerk(input: {
   isLoaded: boolean;
   userId: string | null | undefined;
   hasSession: boolean;
+  /** Clerk session cookies or OAuth return — Clerk may still be hydrating. */
+  clerkSessionHydrating?: boolean;
 }): ConvexAuthMode {
   if (!input.isLoaded) {
     return "idle";
   }
-  if (input.userId && input.hasSession) {
+  if (input.userId) {
     return "clerk";
+  }
+  if (input.clerkSessionHydrating) {
+    return "idle";
   }
   return "guest";
 }

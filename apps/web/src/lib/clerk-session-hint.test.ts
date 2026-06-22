@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   hasClerkReturnSignal,
+  isClerkSessionHydrating,
   markClerkLoadRequested,
   mayHaveClerkSession,
   shouldEagerLoadClerk,
@@ -45,6 +46,47 @@ describe("mayHaveClerkSession", () => {
   it("returns true when suffixed __client_uat is greater than zero", () => {
     document.cookie = "__client_uat_abc123=1700000000";
     expect(mayHaveClerkSession()).toBe(true);
+  });
+});
+
+describe("isClerkSessionHydrating", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("returns false when Clerk is loaded and signed out despite stale uat cookie", () => {
+    document.cookie = "__client_uat=1700000000";
+    expect(
+      isClerkSessionHydrating({
+        isLoaded: true,
+        userId: null,
+        hasSession: false,
+      }),
+    ).toBe(false);
+  });
+
+  it("returns true when OAuth return signal is present", () => {
+    vi.stubGlobal("location", {
+      search: "?__clerk_status=sign-in",
+      hash: "",
+    });
+    expect(
+      isClerkSessionHydrating({
+        isLoaded: true,
+        userId: null,
+        hasSession: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("returns true when session exists before userId is set", () => {
+    expect(
+      isClerkSessionHydrating({
+        isLoaded: true,
+        userId: null,
+        hasSession: true,
+      }),
+    ).toBe(true);
   });
 });
 

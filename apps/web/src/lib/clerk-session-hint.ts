@@ -22,6 +22,25 @@ export function mayHaveClerkSession(): boolean {
 }
 
 /**
+ * Clerk has finished loading JS but the signed-in user id is not available yet.
+ *
+ * Does not use `__client_uat` alone — a stale uat cookie after sign-out or
+ * account deletion would otherwise block guest mode indefinitely.
+ *
+ * @returns True during OAuth return or a brief session-without-userId frame
+ */
+export function isClerkSessionHydrating(input: {
+  isLoaded: boolean;
+  userId: string | null | undefined;
+  hasSession: boolean;
+}): boolean {
+  if (hasClerkReturnSignal()) {
+    return true;
+  }
+  return input.isLoaded && input.hasSession && !input.userId;
+}
+
+/**
  * Clerk OAuth / handshake redirects often include `__clerk` in the query or hash.
  *
  * @returns True when the current URL looks like a Clerk auth return

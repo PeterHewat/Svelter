@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, mock } from "bun:test";
 import { verifyClerkE2ESecrets } from "./e2e-secrets";
+import { CLERK_CONVEX_JWT_CLAIMS } from "./clerk-jwt-template";
 
 const fixturePublishable = "unit-test-clerk-pub-fixture-01";
 const fixtureSecret = "unit-test-clerk-sec-fixture-01";
@@ -175,7 +176,16 @@ describe("verifyClerkE2ESecrets", () => {
           url.startsWith("https://api.clerk.com/v1/jwt_templates") &&
           init?.method !== "POST"
         ) {
-          return Response.json({ data: [{ name: "convex" }], total_count: 1 });
+          return Response.json({
+            data: [
+              {
+                id: "jwt_template_existing",
+                name: "convex",
+                claims: CLERK_CONVEX_JWT_CLAIMS,
+              },
+            ],
+            total_count: 1,
+          });
         }
         throw new Error(`Unexpected fetch: ${url}`);
       },

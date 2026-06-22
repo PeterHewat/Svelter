@@ -1,8 +1,12 @@
 import { describe, expect, test } from "bun:test";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import {
   convexUrlFromDeploymentSlug,
   parseConvexDeployKeySlug,
   parseConvexProdDeploymentSlug,
+  readConvexUrlFromRootEnv,
   resolveProdConvexUrl,
 } from "./convex-url";
 
@@ -41,6 +45,23 @@ describe("resolveProdConvexUrl", () => {
         "https://insightful-ibex-892.eu-west-1.convex.cloud",
       ),
     ).toBe("https://laudable-deer-836.eu-west-1.convex.cloud");
+  });
+});
+
+describe("readConvexUrlFromRootEnv", () => {
+  test("prefers VITE_CONVEX_URL over slug-derived host", () => {
+    const root = mkdtempSync(join(tmpdir(), "svelter-convex-url-"));
+    writeFileSync(
+      join(root, ".env.local"),
+      [
+        "CONVEX_DEPLOYMENT=dev:insightful-ibex-892",
+        "VITE_CONVEX_URL=https://insightful-ibex-892.eu-west-1.convex.cloud",
+      ].join("\n"),
+    );
+
+    expect(readConvexUrlFromRootEnv(root)).toBe(
+      "https://insightful-ibex-892.eu-west-1.convex.cloud",
+    );
   });
 });
 

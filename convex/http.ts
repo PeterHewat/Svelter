@@ -70,7 +70,7 @@ http.route({
         const data = event.data as { id?: string };
         if (data.id) {
           await ctx.runMutation(internal.users.deleteFromClerk, {
-            clerkUserId: data.id,
+            tokenIdentifier: data.id,
           });
         }
         break;

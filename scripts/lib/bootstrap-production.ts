@@ -3,6 +3,7 @@ import { clerkProductionOrigins } from "../../packages/config/hostnames";
 import { hasApexDomain } from "../../packages/config/validate-domain";
 import { resolveGitHubRepo } from "./apply-identity";
 import { deployClerkProduction, pullClerkProductionEnv } from "./clerk-cli";
+import { syncClerkGoogleOAuth } from "./clerk-google-oauth";
 import {
   issuerFromPublishableKey,
   mergeClerkAllowedOrigins,
@@ -407,6 +408,18 @@ export async function bootstrapProduction(
 
   if (clerkSk.startsWith("sk_live_") && webProject) {
     await syncClerkProductionAllowedOrigins(setup, webProject, clerkSk);
+    const productionIssuer =
+      (await resolveClerkIssuerDomain(clerkPk, clerkSk)) ?? null;
+    await syncClerkGoogleOAuth(root, setup, {
+      issuerDomain: productionIssuer,
+      secretKey: clerkSk,
+      interactive: !options?.autoConfirm,
+      clerkCli:
+        options?.cliContext && canAutomateClerk(options.cliContext)
+          ? options.cliContext.clerk
+          : undefined,
+      instance: "production",
+    });
   } else if (webProject && !clerkDeferred) {
     printManualAction("Set Clerk production allowed origins via Backend API", [
       "Provide sk_live_… when prompted so setup can PATCH allowed_origins automatically",

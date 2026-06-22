@@ -13,6 +13,13 @@ export const CLERK_JWT_TEMPLATES =
   "https://dashboard.clerk.com/last-active?path=jwt-templates";
 export const CLERK_WEBHOOKS =
   "https://dashboard.clerk.com/last-active?path=webhooks";
+export const CLERK_SSO_CONNECTIONS =
+  "https://dashboard.clerk.com/last-active?path=user-authentication/sso-connections";
+export const GOOGLE_CLOUD_CONSOLE = "https://console.cloud.google.com";
+export const GOOGLE_CLOUD_OAUTH_CONSENT =
+  "https://console.cloud.google.com/apis/credentials/consent";
+export const GOOGLE_CLOUD_CREDENTIALS =
+  "https://console.cloud.google.com/apis/credentials";
 
 /**
  * Clerk application dashboard URL when an app id is known.

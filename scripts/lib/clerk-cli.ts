@@ -81,6 +81,30 @@ export async function runClerkCli(
 }
 
 /**
+ * Partially updates the linked Clerk instance config via `clerk config patch`.
+ *
+ * @param clerk - Clerk CLI state
+ * @param root - Repository root (linked via `clerk link`)
+ * @param patch - Partial instance config JSON
+ * @param options - Target instance and confirmation behavior
+ */
+export async function runClerkConfigPatch(
+  clerk: CliToolState,
+  root: string,
+  patch: Record<string, unknown>,
+  options?: { instance?: "prod"; yes?: boolean },
+): Promise<ClerkCliRunResult> {
+  const args = ["config", "patch", "--json", JSON.stringify(patch)];
+  if (options?.instance === "prod") {
+    args.push("--instance", "prod");
+  }
+  if (options?.yes !== false) {
+    args.push("--yes");
+  }
+  return runClerkCli(clerk.command, args, { cwd: root });
+}
+
+/**
  * Extracts a Clerk application ID from CLI output.
  *
  * @param text - stdout or JSON from Clerk CLI

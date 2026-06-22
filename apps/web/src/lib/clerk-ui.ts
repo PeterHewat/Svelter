@@ -1,7 +1,15 @@
-import { ui, type Appearance } from "@clerk/ui";
+import { ui as clerkUi, type Appearance } from "@clerk/ui";
+import type { ComponentProps } from "svelte";
+import { ClerkProvider } from "svelte-clerk/client";
 
-/** Pinned Clerk UI bundle — pass to `ClerkProvider` to avoid CDN drift. */
-export { ui };
+type ClerkProviderUi = ComponentProps<typeof ClerkProvider>["ui"];
+
+/**
+ * Pinned Clerk UI bundle — pass to `ClerkProvider` to avoid CDN drift.
+ *
+ * Cast bridges minor `@clerk/ui` / `svelte-clerk` Clerk type skew at compile time.
+ */
+export const ui = clerkUi as unknown as ClerkProviderUi;
 
 /** Shared Clerk component styling (stable element keys, not DOM structure). */
 export const clerkAppearance: Appearance = {
