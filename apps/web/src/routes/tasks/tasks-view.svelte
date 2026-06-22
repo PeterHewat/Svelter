@@ -66,18 +66,22 @@
   );
 
   const isGuest = $derived(account?.isGuest ?? false);
-  const atGuestLimit = $derived(
-    isGuest &&
-      account !== undefined &&
+  const atTaskLimit = $derived(
+    account !== undefined &&
       account.taskLimit !== null &&
       account.taskCount >= account.taskLimit,
   );
-  const limitMessage = $derived(
+  const quotaMessage = $derived(
     account?.taskLimit !== null && account?.taskLimit !== undefined
-      ? t("tasks.guestLimit", {
-          count: account?.taskCount ?? 0,
-          limit: account.taskLimit,
-        })
+      ? isGuest
+        ? t("tasks.quotaGuest", {
+            count: account.taskCount,
+            limit: account.taskLimit,
+          })
+        : t("tasks.quotaSignedIn", {
+            count: account.taskCount,
+            limit: account.taskLimit,
+          })
       : null,
   );
 </script>
@@ -92,50 +96,15 @@
   </p>
 {:else}
   <div class="mx-auto w-full max-w-lg">
-    <h1 class="mb-2 text-3xl font-bold">{t("tasks.title")}</h1>
-    <p class="text-muted-foreground mb-4 text-sm">{t("tasks.subtitle")}</p>
+    <h1 class="mb-4 text-3xl font-bold">{t("tasks.title")}</h1>
 
-    {#if account}
-      <section
-        class="border-border bg-muted/30 mb-6 flex gap-3 rounded-md border p-4"
-        aria-label={t("tasks.accountConvexLabel")}
-      >
-        {#if !isGuest && account.imageUrl}
-          <img
-            src={account.imageUrl}
-            alt=""
-            class="size-10 shrink-0 rounded-full object-cover"
-          />
-        {:else}
-          <div
-            class="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium"
-            aria-hidden="true"
-          >
-            {isGuest ? "?" : (account.displayName?.[0] ?? "?").toUpperCase()}
-          </div>
-        {/if}
-        <div class="min-w-0">
-          <p class="text-sm font-medium">
-            {isGuest
-              ? t("tasks.anonymous")
-              : (account.displayName ?? t("tasks.anonymous"))}
-          </p>
-          <p class="text-muted-foreground truncate text-sm">
-            {isGuest
-              ? t("tasks.guestSession")
-              : (account.email ?? t("tasks.noEmail"))}
-          </p>
-        </div>
-      </section>
-    {/if}
-
-    {#if isGuest && limitMessage}
+    {#if quotaMessage}
       <p class="text-muted-foreground mb-4 text-sm" role="status">
-        {limitMessage}
+        {quotaMessage}
       </p>
     {/if}
 
-    {#if atGuestLimit}
+    {#if isGuest && atTaskLimit}
       <div
         class="border-border bg-muted/50 mb-6 rounded-md border px-4 py-3 text-sm"
         role="status"
@@ -151,6 +120,13 @@
           {t("tasks.signUpToContinue")}
         </button>
       </div>
+    {:else if !isGuest && atTaskLimit}
+      <p
+        class="border-border bg-muted/50 text-muted-foreground mb-6 rounded-md border px-4 py-3 text-sm"
+        role="status"
+      >
+        {t("tasks.signedInLimitReached", { limit: account!.taskLimit! })}
+      </p>
     {/if}
 
     <form class="mb-4 flex gap-2" onsubmit={createFromForm}>
@@ -162,7 +138,7 @@
         type="text"
         required
         maxlength={500}
-        disabled={atGuestLimit}
+        disabled={atTaskLimit}
         placeholder={t("tasks.newPlaceholder")}
         class="border-input bg-background focus-visible:ring-ring flex-1 rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
       />
@@ -170,7 +146,7 @@
         variant="primary"
         size="md"
         {pending}
-        disabled={atGuestLimit}
+        disabled={atTaskLimit}
         pendingLabel={t("common.loading")}
       >
         {t("tasks.add")}
@@ -181,7 +157,11 @@
       <p class="text-destructive mb-4 text-sm" role="alert">
         {createError.includes("Guest task limit")
           ? t("tasks.guestLimitReached", { limit: account?.taskLimit ?? 3 })
-          : createError}
+          : createError.includes("Signed-in task limit")
+            ? t("tasks.signedInLimitReached", {
+                limit: account?.taskLimit ?? 10,
+              })
+            : createError}
       </p>
     {/if}
 

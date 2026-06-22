@@ -16,6 +16,7 @@ const fr: TranslationDictionary = {
     faq: "FAQ",
     docs: "Docs",
     dashboard: "Tableau de bord",
+    signIn: "Se connecter",
     github: "Voir sur GitHub",
   },
   home: {
@@ -28,6 +29,7 @@ const fr: TranslationDictionary = {
     ctaTitle: "Prêt à lancer votre produit ?",
     ctaSubtitle:
       "Clonez le modèle, personnalisez le contenu placeholder et déployez aujourd'hui.",
+    ctaDashboard: "Aller au tableau de bord",
     howItWorksTitle: "Comment ça marche",
     metricsTitle: "Conçu pour la rapidité",
     testimonialTitle: "Ce que disent les équipes",
@@ -95,6 +97,10 @@ const fr: TranslationDictionary = {
     toggle: "Changer de thème",
     light: "Clair",
     dark: "Sombre",
+    switchToLight: "Passer au thème clair",
+    switchToDark: "Passer au thème sombre",
+    switchToLightAria: "Passer au thème clair.",
+    switchToDarkAria: "Passer au thème sombre.",
   },
 };
 

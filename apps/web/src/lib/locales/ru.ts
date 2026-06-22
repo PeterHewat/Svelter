@@ -20,6 +20,10 @@ const ru: TranslationDictionary = {
     dark: "Тёмная",
     system: "Системная",
     toggle: "Переключить тему",
+    switchToLight: "Переключить на светлую тему",
+    switchToDark: "Переключить на тёмную тему",
+    switchToLightAria: "Переключить на светлую тему.",
+    switchToDarkAria: "Переключить на тёмную тему.",
   },
   language: {
     select: "Выбрать язык",
@@ -28,6 +32,7 @@ const ru: TranslationDictionary = {
   nav: {
     main: "Основная навигация",
     tasks: "Задачи",
+    user: "Пользователь",
     home: "Главная",
     website: "Сайт",
   },
@@ -85,21 +90,25 @@ const ru: TranslationDictionary = {
   },
   tasks: {
     title: "Задачи",
-    subtitle: "Вертикальный пример: мутации Convex и аутентификация Clerk",
     newPlaceholder: "Что нужно сделать?",
     add: "Добавить задачу",
     empty: "Задач пока нет. Добавьте одну выше.",
     listLabel: "Ваши задачи",
     toggleComplete: "Отметить «{{title}}» выполненной",
     delete: "Удалить «{{title}}»",
-    guestLimit: "{{count}} / {{limit}} гостевых задач",
+    quotaGuest: "Квота: {{count}} / {{limit}} задач (гость)",
+    quotaSignedIn: "Квота: {{count}} / {{limit}} задач (вход выполнен)",
     guestLimitReached:
       "Достигнут гостевой лимит ({{limit}} задач). Создайте аккаунт, чтобы добавить больше.",
+    signedInLimitReached: "Достигнут лимит задач ({{limit}} задач).",
     signUpToContinue: "Зарегистрироваться, чтобы продолжить",
     accountConvexLabel: "Профиль сохранён в Convex",
     anonymous: "Аноним",
     guestSession: "Гостевая сессия",
     noEmail: "Email не синхронизирован",
+  },
+  user: {
+    title: "Пользователь",
   },
   footer: {
     copyright: "© {{year}} {{name}}",

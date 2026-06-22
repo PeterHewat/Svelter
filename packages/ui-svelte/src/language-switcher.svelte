@@ -90,7 +90,11 @@
     className,
   )}
 >
-  <summary class={languageSwitcherIconOnlySummaryClass} aria-label={ariaLabel}>
+  <summary
+    class={languageSwitcherIconOnlySummaryClass}
+    aria-label={ariaLabel}
+    title={ariaLabel}
+  >
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"

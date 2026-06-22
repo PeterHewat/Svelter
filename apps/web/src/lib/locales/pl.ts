@@ -20,6 +20,10 @@ const pl: TranslationDictionary = {
     dark: "Ciemny",
     system: "Systemowy",
     toggle: "Przełącz motyw",
+    switchToLight: "Przełącz na jasny motyw",
+    switchToDark: "Przełącz na ciemny motyw",
+    switchToLightAria: "Przełącz na jasny motyw.",
+    switchToDarkAria: "Przełącz na ciemny motyw.",
   },
   language: {
     select: "Wybierz język",
@@ -28,6 +32,7 @@ const pl: TranslationDictionary = {
   nav: {
     main: "Nawigacja główna",
     tasks: "Zadania",
+    user: "Użytkownik",
     home: "Strona główna",
     website: "Strona",
   },
@@ -85,21 +90,25 @@ const pl: TranslationDictionary = {
   },
   tasks: {
     title: "Zadania",
-    subtitle: "Przykład pionowy: mutacje Convex i auth Clerk",
     newPlaceholder: "Co trzeba zrobić?",
     add: "Dodaj zadanie",
     empty: "Brak zadań. Dodaj jedno powyżej.",
     listLabel: "Twoje zadania",
     toggleComplete: "Oznacz „{{title}}” jako ukończone",
     delete: "Usuń „{{title}}”",
-    guestLimit: "{{count}} / {{limit}} zadań gościa",
+    quotaGuest: "Limit: {{count}} / {{limit}} zadań (gość)",
+    quotaSignedIn: "Limit: {{count}} / {{limit}} zadań (zalogowany)",
     guestLimitReached:
       "Limit gościa osiągnięty ({{limit}} zadań). Utwórz konto, aby dodać więcej.",
+    signedInLimitReached: "Osiągnięto limit zadań ({{limit}} zadań).",
     signUpToContinue: "Zarejestruj się, aby kontynuować",
     accountConvexLabel: "Profil zapisany w Convex",
     anonymous: "Anonimowy",
     guestSession: "Sesja gościa",
     noEmail: "Brak zsynchronizowanego e-maila",
+  },
+  user: {
+    title: "Użytkownik",
   },
   footer: {
     copyright: "© {{year}} {{name}}",

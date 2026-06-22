@@ -20,6 +20,10 @@ const fr: TranslationDictionary = {
     dark: "Sombre",
     system: "Système",
     toggle: "Changer le thème",
+    switchToLight: "Passer au thème clair",
+    switchToDark: "Passer au thème sombre",
+    switchToLightAria: "Passer au thème clair.",
+    switchToDarkAria: "Passer au thème sombre.",
   },
   language: {
     select: "Choisir la langue",
@@ -28,6 +32,7 @@ const fr: TranslationDictionary = {
   nav: {
     main: "Navigation principale",
     tasks: "Tâches",
+    user: "Utilisateur",
     home: "Accueil",
     website: "Site web",
   },
@@ -85,21 +90,25 @@ const fr: TranslationDictionary = {
   },
   tasks: {
     title: "Tâches",
-    subtitle: "Exemple vertical : mutations Convex et auth Clerk",
     newPlaceholder: "Que faut-il faire ?",
     add: "Ajouter une tâche",
     empty: "Pas encore de tâches. Ajoutez-en une ci-dessus.",
     listLabel: "Vos tâches",
     toggleComplete: "Marquer « {{title}} » comme terminée",
     delete: "Supprimer « {{title}} »",
-    guestLimit: "{{count}} / {{limit}} tâches invité",
+    quotaGuest: "Quota : {{count}} / {{limit}} tâches (invité)",
+    quotaSignedIn: "Quota : {{count}} / {{limit}} tâches (connecté)",
     guestLimitReached:
       "Limite invité atteinte ({{limit}} tâches). Créez un compte pour en ajouter.",
+    signedInLimitReached: "Limite de tâches atteinte ({{limit}} tâches).",
     signUpToContinue: "S'inscrire pour continuer",
     accountConvexLabel: "Profil stocké dans Convex",
     anonymous: "Anonyme",
     guestSession: "Session invité",
     noEmail: "Aucun e-mail synchronisé",
+  },
+  user: {
+    title: "Utilisateur",
   },
   footer: {
     copyright: "© {{year}} {{name}}",

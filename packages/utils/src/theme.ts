@@ -52,6 +52,47 @@ export function resolveTheme(mode: ThemeMode): ResolvedTheme {
 }
 
 /**
+ * Human-readable name for the theme mode the toggle will switch to.
+ *
+ * @param targetMode - Resolved theme after toggling
+ * @param labels - Optional localized light/dark labels
+ */
+export function themeToggleTargetLabel(
+  targetMode: ResolvedTheme,
+  labels: { light?: string; dark?: string } = {},
+): string {
+  const light = labels.light ?? "Light";
+  const dark = labels.dark ?? "Dark";
+  return targetMode === "light" ? light : dark;
+}
+
+/**
+ * Tooltip and title for the shared theme toggle (web + marketing init.js).
+ *
+ * @param targetMode - Resolved theme after toggling
+ * @param labels - Optional localized light/dark labels
+ */
+export function themeToggleTitle(
+  targetMode: ResolvedTheme,
+  labels: { light?: string; dark?: string } = {},
+): string {
+  return `Switch to ${themeToggleTargetLabel(targetMode, labels)}`;
+}
+
+/**
+ * Accessible name for the theme toggle button.
+ *
+ * @param targetMode - Resolved theme after toggling
+ * @param labels - Optional localized light/dark labels
+ */
+export function themeToggleAriaLabel(
+  targetMode: ResolvedTheme,
+  labels: { light?: string; dark?: string } = {},
+): string {
+  return `${themeToggleTitle(targetMode, labels)} theme.`;
+}
+
+/**
  * Apply theme to the document root element.
  * Adds/removes the `dark` class on the `<html>` element.
  *

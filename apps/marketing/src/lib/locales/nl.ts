@@ -16,6 +16,7 @@ const nl: TranslationDictionary = {
     faq: "FAQ",
     docs: "Docs",
     dashboard: "Dashboard",
+    signIn: "Inloggen",
     github: "Bekijk op GitHub",
   },
   home: {
@@ -28,6 +29,7 @@ const nl: TranslationDictionary = {
     ctaTitle: "Klaar om je product te lanceren?",
     ctaSubtitle:
       "Kloon het sjabloon, pas de placeholder-inhoud aan en deploy vandaag.",
+    ctaDashboard: "Naar dashboard",
     howItWorksTitle: "Hoe het werkt",
     metricsTitle: "Gebouwd voor snelheid",
     testimonialTitle: "Wat teams zeggen",
@@ -95,6 +97,10 @@ const nl: TranslationDictionary = {
     toggle: "Thema wisselen",
     light: "Licht",
     dark: "Donker",
+    switchToLight: "Schakel over naar licht",
+    switchToDark: "Schakel over naar donker",
+    switchToLightAria: "Schakel over naar licht thema.",
+    switchToDarkAria: "Schakel over naar donker thema.",
   },
 };
 

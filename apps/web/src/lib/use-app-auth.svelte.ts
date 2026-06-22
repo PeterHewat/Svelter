@@ -1,4 +1,5 @@
 import { useClerkContext } from "svelte-clerk/client";
+import { clearGoogleOneTapTried } from "$lib/google-one-tap-auth";
 import { isAuthEnabled } from "$lib/backend";
 
 const disabledAuth = {
@@ -28,6 +29,7 @@ export function useAppAuth() {
       return isAuthenticated;
     },
     signOut: async () => {
+      clearGoogleOneTapTried();
       await clerk.clerk?.signOut();
     },
   };

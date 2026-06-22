@@ -8,18 +8,27 @@
   type Props = Omit<HTMLAnchorAttributes, "href" | "class"> & {
     class?: string;
     lang?: Locale;
+    /** Opens the product app sign-in dialog when the user follows the link. */
+    auth?: boolean;
     children?: Snippet;
   };
 
-  let { lang, class: className, children, ...rest }: Props = $props();
+  let {
+    lang,
+    auth = false,
+    class: className,
+    children,
+    ...rest
+  }: Props = $props();
 
-  const href = $derived(productAppHref({ lang }));
+  const href = $derived(productAppHref({ lang, auth }));
 </script>
 
 <a
   {href}
   class={cn(className)}
   data-product-app-link
+  data-auth={auth ? "login" : undefined}
   data-lang={lang}
   {...rest}
 >

@@ -140,9 +140,10 @@
     var resolved = resolveTheme(readThemeMode());
     var next = resolved === "dark" ? "light" : "dark";
     document.querySelectorAll("[data-theme-toggle]").forEach(function (el) {
-      var label = el.getAttribute("data-label-" + next) || next;
-      el.setAttribute("aria-label", label);
-      el.setAttribute("title", label);
+      var title = el.getAttribute("data-title-" + next) || next;
+      var ariaLabel = el.getAttribute("data-aria-label-" + next) || title;
+      el.setAttribute("aria-label", ariaLabel);
+      el.setAttribute("title", title);
       var icon = el.querySelector("[data-theme-toggle-icon]");
       if (icon) {
         icon.innerHTML =
@@ -691,6 +692,9 @@
           url.searchParams.set("lang", lang);
         }
         url.searchParams.set("theme", theme);
+        if (el.getAttribute("data-auth") === "login") {
+          url.searchParams.set("auth", "login");
+        }
         el.setAttribute("href", url.toString());
       } catch {
         /* ignore */
@@ -701,6 +705,7 @@
   function wireChrome() {
     updateToggleLabels();
     document.querySelectorAll("[data-theme-toggle]").forEach(function (el) {
+      el.disabled = false;
       el.addEventListener("click", function () {
         toggleTheme();
         syncProductAppLinks();

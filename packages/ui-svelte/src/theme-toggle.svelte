@@ -1,13 +1,25 @@
 <script lang="ts">
   import { cn } from "@repo/utils";
   import { iconButtonClass } from "@repo/utils/chrome";
-  import { useThemeStore, type ResolvedTheme } from "@repo/utils/theme";
+  import {
+    themeToggleAriaLabel,
+    themeToggleTitle,
+    useThemeStore,
+    type ResolvedTheme,
+  } from "@repo/utils/theme";
   import { onMount } from "svelte";
 
   interface Props {
     class?: string;
     size?: "sm" | "md" | "lg";
-    labels?: { light?: string; dark?: string };
+    labels?: {
+      light?: string;
+      dark?: string;
+      switchToLight?: string;
+      switchToDark?: string;
+      switchToLightAria?: string;
+      switchToDarkAria?: string;
+    };
   }
 
   let { class: className, size = "md", labels = {} }: Props = $props();
@@ -28,7 +40,17 @@
   const nextMode = $derived<ResolvedTheme>(
     resolvedTheme === "light" ? "dark" : "light",
   );
-  const targetLabel = $derived(mergedLabels[nextMode]);
+  const targetLabel = $derived(
+    nextMode === "light"
+      ? (labels.switchToLight ?? themeToggleTitle("light", mergedLabels))
+      : (labels.switchToDark ?? themeToggleTitle("dark", mergedLabels)),
+  );
+  const targetAriaLabel = $derived(
+    nextMode === "light"
+      ? (labels.switchToLightAria ??
+          themeToggleAriaLabel("light", mergedLabels))
+      : (labels.switchToDarkAria ?? themeToggleAriaLabel("dark", mergedLabels)),
+  );
 
   const sizeClasses = {
     sm: "h-8 w-8 text-sm",
@@ -51,8 +73,8 @@
   type="button"
   class={cn(iconButtonClass(), sizeClasses[size], className)}
   onclick={toggle}
-  aria-label="Switch to {targetLabel} theme."
-  title="Switch to {targetLabel}"
+  aria-label={targetAriaLabel}
+  title={targetLabel}
 >
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -62,7 +84,7 @@
     stroke-width="2"
     stroke-linecap="round"
     stroke-linejoin="round"
-    class={cn("shrink-0", iconSizeClasses[size])}
+    class={cn("text-muted-foreground shrink-0", iconSizeClasses[size])}
     aria-hidden="true"
   >
     {#if nextMode === "light"}

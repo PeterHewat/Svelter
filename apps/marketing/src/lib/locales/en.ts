@@ -32,6 +32,7 @@ const en = {
     faq: "FAQ",
     docs: "Docs",
     dashboard: "Dashboard",
+    signIn: "Sign in",
     github: "View on GitHub",
   },
   home: {
@@ -44,6 +45,7 @@ const en = {
     ctaTitle: "Ready to ship your product?",
     ctaSubtitle:
       "Clone the template, customize the placeholder content, and deploy today.",
+    ctaDashboard: "Go to Dashboard",
     howItWorksTitle: "How it works",
     metricsTitle: "Built for speed",
     testimonialTitle: "What teams are saying",
@@ -121,6 +123,10 @@ const en = {
     toggle: "Toggle theme",
     light: "Light",
     dark: "Dark",
+    switchToLight: "Switch to Light",
+    switchToDark: "Switch to Dark",
+    switchToLightAria: "Switch to Light theme.",
+    switchToDarkAria: "Switch to Dark theme.",
   },
 } as const satisfies TranslationDictionary;
 
