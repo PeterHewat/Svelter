@@ -1,7 +1,7 @@
 import { ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
-import { isAnonymousIdentity, isAnonymousSubject } from "../lib/anon_auth";
+import { isAnonymousSubject } from "../lib/anon_auth";
 import { ANON_USER_ID_PREFIX } from "../lib/constants";
 import type { UserIdentity } from "convex/server";
 
@@ -29,10 +29,10 @@ export function formatUserDisplayName(
 
 /**
  * @param user - User document
- * @returns True when the user is a guest (no Clerk account linked yet)
+ * @returns True when the user is a guest (anonymous JWT, `anon_…` subject)
  */
 export function isGuestUser(user: Doc<"users">): boolean {
-  return user.clerkUserId === undefined;
+  return isAnonymousSubject(user.tokenIdentifier);
 }
 
 /**
@@ -175,10 +175,8 @@ export async function getOrCreateUserFromIdentity(
     return (await ctx.db.get(existing._id)) ?? existing;
   }
 
-  const isGuest = isAnonymousIdentity(identity);
   const id = await ctx.db.insert("users", {
     tokenIdentifier,
-    clerkUserId: isGuest ? undefined : tokenIdentifier,
     firstName: profile.firstName,
     lastName: profile.lastName,
     email: profile.email,
@@ -198,21 +196,20 @@ export async function getOrCreateUserFromIdentity(
  * Upserts a Clerk account row from webhook data (authoritative profile sync).
  *
  * @param ctx - Mutation context
- * @param clerkUserId - Clerk user id
+ * @param clerkSubject - Clerk user id (JWT `sub` / `tokenIdentifier`)
  * @param profile - Profile from webhook payload
  */
 export async function upsertClerkUserFromWebhook(
   ctx: MutationCtx,
-  clerkUserId: string,
+  clerkSubject: string,
   profile: UserProfile,
 ): Promise<Id<"users">> {
-  const tokenIdentifier = clerkUserId;
+  const tokenIdentifier = clerkSubject;
   const now = Date.now();
   const existing = await getUserByToken(ctx, tokenIdentifier);
 
   if (existing) {
     await ctx.db.patch(existing._id, {
-      clerkUserId,
       updatedAt: now,
     });
     await applyUserProfile(ctx, existing._id, profile, "overwrite");
@@ -221,7 +218,6 @@ export async function upsertClerkUserFromWebhook(
 
   return await ctx.db.insert("users", {
     tokenIdentifier,
-    clerkUserId,
     firstName: profile.firstName,
     lastName: profile.lastName,
     email: profile.email,

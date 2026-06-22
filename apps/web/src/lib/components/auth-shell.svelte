@@ -3,6 +3,7 @@
   import { clerkAppearance, ui } from "$lib/clerk-ui";
   import ConvexClerkSync from "$lib/components/convex-clerk-sync.svelte";
   import AuthModal from "$lib/components/auth-modal.svelte";
+  import GoogleOneTap from "$lib/components/google-one-tap.svelte";
   import { initConvexFromEnv } from "$lib/init-convex-from-env";
 
   initConvexFromEnv();
@@ -17,6 +18,9 @@
 
 <ClerkProvider {publishableKey} {ui} appearance={clerkAppearance}>
   <ConvexClerkSync />
+  <!-- Clerk Smart CAPTCHA mount (One Tap / sign-up bot protection). -->
+  <div id="clerk-captcha" class="sr-only" aria-hidden="true"></div>
+  <GoogleOneTap />
   {@render children()}
   <AuthModal />
 </ClerkProvider>

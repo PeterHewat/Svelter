@@ -10,6 +10,7 @@
     resolveAnonymousConvexToken,
   } from "$lib/anonymous-auth";
   import { isAuthEnabled } from "$lib/backend";
+  import { isClerkSessionHydrating } from "$lib/clerk-session-hint";
   import { convexAuthReady } from "$lib/convex-clerk-ready.svelte";
   import { convexSiteUrl } from "$lib/convex-site-url";
   import { loadWebEnv } from "$lib/web-env";
@@ -25,10 +26,16 @@
 
     const authMode = $derived.by(() => {
       const { isLoaded, auth, session } = clerk;
+      const hasSession = Boolean(session);
       return convexAuthModeFromClerk({
         isLoaded,
         userId: auth.userId,
-        hasSession: Boolean(session),
+        hasSession,
+        clerkSessionHydrating: isClerkSessionHydrating({
+          isLoaded,
+          userId: auth.userId,
+          hasSession,
+        }),
       });
     });
 
@@ -58,6 +65,8 @@
 
     $effect(() => {
       const mode = authMode;
+      // Re-run setAuth when Clerk session materializes after One Tap / OAuth.
+      void (clerk.session?.id ?? clerk.auth.userId);
 
       if (mode === "idle") {
         convexAuthReady.ready = false;
@@ -90,11 +99,8 @@
               convexAuthReady.ready = false;
               return;
             }
-            void syncClerkUserRow().finally(() => {
-              if (active) {
-                convexAuthReady.ready = true;
-              }
-            });
+            convexAuthReady.ready = true;
+            void syncClerkUserRow();
           },
         );
       } else if (convexUrl) {
@@ -107,7 +113,13 @@
                 forceRefreshToken,
               );
             } catch {
-              return null;
+              clearStoredAnonUserId();
+              clearAnonymousTokenCache();
+              try {
+                return await resolveAnonymousConvexToken(siteUrl, true);
+              } catch {
+                return null;
+              }
             }
           },
           (confirmed) => {

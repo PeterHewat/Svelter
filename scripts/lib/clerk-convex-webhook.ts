@@ -9,8 +9,38 @@ export const CLERK_USER_WEBHOOK_EVENTS = [
 ] as const;
 
 export type EnsureClerkSvixAppResult =
-  | { ok: true }
+  | { ok: true; alreadyExisted: boolean }
   | { ok: false; message: string };
+
+/**
+ * Returns true when Clerk reports the instance Svix app is already provisioned.
+ *
+ * @param response - Clerk API response from `POST /webhooks/svix`
+ * @param detail - Response body text
+ */
+export function isClerkSvixAppAlreadyExists(
+  response: Response,
+  detail: string,
+): boolean {
+  if (response.status === 409) {
+    return true;
+  }
+  if (
+    /already exists|resource_exists|duplicate|svix_app_exists/i.test(detail)
+  ) {
+    return true;
+  }
+  try {
+    const parsed = JSON.parse(detail) as {
+      errors?: Array<{ code?: string }>;
+    };
+    return (parsed.errors ?? []).some(
+      (error) => error.code === "svix_app_exists",
+    );
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Performs an authenticated Clerk Backend API request.
@@ -50,15 +80,12 @@ export async function ensureClerkSvixApp(
     method: "POST",
   });
   if (response.ok) {
-    return { ok: true };
+    return { ok: true, alreadyExisted: false };
   }
 
   const detail = (await response.text()).slice(0, 200);
-  if (
-    response.status === 409 ||
-    /already exists|resource_exists|duplicate/i.test(detail)
-  ) {
-    return { ok: true };
+  if (isClerkSvixAppAlreadyExists(response, detail)) {
+    return { ok: true, alreadyExisted: true };
   }
 
   return {

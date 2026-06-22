@@ -81,7 +81,7 @@ export const mergeGuestSessionIntoAccount = mutation({
       throw new ConvexError("Sign in with a full account first");
     }
 
-    const clerkUserId = identity.subject;
+    const clerkSubject = identity.subject;
     if (!isGuestTokenIdentifier(args.guestTokenIdentifier)) {
       return { migratedTaskCount: 0, upgradedInPlace: false };
     }
@@ -98,12 +98,11 @@ export const mergeGuestSessionIntoAccount = mutation({
       .withIndex("by_user", (q) => q.eq("userId", guestUser._id))
       .collect();
 
-    const existingAccount = await getUserByToken(ctx, clerkUserId);
+    const existingAccount = await getUserByToken(ctx, clerkSubject);
 
     if (!existingAccount) {
       await ctx.db.patch(guestUser._id, {
-        tokenIdentifier: clerkUserId,
-        clerkUserId,
+        tokenIdentifier: clerkSubject,
         updatedAt: now,
       });
       await applyUserProfile(ctx, guestUser._id, profile, "fillMissing");
@@ -156,10 +155,10 @@ export const upsertFromClerk = internalMutation({
  */
 export const deleteFromClerk = internalMutation({
   args: {
-    clerkUserId: v.string(),
+    tokenIdentifier: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await getUserByToken(ctx, args.clerkUserId);
+    const user = await getUserByToken(ctx, args.tokenIdentifier);
     if (user) {
       await ctx.db.delete(user._id);
     }

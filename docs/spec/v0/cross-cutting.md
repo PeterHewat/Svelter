@@ -3,7 +3,7 @@
 - **Web app:** Clerk via `svelte-clerk` when `PUBLIC_CONVEX_URL` and `PUBLIC_CLERK_PUBLISHABLE_KEY` are set (`apps/web/src/routes/+layout.svelte`).
 - **Convex:** Clerk JWT validation in `convex/auth.config.ts` — `CLERK_JWT_ISSUER_DOMAIN` on each deployment.
 - **Guest access:** Anonymous RS256 JWTs minted by `POST /auth/anonymous` on the deployment `.convex.site` URL. Env: `ANON_AUTH_ISSUER`, `ANON_AUTH_JWKS`, `ANON_AUTH_PRIVATE_KEY` (set by `bun run setup`).
-- **Users table:** One canonical row per person. Guests have `clerkUserId` unset; sign-in sets `clerkUserId` and merges guest data via `users.mergeGuestSessionIntoAccount`. Profile fields sync from the Clerk JWT on sign-in (`fillMissing`) and from Clerk webhooks (`overwrite`).
+- **Users table:** One canonical row per person. `tokenIdentifier` is the JWT `sub` (`anon_…` for guests, Clerk user id when signed in). Sign-in upgrades or merges guest data via `users.mergeGuestSessionIntoAccount`. Profile fields sync from the Clerk JWT on sign-in (`fillMissing`) and from Clerk webhooks (`overwrite`).
 - **Clerk webhook:** `POST /clerk-webhook` on the deployment `.convex.site` URL — required for production profile sync. Set `CLERK_WEBHOOK_SIGNING_SECRET` on Convex. See [setup-automation.md](../../setup-automation.md#clerk-webhook-to-convex-profile-sync).
 - **Tasks (F-01):** Handlers scope tasks by `users._id`. Guests limited to 3 tasks.
 - **Shell (F-02):** Home route (`/`) renders without Convex or auth when env is missing.

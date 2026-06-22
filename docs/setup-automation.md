@@ -9,7 +9,10 @@ What `bun run setup` automates, what stays manual, and dashboard URLs for fallba
 - **Idempotent** (safe to re-run anytime): should not duplicate Clerk apps, corrupt [`.svelter/setup.json`](../.svelter/setup.json), or worsen secret placement. Interrupted runs resume; create-or-skip steps skip when already done. Prompts still run (with saved defaults); optional sync steps (GitHub secrets, Cloudflare) run again only when you confirm them.
 - **Interactive** (local TTY): prompts run each time; previous answers from `.svelter/setup.json` are defaults (Enter keeps them).
 - **Non-TTY** (CI, piped stdin): skip prompts; use existing `.svelter/setup.json` and env only. GitHub Actions secret sync, Cloudflare bootstrap, and production bootstrap require an interactive TTY — or pass `--sync-secrets` when `gh` / `CLOUDFLARE_API_TOKEN` are already set.
-- Dashboard URLs appear as clickable links in setup output. **Follow up** steps are deferred checklists (setup keeps going); **ACTION REQUIRED** only when setup pauses and exits (e.g. Convex link incomplete).
+- Dashboard URLs appear as clickable links in setup output. Three manual tiers:
+  - **ACTION REQUIRED** — setup **exits**; finish the step, then re-run `bun run setup` (e.g. Convex not linked, apex DNS nameservers not delegated).
+  - **→** (immediate) — do this **now** before the next prompt in the same run (e.g. create GCP OAuth client, then paste credentials).
+  - **→ Follow up:** — deferred checklist; setup **continues** (e.g. Clerk webhook endpoint, skipped optional steps).
 
 Step-by-step summary: [getting-started.md](./getting-started.md#2-setup-wizard-bun-run-setup).
 
@@ -78,6 +81,7 @@ Also writes `packages/config/product.ts`, rebrands `README.md` when forking from
 | Clerk JWT template       | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual dashboard fallback on failure                                                                                |
 | Clerk webhook → Convex   | Interactive setup prompts for signing secret after Clerk Dashboard steps (or reads web env) — [details](#clerk-webhook-to-convex-profile-sync)                                |
 | Clerk allowed origins    | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual PATCH fallback on failure                                                                                    |
+| Google OAuth + One Tap   | Guided GCP checklist; enables connection via Clerk CLI `config patch` when linked; prompts for credentials and patches Clerk (manual dashboard fallback)                      |
 | Apex domain              | Optional in identity wizard (Enter to skip). Re-run setup to add a domain later.                                                                                              |
 | DNS at registrar         | When apex is set: setup automates zone/domains/DNS via API, prints Cloudflare nameservers, and **pauses** until you confirm registrar delegation (`cloudflare.dnsConfigured`) |
 | E2E test user            | Wizard defaults `e2e.test@{apex}` when apex is set, else `e2e.test@example.com`; creates user via Clerk API and writes `E2E_USER_EMAIL`                                       |
@@ -85,12 +89,12 @@ Also writes `packages/config/product.ts`, rebrands `README.md` when forking from
 
 ### Feasibility summary
 
-| Category    | Examples                                                                                                                                                            |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Script**  | `PRODUCT_NAME`, `.env.local`, `convex env set`, deploy keys, `gh secret set`, `gh label create`, Pages domains via API, Clerk JWT template + origins + webhook prep |
-| **Guided**  | Clerk CLI `env pull` or paste keys, inline Convex link, `wrangler login` or Cloudflare API token paste, DNS, E2E user                                               |
-| **Manual**  | Account signup, registrar nameserver change (when apex is set), Clerk auth methods, `release-*` release approval, org GitHub policies                               |
-| **Blocked** | Clerk setup without CLI login or dashboard access                                                                                                                   |
+| Category    | Examples                                                                                                                                                                                                    |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Script**  | `PRODUCT_NAME`, `.env.local`, `convex env set`, deploy keys, `gh secret set`, `gh label create`, Pages domains via API, Clerk JWT template + origins + webhook prep + Google OAuth enable/credentials patch |
+| **Guided**  | Clerk CLI `env pull` or paste keys, inline Convex link, `wrangler login` or Cloudflare API token paste, DNS, E2E user, **Google Cloud OAuth client** (JavaScript origins + redirect URI)                    |
+| **Manual**  | Account signup, registrar nameserver change (when apex is set), Clerk email/password toggle (if E2E needs it), `release-*` release approval, org GitHub policies, Google Cloud project/consent screen       |
+| **Blocked** | Clerk setup without CLI login or dashboard access                                                                                                                                                           |
 
 ---
 
@@ -109,18 +113,36 @@ Without an apex, setup can defer Clerk Production and still sync Convex + Cloudf
 
 ### Clerk
 
-| Step                          | URL                                                                         |
-| ----------------------------- | --------------------------------------------------------------------------- |
-| Sign in / home                | [dashboard.clerk.com](https://dashboard.clerk.com)                          |
-| Create application            | [dashboard.clerk.com/apps](https://dashboard.clerk.com/apps)                |
-| API keys (Development)        | [API keys](https://dashboard.clerk.com/last-active?path=api-keys)           |
-| API keys (Production)         | Same path; switch instance to Production                                    |
-| JWT templates → Convex preset | [JWT templates](https://dashboard.clerk.com/last-active?path=jwt-templates) |
-| Webhooks (manual fallback)    | [Webhooks](https://dashboard.clerk.com/last-active?path=webhooks)           |
-| Allowed origins (Development) | `PATCH /v1/instance` with `sk_test_…` (setup does this automatically)       |
-| Integrations → Convex         | [Integrations](https://dashboard.clerk.com/last-active?path=integrations)   |
+| Step                          | URL                                                                                                 |
+| ----------------------------- | --------------------------------------------------------------------------------------------------- |
+| Sign in / home                | [dashboard.clerk.com](https://dashboard.clerk.com)                                                  |
+| Create application            | [dashboard.clerk.com/apps](https://dashboard.clerk.com/apps)                                        |
+| API keys (Development)        | [API keys](https://dashboard.clerk.com/last-active?path=api-keys)                                   |
+| API keys (Production)         | Same path; switch instance to Production                                                            |
+| JWT templates → Convex preset | [JWT templates](https://dashboard.clerk.com/last-active?path=jwt-templates)                         |
+| Webhooks (manual fallback)    | [Webhooks](https://dashboard.clerk.com/last-active?path=webhooks)                                   |
+| Allowed origins (Development) | `PATCH /v1/instance` with `sk_test_…` (setup does this automatically)                               |
+| Integrations → Convex         | [Integrations](https://dashboard.clerk.com/last-active?path=integrations)                           |
+| SSO connections → Google      | [SSO connections](https://dashboard.clerk.com/last-active?path=user-authentication/sso-connections) |
 
 After the app exists, setup pulls or prompts for `PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`, derives `CLERK_JWT_ISSUER_DOMAIN`, and uploads it to Convex before the first successful function push. If Convex linking provisions a deployment before the issuer is set, setup detects the linked deployment, sets the env var, and retries the push automatically.
+
+#### Google OAuth and One Tap
+
+Google sign-in via the Clerk modal works with Clerk’s shared dev credentials. **Google One Tap** (prompt on `/tasks` when signed out) requires **custom Google OAuth credentials** in Clerk — even on Development instances.
+
+When `CLERK_SECRET_KEY` is set and the Clerk issuer is known, setup:
+
+1. Prints **Authorized JavaScript origins** (localhost, staging `*.pages.dev`, production URLs) and Clerk’s **OAuth redirect URI**
+2. Guides **OAuth consent screen** on new GCP projects ([consent screen](https://console.cloud.google.com/apis/credentials/consent) — Credentials shows a yellow banner until configured), then a **Web application** OAuth client ([Credentials](https://console.cloud.google.com/apis/credentials))
+3. Enables the Google SSO connection via `clerk config patch` when the project is linked (`clerk auth login` + `clerk link`). On an interactive run, prints a GCP-only checklist, then prompts for credentials and patches Clerk — **no Clerk dashboard paste** when the patch succeeds.
+4. Prompts for `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` (or reads them from `apps/web/.env.local`) and patches Clerk. Manual **Configure → SSO connections → Google** steps appear only when the CLI patch fails.
+
+**Google Cloud:** standard Sign-in OAuth clients are created in the [console](https://console.cloud.google.com/apis/credentials) only (no `gcloud` automation) — see feasibility table below.
+
+**Production:** the Production setup step repeats for the Production Clerk instance (`sk_live_…`) with production web origins.
+
+Without custom credentials, Google One Tap will not render; the sign-in modal’s Google button may still work in Development.
 
 #### Clerk webhook to Convex profile sync
 

@@ -104,7 +104,13 @@ export async function syncClerkWebhookEnv(
   console.log("\nClerk webhook → Convex");
 
   const svixApp = await ensureClerkSvixApp(secretKey);
-  if (!svixApp.ok) {
+  if (svixApp.ok) {
+    console.log(
+      svixApp.alreadyExisted
+        ? "✓ Clerk Svix app already present"
+        : "✓ Clerk Svix app ready",
+    );
+  } else {
     console.log(`○ Could not prepare Clerk webhooks: ${svixApp.message}`);
   }
 

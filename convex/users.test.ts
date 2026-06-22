@@ -59,7 +59,7 @@ test("mergeGuestSessionIntoAccount upgrades guest row on first sign-up", async (
 
   const users = await t.run(async (ctx) => ctx.db.query("users").collect());
   expect(users).toHaveLength(1);
-  expect(users[0]?.clerkUserId).toBe(clerkUser.subject);
+  expect(users[0]?.tokenIdentifier).toBe(clerkUser.subject);
   expect(users[0]?.firstName).toBe("Clerk");
   expect(users[0]?.lastName).toBe("User");
   expect(users[0]?.imageUrl).toBe("https://example.com/clerk.png");
@@ -89,7 +89,7 @@ test("mergeGuestSessionIntoAccount merges into existing account for returning us
 
   const users = await t.run(async (ctx) => ctx.db.query("users").collect());
   expect(users).toHaveLength(1);
-  expect(users[0]?.clerkUserId).toBe(clerkUser.subject);
+  expect(users[0]?.tokenIdentifier).toBe(clerkUser.subject);
 });
 
 test("signed-in users have no task limit", async () => {
@@ -111,7 +111,7 @@ test("syncCurrentUser seeds profile fields from JWT claims", async () => {
   const userId = await t.mutation(api.users.syncCurrentUser, {});
   const user = await t.run(async (ctx) => ctx.db.get(userId));
 
-  expect(user?.clerkUserId).toBe(clerkUser.subject);
+  expect(user?.tokenIdentifier).toBe(clerkUser.subject);
   expect(user?.firstName).toBe("Clerk");
   expect(user?.lastName).toBe("User");
   expect(user?.email).toBe("clerk@example.com");

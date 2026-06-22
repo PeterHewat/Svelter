@@ -92,10 +92,23 @@ export function resolveProdConvexUrl(
 /**
  * Reads the dev Convex deployment URL from root `.env.local` when linked.
  *
+ * Prefers `VITE_CONVEX_URL` (written by `convex dev` with regional host) over
+ * deriving `https://{slug}.convex.cloud` from `CONVEX_DEPLOYMENT`.
+ *
  * @param root - Repository root
  */
 export function readConvexUrlFromRootEnv(root: string): string | null {
   const rootEnv = readEnvFile(root, ".env.local");
+
+  const viteConvexUrl = rootEnv.VITE_CONVEX_URL?.trim();
+  if (
+    viteConvexUrl &&
+    !isPlaceholderEnvValue(viteConvexUrl) &&
+    viteConvexUrl.includes(".convex.cloud")
+  ) {
+    return viteConvexUrl;
+  }
+
   const deployment = rootEnv.CONVEX_DEPLOYMENT;
   if (!deployment) {
     return null;

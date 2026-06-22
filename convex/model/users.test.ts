@@ -1,10 +1,21 @@
 import { expect, test } from "vitest";
+import type { Doc } from "../_generated/dataModel";
 import type { UserIdentity } from "convex/server";
 import {
   formatUserDisplayName,
+  isGuestUser,
   profileFromClerkWebhook,
   profileFromIdentity,
 } from "./users";
+
+test("isGuestUser is true when tokenIdentifier uses the anon_ prefix", () => {
+  expect(isGuestUser({ tokenIdentifier: "anon_guest" } as Doc<"users">)).toBe(
+    true,
+  );
+  expect(
+    isGuestUser({ tokenIdentifier: "user_clerk_test" } as Doc<"users">),
+  ).toBe(false);
+});
 
 test("formatUserDisplayName joins first and last name", () => {
   expect(

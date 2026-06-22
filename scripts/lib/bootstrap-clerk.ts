@@ -21,6 +21,7 @@ import {
   isClerkEmailPasswordDisabledMessage,
 } from "./clerk-e2e-user";
 import { ensureClerkConvexJwtTemplate } from "./clerk-jwt-template";
+import { syncClerkGoogleOAuth } from "./clerk-google-oauth";
 import {
   isClerkPublishableKey,
   isClerkSecretKey,
@@ -588,6 +589,21 @@ export async function bootstrapClerk(
         ? undefined
         : webEnv.CLERK_SECRET_KEY,
     );
+  }
+
+  const finalKeys = readValidClerkKeysFromEnv(root);
+  if (
+    finalKeys?.secretKey.startsWith("sk_test_") &&
+    issuerDomain &&
+    !isPlaceholderEnvValue(finalKeys.secretKey)
+  ) {
+    await syncClerkGoogleOAuth(root, setup, {
+      issuerDomain,
+      secretKey: finalKeys.secretKey,
+      interactive,
+      clerkCli: clerkCliReady ? cliContext!.clerk : undefined,
+      instance: "development",
+    });
   }
 
   return issuerDomain;

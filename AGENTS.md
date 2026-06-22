@@ -80,7 +80,23 @@ Use `bunx prettier --write` (not `bun run format`, which is check-only).
 - If a tool fails, analyze the error and retry with correction if possible
 - Do not blame the user or environment; adapt and find alternatives
 - If truly blocked, state what failed and one concrete next step — factually, without rhetorical questions
-- **CLI stuck:** If a CLI command hangs, times out, or needs auth you do not have (e.g. `bunx clerk api …`), **ask the user to run it** and paste the output — do not probe undocumented API paths or install extra packages as a workaround
+
+### Shell and CLI (agent)
+
+The agent shell is not an interactive terminal. Commands that exit immediately when a human runs them may still hang here (cold `bunx`/`npx`, missing TTY, auth/browser prompts, sandbox network, dev servers that never exit). **Never leave background shells running** — treat a silent or backgrounded run as failure unless output already arrived.
+
+| Situation                                                                                      | Budget                                                   | Behavior                                                                              |
+| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Instant probe (`--help`, `--version`, `which`, read-only `--json`)                             | **≤5s**                                                  | One attempt per command string per task; no retry loops                               |
+| Repo command with known runtime (`bun run lint`, `bun test <file>`, Prettier on touched paths) | Tool default                                             | Run once; on hang, stop — do not background and poll                                  |
+| Slow but bounded (`bun run check`, `bun run verify`, builds)                                   | Set `block_until_ms` with buffer; still no infinite poll | If it exceeds budget with no output, stop and report                                  |
+| Interactive or auth (`login`, `deploy`, OAuth, prompts, pagers)                                | —                                                        | **Do not run** — ask the user to run and paste output                                 |
+| Long-running servers (`dev`, `watch`, `convex dev`)                                            | —                                                        | **Do not run** unless the user asked; use existing terminals or ask the user          |
+| Missing credentials / blocked sandbox                                                          | —                                                        | Ask the user to run locally; do not install extra packages or probe undocumented APIs |
+
+**Before probing any CLI:** check `docs/`, `scripts/`, repo wrappers (`bun run setup`, `scripts/lib/*`), and package source (`opensrc`) — exploration is not a reason to spawn shells.
+
+**On any hang, timeout, or empty background output:** stop immediately, tell the user which command failed, ask them to run it locally and paste output, then continue from docs/code fallbacks.
 
 <!-- convex-ai-start -->
 
