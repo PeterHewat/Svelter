@@ -21,7 +21,8 @@ test.describe("Routing", () => {
     await page.goto("/login");
     await expect(page).toHaveURL("/");
     const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
+    // Clerk loads lazily after /login redirects home.
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
     await expect(
       dialog.getByRole("heading", { name: /sign in/i }),
     ).toBeVisible();

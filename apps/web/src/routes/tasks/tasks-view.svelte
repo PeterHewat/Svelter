@@ -49,7 +49,7 @@
   }
 
   function handleSignUp() {
-    openAuthModal("/tasks");
+    openAuthModal("/tasks", { skipOneTap: true });
   }
 
   const tasks = $derived(tasksQuery.data);
