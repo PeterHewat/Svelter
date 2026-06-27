@@ -7,15 +7,7 @@ import { getLocalStorageOrMemory } from "./storage";
  * Add new locales here as they are supported.
  */
 export type Locale =
-  | "en"
-  | "es"
-  | "fr"
-  | "de"
-  | "pt"
-  | "it"
-  | "nl"
-  | "pl"
-  | "ru";
+  "en" | "es" | "fr" | "de" | "pt" | "it" | "nl" | "pl" | "ru";
 
 /**
  * Default locale used when no preference is set.

@@ -51,14 +51,10 @@ type ClerkProductionKeyPair = {
 };
 
 export type ClerkProductionResolve =
-  | { kind: "ready"; keys: ClerkProductionKeyPair }
-  | { kind: "deferred" };
+  { kind: "ready"; keys: ClerkProductionKeyPair } | { kind: "deferred" };
 
 export type BootstrapProductionResult =
-  | "synced"
-  | "partial"
-  | "skipped"
-  | "failed";
+  "synced" | "partial" | "skipped" | "failed";
 
 /**
  * Resolves Clerk Production keys via CLI pull or deploy when an apex domain is set.
