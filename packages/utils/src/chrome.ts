@@ -38,17 +38,17 @@ export const iconSlotClass =
  */
 export function iconButtonClass(...extra: ClassValue[]): string {
   return cn(
-    "border-border bg-background text-foreground inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md border",
+    "border-border bg-background text-foreground inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border",
     "hover:bg-secondary hover:text-secondary-foreground",
     "disabled:cursor-not-allowed disabled:opacity-50",
-    focusRing,
+    "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
     ...extra,
   );
 }
 
 /** Shared language switcher shell (border + hover). */
 const languageSwitcherShellClass = cn(
-  "border-border bg-background text-foreground inline-flex items-center rounded-md border",
+  "border-border bg-background text-foreground inline-flex items-center rounded-full border",
   "hover:bg-secondary hover:text-secondary-foreground",
 );
 

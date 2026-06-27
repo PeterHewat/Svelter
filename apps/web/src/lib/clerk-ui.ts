@@ -11,7 +11,7 @@ type ClerkProviderUi = ComponentProps<typeof ClerkProvider>["ui"];
  */
 export const ui = clerkUi as unknown as ClerkProviderUi;
 
-/** Shared Clerk component styling (stable element keys, not DOM structure). */
+/** Focus ring for header UserButton; sizing lives in auth-account-clerk-button CSS. */
 export const clerkAppearance: Appearance = {
   elements: {
     userButtonTrigger: {
