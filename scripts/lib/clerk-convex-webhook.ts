@@ -9,8 +9,7 @@ export const CLERK_USER_WEBHOOK_EVENTS = [
 ] as const;
 
 export type EnsureClerkSvixAppResult =
-  | { ok: true; alreadyExisted: boolean }
-  | { ok: false; message: string };
+  { ok: true; alreadyExisted: boolean } | { ok: false; message: string };
 
 /**
  * Returns true when Clerk reports the instance Svix app is already provisioned.

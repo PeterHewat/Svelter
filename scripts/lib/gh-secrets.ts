@@ -236,8 +236,7 @@ export async function ghEnvironmentExists(
 
 /** Result of ensuring the GitHub `production` environment exists. */
 export type EnsureGhEnvironmentResult =
-  | { ok: true }
-  | { ok: false; message: string; needsScopeRefresh: boolean };
+  { ok: true } | { ok: false; message: string; needsScopeRefresh: boolean };
 
 /**
  * Ensures the GitHub `production` environment exists (no reviewers).

@@ -1,5 +1,5 @@
 name: Setup Bun
-description: Install Bun and workspace dependencies with lockfile cache (CI skips lifecycle scripts).
+description: Install Bun and workspace dependencies with lockfile cache (CI skips lifecycle scripts; runs svelte-kit sync explicitly).
 
 runs:
   using: composite
@@ -26,3 +26,7 @@ runs:
       env:
         HUSKY: "0"
       run: bun install --frozen-lockfile --ignore-scripts
+
+    - name: Sync SvelteKit tsconfig
+      shell: bash
+      run: bun run sync:svelte-kit

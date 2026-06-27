@@ -5,8 +5,7 @@ import {
 import { ensureClerkConvexJwtTemplate } from "./clerk-jwt-template";
 
 export type E2ESecretsCheckResult =
-  | { ok: true; jwtTemplateCreated: boolean }
-  | { ok: false; message: string };
+  { ok: true; jwtTemplateCreated: boolean } | { ok: false; message: string };
 
 /**
  * Verifies Clerk dev keys authenticate and belong to the same instance.
