@@ -59,6 +59,16 @@ Stay on supported Vitest 3.x with matching coverage packages across workspaces.
 - Root and workspace overrides updated together
 - Config files adjusted for renamed coverage options
 
+## Verify gate failure — stop
+
+`bun run check` fails on a type error in staged Convex code.
+
+**Wrong:** Fix the type error, restage, retry verify, commit, push, open PR.
+
+**Wrong:** Skip verify and push anyway — CI will catch it.
+
+**Right:** Paste the check output, note that commit/push did not run, and stop. The user fixes types and re-invokes the skill.
+
 ## Pre-commit hook failure — stop
 
 `git commit` fails because lint-staged / ESLint rejects a staged file.

@@ -9,20 +9,6 @@
     "rootDir": ".",
     "types": ["node"]
   },
-  "include": [
-    "aliases.ts",
-    "dev-ports.ts",
-    "dev-ports.test.ts",
-    "env-placeholders.ts",
-    "env-placeholders.test.ts",
-    "product.ts",
-    "product.test.ts",
-    "validate-domain.ts",
-    "validate-domain.test.ts",
-    "hostnames.ts",
-    "cross-app-origin.ts",
-    "cross-app-origin.test.ts",
-    "e2e-auth.ts"
-  ],
-  "exclude": ["dist"]
+  "include": ["**/*.ts"],
+  "exclude": ["dist", "coverage", "node_modules"]
 }

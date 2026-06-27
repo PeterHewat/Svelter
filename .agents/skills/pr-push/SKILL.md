@@ -21,7 +21,8 @@ Examples: [examples.md](examples.md).
 - **Staged index for commits** — commit only what is already staged. Do not run `git add` unless the user explicitly asks.
 - **Stage before you run** — everything that belongs in the PR must be staged before invoking this skill. Unstaged work on the branch is not committed and not described.
 - Do not push to `main`. Work lands on a feature branch and enters `main` via squash merge.
-- Do not run `bun run verify` or `bun run check` — the user is expected to have verified already before opening a PR.
+- **Verify before ship** — run the [Verify gate](#verify-gate) after preflight confirms work to ship. Check-only: no `format:fix`, no `eslint --fix`, no E2E. Playwright E2E runs on staging after merge to `main`, not in this skill.
+- **Verify / check failures — stop, do not repair.** If the verify gate fails, report the command output and **stop**. Do not edit files, run formatters or linters, restage, retry checks, or continue to commit/push/PR. The user fixes and re-invokes the skill.
 - **Errors — report and stop.** If any step fails (git, `gh`, tests, checks, or other commands run during this skill), explain what went wrong and stop. Do not edit files, run formatters, retry with fixes, or continue to commit/push/PR.
 - **Pre-commit / hook failures — stop, do not repair.** If `git commit` fails because of a pre-commit hook (e.g. lint-staged, ESLint, Prettier, tests), report the hook output and **stop**. Do not edit files, run formatters or linters, run `git add`, retry the commit, use `--no-verify`, or continue to push/PR. Do not propose a fix plan — repairing hook failures is outside this skill unless the user explicitly asks.
 - Never include "Made with Cursor" (or similar Cursor attribution) in the PR body. Cursor may inject it on `gh pr create`; re-apply the drafted description with `gh pr edit` after create (see [Push and publish PR](#push-and-publish-pr)).
@@ -89,6 +90,76 @@ When an open PR exists on the current branch (`existing_pr` is set):
 3. Do **not** narrow the title or body to the latest commit; squash-merge release notes must reflect the **whole branch**.
 
 If preflight shows nothing to ship (no staged diff and branch not ahead of `base`), report that and stop — do not skip preflight.
+
+### Verify gate
+
+Run **after** confirming there is work to ship; **before** drafting title/body/label or executing commit/push. Skip when [What to ship](#what-to-ship) stops early.
+
+Collect the full PR scope — branch commits plus any staged index not yet committed:
+
+```bash
+base=main
+{
+  git diff --name-only "${base}...HEAD" 2>/dev/null || true
+  git diff --cached --name-only
+} | sort -u
+```
+
+#### Docs-only
+
+When **every** changed path is docs-only (same patterns as [ci-detect-changes.sh](../../../scripts/ci-detect-changes.sh): `docs/**`, `README.md`, `CONTRIBUTING.md`, `AGENTS.md`, `CLAUDE.md`, `SECURITY.md`, `LICENSE`):
+
+```bash
+bun run format
+```
+
+Stop on failure. Skip `check` and tests.
+
+#### SvelteKit sync (non-docs-only)
+
+`bun run check` and `bun run verify` already run **`bun run sync:svelte-kit`** first (generates `apps/*/.svelte-kit/tsconfig.json`). CI runs the same step in [setup-bun](../../../.github/actions/setup-bun/action.yml) because install uses `--ignore-scripts` and skips each app’s `prepare` hook.
+
+Do not run sync again before `check` / `verify`. For path-scoped gates below, start with `bun run check` (sync is included).
+
+#### Broad or shared changes → full verify
+
+Run **`bun run verify`** (`check` + workspace tests + scripts tests) when any of these apply:
+
+- Root tooling or CI: `scripts/**`, `.github/**`, `.husky/**`, root `package.json`, `bun.lock`, ESLint/TS/Prettier configs, `.env.example` files
+- Shared packages: `packages/ui-svelte/**`, `packages/utils/**`, `packages/test-utils/**`, `packages/tokens/**`, `packages/config/**`, `packages/env-core/**`
+- Changes span **two or more** of: `convex/**`, `apps/web/**`, `apps/marketing/**`
+- Changed-path list is empty (first push / unknown diff — do not false-green)
+
+Stop on failure.
+
+#### Path-scoped → check + targeted tests
+
+Otherwise run **`bun run check`** first, then the matching test commands from [development.md](../../../docs/development.md#verify-gate-full) (run all that apply):
+
+| Changed paths                                | Test command(s)                                                                                         |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `convex/**`                                  | `bun run --filter @repo/convex test`                                                                    |
+| `apps/web/**`                                | `bun run --filter @repo/web test`; add `@repo/ui-svelte` / `@repo/utils` tests when those paths changed |
+| `apps/marketing/**`                          | `bun run --filter @repo/marketing test`                                                                 |
+| `packages/utils/**`                          | `bun run --filter @repo/utils test`                                                                     |
+| `packages/ui-svelte/**`                      | `bun run --filter @repo/ui-svelte test`                                                                 |
+| `packages/config/**`, `packages/env-core/**` | `bun run test:packages`                                                                                 |
+
+Stop on failure.
+
+#### CI parity (build + coverage)
+
+After the verify commands above succeed, run the same build/coverage steps as [ci.yml](../../../.github/workflows/ci.yml) for paths that job would run (stop on first failure):
+
+| Changed paths                                                                            | CI parity commands                                                                                                                                                                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/**` or shared packages that fan out to web                                     | `bun scripts/generate-convex.ts` (when Convex is linked or `CONVEX_DEPLOY_KEY` is set), then `bun run --filter @repo/web build`, `bun run --filter @repo/web test:coverage`, `bun run --filter @repo/ui-svelte test:coverage`, `bun run --filter @repo/utils test:coverage`, `bun run --filter @repo/utils test:integration` |
+| `apps/marketing/**`                                                                      | `bun run --filter @repo/marketing build`, `bun run --filter @repo/marketing test:coverage`                                                                                                                                                                                                                                   |
+| `packages/config/**`, `packages/env-core/**` (without full verify already covering them) | `bun run --filter @repo/config test:coverage`, `bun run --filter @repo/env-core test:coverage`                                                                                                                                                                                                                               |
+
+Skip web Convex codegen/build when `CONVEX_DEPLOY_KEY` is unset and `convex/_generated/` is missing — note the gap and continue; CI will still gate the PR.
+
+This gate mirrors local [verify gate](../../../docs/development.md#verify-gate-full) plus PR CI builds/coverage — not audit, secrets scan, or E2E (staging after merge).
 
 ## 2. Draft title, description, and label
 
@@ -241,10 +312,10 @@ Label must exist in the repo (run `bun run setup` if missing).
 
 ## 4. Report back
 
-Return the PR URL plus the label, title, and description used. Note whether the PR was created or updated. Remind the user:
+Return the PR URL plus the label, title, and description used. Note whether the PR was created or updated. Note which verify commands ran. Remind the user:
 
-1. Wait for PR CI ([ci.yml](../../../.github/workflows/ci.yml)) to pass.
-2. Squash merge into `main`.
+1. Wait for PR CI ([ci.yml](../../../.github/workflows/ci.yml)) to pass (builds, coverage, audit — beyond the local verify gate).
+2. Squash merge into `main` — staging then runs full Playwright E2E ([staging.yml](../../../.github/workflows/staging.yml)).
 3. Create a GitHub release when ready — release notes use merged PR titles, bodies, and labels ([docs/ci-cd.md](../../../docs/ci-cd.md)).
 
 Do not squash merge, delete the branch, or create a release unless the user asks.
