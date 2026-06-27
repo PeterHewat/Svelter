@@ -23,8 +23,8 @@ export class TasksPage {
   }
 
   async waitForReady(): Promise<void> {
-    await this.heading.waitFor({ state: "visible" });
-    await this.titleInput.waitFor({ state: "visible" });
+    await this.heading.waitFor({ state: "visible", timeout: 45_000 });
+    await this.titleInput.waitFor({ state: "visible", timeout: 15_000 });
   }
 
   async createTask(title: string): Promise<void> {

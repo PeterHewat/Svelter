@@ -19,28 +19,28 @@
     "e2e": "playwright test"
   },
   "dependencies": {
-    "@clerk/ui": "^1.20.0",
+    "@clerk/ui": "^1.23.0",
     "@repo/config": "workspace:*",
     "@repo/tokens": "workspace:*",
     "@repo/ui-svelte": "workspace:*",
     "@repo/utils": "workspace:*",
-    "convex": "^1.41.0",
+    "convex": "^1.42.0",
     "convex-svelte": "^0.14.0",
-    "svelte-clerk": "^1.1.9"
+    "svelte-clerk": "^1.1.10"
   },
   "devDependencies": {
-    "@clerk/testing": "^2.1.5",
-    "@playwright/test": "^1.61.0",
+    "@clerk/testing": "^2.1.7",
+    "@playwright/test": "^1.61.1",
     "@repo/test-utils": "workspace:*",
     "@sveltejs/adapter-static": "^3.0.10",
-    "@sveltejs/kit": "^2.66.0",
+    "@sveltejs/kit": "^2.68.0",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
     "@tailwindcss/vite": "^4.3.1",
     "rollup-plugin-visualizer": "^7.0.1",
-    "svelte": "^5.56.3",
-    "svelte-check": "^4.6.0",
+    "svelte": "^5.56.4",
+    "svelte-check": "^4.7.1",
     "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3",
-    "vite": "^8.0.16"
+    "vite": "^8.1.0"
   }
 }

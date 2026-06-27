@@ -13,12 +13,12 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "convex": "^1.41.0",
+    "convex": "^1.42.0",
     "jose": "^6.2.3",
     "standardwebhooks": "^1.0.0"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
-    "convex-test": "^0.0.53"
+    "convex-test": "^0.0.54"
   }
 }

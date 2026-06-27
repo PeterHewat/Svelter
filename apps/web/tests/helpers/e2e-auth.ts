@@ -76,14 +76,79 @@ export function isPlaywrightUiOnly(): boolean {
 }
 
 /**
+ * Converts a Convex cloud deployment URL to the HTTP actions (`.convex.site`) origin.
+ *
+ * @param convexCloudUrl - `PUBLIC_CONVEX_URL` value
+ */
+export function convexSiteUrlForE2E(convexCloudUrl: string): string {
+  const url = new URL(convexCloudUrl);
+  if (url.hostname.endsWith(".convex.cloud")) {
+    url.hostname = url.hostname.replace(".convex.cloud", ".convex.site");
+  }
+  return url.origin;
+}
+
+/**
+ * Verifies the linked Convex dev deployment has pushed functions (HTTP actions).
+ *
+ * Tasks E2E needs Convex auth (`auth.config.ts` + `/auth/anonymous`). When functions
+ * were never pushed, the app stays on "Loading..." and Playwright times out on the
+ * Tasks heading.
+ *
+ * @throws When the deployment is unreachable or HTTP actions are not enabled
+ */
+export async function verifyConvexDeploymentForTasksE2E(): Promise<void> {
+  const convexUrl = process.env.PUBLIC_CONVEX_URL?.trim();
+  if (!convexUrl || isPlaceholderEnvValue(convexUrl)) {
+    return;
+  }
+
+  const siteUrl = convexSiteUrlForE2E(convexUrl);
+  const origin =
+    process.env.PLAYWRIGHT_BASE_URL?.trim() ?? "http://localhost:3000";
+
+  let response: Response;
+  try {
+    response = await fetch(`${siteUrl}/auth/anonymous`, {
+      method: "OPTIONS",
+      headers: {
+        Origin: origin,
+        "Access-Control-Request-Method": "POST",
+      },
+    });
+  } catch (error) {
+    throw new Error(
+      `Cannot reach Convex HTTP actions at ${siteUrl}: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
+  }
+
+  const body = await response.text();
+  if (response.status === 404 && body.includes("HTTP actions")) {
+    throw new Error(
+      "Convex deployment does not have HTTP actions enabled — push functions with `bun run dev:convex` from the repo root (see docs/getting-started.md)",
+    );
+  }
+
+  if (!response.ok && response.status !== 200 && response.status !== 204) {
+    throw new Error(
+      `Convex anonymous auth preflight failed (${response.status}) at ${siteUrl}/auth/anonymous`,
+    );
+  }
+}
+
+/**
  * Open a route that mounts the deferred Clerk shell before `@clerk/testing` sign-in.
  *
- * The home page alone does not load Clerk (`clerk-deferred-layout.svelte`); `/login`
- * requests the auth shell and returns to `/` with Clerk initializing.
+ * `/tasks` requests the auth shell without queuing `openAuthModal` (unlike `/login`,
+ * which redirects home and opens the Clerk sign-in dialog — racing ticket sign-in).
  *
  * @param page - Playwright page
  */
 export async function gotoClerkReady(page: Page): Promise<void> {
-  await page.goto("/login");
-  await expect(page).toHaveURL("/");
+  await page.goto("/tasks");
+  await expect(page).toHaveURL("/tasks");
+  await page.waitForFunction(() => window.Clerk?.loaded === true, undefined, {
+    timeout: 15_000,
+  });
 }
