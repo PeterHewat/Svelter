@@ -12,12 +12,12 @@ const it: TranslationDictionary = {
     menu: "Menu",
     features: "Funzionalità",
     pricing: "Prezzi",
+    about: "Chi siamo",
     blog: "Blog",
     faq: "FAQ",
     docs: "Docs",
     dashboard: "Dashboard",
     signIn: "Accedi",
-    github: "Vedi su GitHub",
   },
   home: {
     heroTitle: "Sviluppa più velocemente con {{name}}",
@@ -25,7 +25,7 @@ const it: TranslationDictionary = {
       "Template monorepo pronto per la produzione per siti prodotto e marketing.",
     heroScreenshotAlt: "Segnaposto screenshot prodotto",
     heroMicrocopy: "Provalo gratis, senza account né carta di credito",
-    logoBarTagline: "Scelto dai team che costruiscono con il template",
+    customerLogosTitle: "Scelto dai team che costruiscono con il template",
     ctaTitle: "Pronto a pubblicare il tuo prodotto?",
     ctaSubtitle:
       "Clona il template, personalizza i contenuti placeholder e pubblica oggi.",
@@ -38,6 +38,7 @@ const it: TranslationDictionary = {
     freeTierBadge: "Gratis per sempre",
     popularTierBadge: "Più popolare",
     faqTitle: "Domande frequenti",
+    aboutTitle: "Chi siamo",
   },
   pricing: {
     subtitle: "Scegli il piano adatto al tuo team.",
@@ -70,25 +71,20 @@ const it: TranslationDictionary = {
     resources: "Risorse",
     legal: "Legale",
     about: "Chi siamo",
-    customers: "Clienti",
+    testimonials: "Testimonianze",
     security: "Sicurezza",
-    github: "GitHub",
     privacy: "Privacy",
     terms: "Termini",
   },
   pages: {
     features: { title: "Funzionalità" },
     pricing: { title: "Prezzi" },
-    customers: { title: "Clienti" },
+    legal: { title: "Legale" },
     security: { title: "Sicurezza" },
     about: { title: "Chi siamo" },
     docs: { title: "Documentazione" },
     privacy: { title: "Informativa sulla privacy" },
     terms: { title: "Termini di servizio" },
-  },
-  stub: {
-    templateNotice:
-      "Placeholder del template — sostituire prima del lancio (v1).",
   },
   language: {
     select: "Seleziona lingua",

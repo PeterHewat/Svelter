@@ -1,6 +1,6 @@
 import { getDocSlugs } from "$lib/docs";
 import { MARKETING_LOCALES } from "$lib/i18n";
-import { getFeatureDeepDiveSlugs } from "$lib/marketing-content";
+import { getFeatureSlugs } from "$lib/marketing-content";
 import { localizedPath } from "$lib/locale-path";
 import { getAllPosts } from "$lib/posts";
 
@@ -9,11 +9,11 @@ export const MARKETING_STATIC_ROUTES = [
   "",
   "pricing",
   "features",
-  "customers",
   "security",
   "about",
   "blog",
   "docs",
+  "legal",
   "legal/privacy",
   "legal/terms",
 ] as const;
@@ -22,7 +22,7 @@ export const MARKETING_STATIC_ROUTES = [
  * All prerendered marketing paths (locale prefix included, no origin).
  */
 export function getMarketingPaths(): string[] {
-  const featureSlugs = getFeatureDeepDiveSlugs();
+  const featureSlugs = getFeatureSlugs();
   const postSlugs = getAllPosts().map((post) => post.slug);
   const docSlugs = getDocSlugs();
 

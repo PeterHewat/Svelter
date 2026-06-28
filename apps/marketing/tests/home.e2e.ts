@@ -145,6 +145,22 @@ test.describe("Marketing Home Page", () => {
     ).toBeInViewport();
   });
 
+  test("restores scroll position over a stale hash on refresh", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto("/en#pricing");
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll("#pricing [data-reveal].is-visible").length >
+        0,
+    );
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.reload();
+    await expect.poll(async () => page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(page).toHaveURL(/\/en\/?$/);
+  });
+
   test("should set html lang from locale", async ({ page }) => {
     await page.goto("/fr");
     await expect(page.locator("html")).toHaveAttribute("lang", "fr");
@@ -162,7 +178,7 @@ test.describe("Marketing Home Page", () => {
       exact: true,
     });
     await expect(pricingHeading).toBeVisible();
-    const pricing = page.locator("section#pricing .monthly-cards");
+    const pricing = page.locator("section#pricing .pricing-cards");
     await expect(
       pricing.getByRole("heading", { name: "Free", exact: true }),
     ).toBeVisible();
@@ -174,7 +190,81 @@ test.describe("Marketing Home Page", () => {
     ).toBeVisible();
   });
 
-  test("nav links features, pricing, and FAQ to homepage anchors", async ({
+  test("resets all reveal triggers when clicking a header anchor link", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto("/en#faq");
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll("#faq [data-reveal].is-visible").length > 0,
+    );
+    await page
+      .getByRole("navigation", { name: /main navigation/i })
+      .getByRole("link", { name: /^about$/i })
+      .click();
+    await expect(page).toHaveURL(/\/en#about/);
+    await expect
+      .poll(async () =>
+        page.evaluate(
+          () =>
+            document.querySelectorAll("#faq [data-reveal]:not(.is-visible)")
+              .length,
+        ),
+      )
+      .toBeGreaterThan(0);
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll("#about [data-reveal].is-visible").length > 0,
+    );
+  });
+
+  test("home links scroll to top and reset reveal triggers", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto("/en#pricing");
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll("#pricing [data-reveal].is-visible").length >
+        0,
+    );
+    await page
+      .getByRole("navigation", { name: /main navigation/i })
+      .getByRole("link", { name: /^svelter$/i })
+      .click();
+    await expect(page).toHaveURL(/\/en\/?$/);
+    await expect.poll(async () => page.evaluate(() => window.scrollY)).toBe(0);
+    await expect
+      .poll(async () =>
+        page.evaluate(
+          () =>
+            document.querySelectorAll("[data-reveal]:not(.is-visible)").length,
+        ),
+      )
+      .toBeGreaterThan(0);
+
+    await page.evaluate(() => {
+      document.querySelector("#faq")?.scrollIntoView();
+    });
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll("#faq [data-reveal].is-visible").length > 0,
+    );
+    await page.getByRole("link", { name: /© \d{4} svelter/i }).click();
+    await expect(page).toHaveURL(/\/en\/?$/);
+    await expect.poll(async () => page.evaluate(() => window.scrollY)).toBe(0);
+    await expect
+      .poll(async () =>
+        page.evaluate(
+          () =>
+            document.querySelectorAll("[data-reveal]:not(.is-visible)").length,
+        ),
+      )
+      .toBeGreaterThan(0);
+  });
+
+  test("nav links features, pricing, about, and FAQ to homepage anchors", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
@@ -186,6 +276,10 @@ test.describe("Marketing Home Page", () => {
     await expect(nav.getByRole("link", { name: /^pricing$/i })).toHaveAttribute(
       "href",
       "/en#pricing",
+    );
+    await expect(nav.getByRole("link", { name: /^about$/i })).toHaveAttribute(
+      "href",
+      "/en#about",
     );
     await expect(nav.getByRole("link", { name: /^faq$/i })).toHaveAttribute(
       "href",

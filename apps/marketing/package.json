@@ -5,8 +5,9 @@
   "type": "module",
   "description": "Marketing site (SvelteKit SSG)",
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build && bun ../../scripts/optimize-marketing-build.ts && bun ../../scripts/write-pages-edge-files.ts marketing",
+    "build:init": "bun scripts/bundle-init.ts",
+    "dev": "bun run build:init && vite dev",
+    "build": "bun run build:init && vite build && bun ../../scripts/optimize-marketing-build.ts && bun ../../scripts/write-pages-edge-files.ts marketing",
     "analyze": "vite build --mode analyze",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",

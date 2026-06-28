@@ -1,5 +1,1 @@
-<script lang="ts">
-  import MarketingStubRoute from "$lib/components/marketing-stub-route.svelte";
-</script>
-
-<MarketingStubRoute stubId="about" />
+<!-- Redirects to /[lang]#about in +page.ts -->

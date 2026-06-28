@@ -1,6 +1,9 @@
 import type { Locale, MarketingTranslationKey } from "$lib/i18n";
-import { localizedAnchor, localizedPath } from "$lib/locale-path";
-import { GITHUB_REPO_URL } from "$lib/site";
+import {
+  localizedAnchor,
+  localizedLegalAnchor,
+  localizedPath,
+} from "$lib/locale-path";
 
 export type MarketingLinkDef = {
   href: (lang: Locale) => string;
@@ -8,60 +11,62 @@ export type MarketingLinkDef = {
   external?: boolean;
 };
 
-/** Primary product links shared by header nav and footer product column. */
+const anchor = (
+  fragment: string,
+  labelKey: MarketingTranslationKey,
+): MarketingLinkDef =>
+  ({
+    href: (lang: Locale) => localizedAnchor(lang, fragment),
+    labelKey,
+  }) as const;
+
+const path = (
+  segment: string,
+  labelKey: MarketingTranslationKey,
+): MarketingLinkDef =>
+  ({
+    href: (lang: Locale) => localizedPath(lang, segment),
+    labelKey,
+  }) as const;
+
+const legalAnchor = (
+  fragment: string,
+  labelKey: MarketingTranslationKey,
+): MarketingLinkDef =>
+  ({
+    href: (lang: Locale) => localizedLegalAnchor(lang, fragment),
+    labelKey,
+  }) as const;
+
+/** Homepage product anchors — footer Product column. */
 export const productNavLinks = [
-  {
-    href: (lang: Locale) => localizedAnchor(lang, "features"),
-    labelKey: "nav.features",
-  },
-  {
-    href: (lang: Locale) => localizedPath(lang, "docs"),
-    labelKey: "nav.docs",
-  },
-  {
-    href: (lang: Locale) => localizedPath(lang, "blog"),
-    labelKey: "nav.blog",
-  },
-  {
-    href: (lang: Locale) => localizedAnchor(lang, "pricing"),
-    labelKey: "nav.pricing",
-  },
-  {
-    href: (lang: Locale) => localizedAnchor(lang, "faq"),
-    labelKey: "nav.faq",
-  },
+  anchor("features", "nav.features"),
+  anchor("pricing", "nav.pricing"),
+  anchor("faq", "nav.faq"),
+] as const satisfies readonly MarketingLinkDef[];
+
+/** Primary header nav. */
+export const headerNavLinks = [
+  anchor("features", "nav.features"),
+  anchor("pricing", "nav.pricing"),
+  anchor("faq", "nav.faq"),
+  anchor("about", "nav.about"),
+  path("docs", "nav.docs"),
+  path("blog", "nav.blog"),
 ] as const satisfies readonly MarketingLinkDef[];
 
 export const footerCompanyLinks = [
-  {
-    href: (lang: Locale) => localizedPath(lang, "about"),
-    labelKey: "footer.about",
-  },
-  {
-    href: (lang: Locale) => localizedPath(lang, "customers"),
-    labelKey: "footer.customers",
-  },
+  anchor("about", "footer.about"),
+  anchor("testimonials", "footer.testimonials"),
 ] as const satisfies readonly MarketingLinkDef[];
 
 export const footerResourceLinks = [
-  {
-    href: (lang: Locale) => localizedPath(lang, "security"),
-    labelKey: "footer.security",
-  },
-  {
-    href: () => GITHUB_REPO_URL,
-    labelKey: "footer.github",
-    external: true,
-  },
+  path("docs", "nav.docs"),
+  path("blog", "nav.blog"),
 ] as const satisfies readonly MarketingLinkDef[];
 
 export const footerLegalLinks = [
-  {
-    href: (lang: Locale) => localizedPath(lang, "legal/privacy"),
-    labelKey: "footer.privacy",
-  },
-  {
-    href: (lang: Locale) => localizedPath(lang, "legal/terms"),
-    labelKey: "footer.terms",
-  },
+  legalAnchor("security", "footer.security"),
+  legalAnchor("privacy", "footer.privacy"),
+  legalAnchor("terms", "footer.terms"),
 ] as const satisfies readonly MarketingLinkDef[];

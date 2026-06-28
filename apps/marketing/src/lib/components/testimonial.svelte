@@ -1,4 +1,6 @@
 <script lang="ts">
+  import CustomerLogosMarquee from "$lib/components/customer-logos-marquee.svelte";
+  import Reveal from "$lib/components/reveal.svelte";
   import Section from "$lib/components/section.svelte";
   import { useMarketingT } from "$lib/marketing-context";
   import {
@@ -31,103 +33,117 @@
   const showControls = $derived(items.length > 1);
 </script>
 
-<Section title={t("home.testimonialTitle")}>
-  <div
-    class="testimonial-carousel mx-auto flex max-w-4xl items-center gap-2 md:gap-4"
-    data-testimonial-carousel
-    data-testimonials={testimonialsJson}
-    data-testimonial-label-prev={t("home.testimonialPrev")}
-    data-testimonial-label-next={t("home.testimonialNext")}
-  >
-    {#if showControls}
-      <button
-        type="button"
-        class={iconButtonClass("testimonial-nav-btn shrink-0")}
-        data-testimonial-prev
-        aria-label={t("home.testimonialPrev")}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="h-5 w-5 shrink-0"
-          aria-hidden="true"
-        >
-          <path d="m15 18-6-6 6-6" />
-        </svg>
-      </button>
-    {/if}
+<Section id="testimonials">
+  <Reveal>
+    <h2
+      class="marketing-section-title mb-8 text-center font-semibold tracking-tight text-balance"
+    >
+      {t("home.testimonialTitle")}
+    </h2>
 
-    <figure class="min-w-0 flex-1">
-      <div class="flex justify-center">
-        <blockquote
-          class="testimonial-quote text-left text-xl leading-relaxed font-medium md:text-2xl"
+    <div
+      class="testimonial-carousel mx-auto flex max-w-4xl items-center gap-2 md:gap-4"
+      data-testimonial-carousel
+      data-testimonials={testimonialsJson}
+      data-testimonial-label-prev={t("home.testimonialPrev")}
+      data-testimonial-label-next={t("home.testimonialNext")}
+    >
+      {#if showControls}
+        <button
+          type="button"
+          class={iconButtonClass("testimonial-nav-btn shrink-0")}
+          data-testimonial-prev
+          aria-label={t("home.testimonialPrev")}
         >
-          <span
-            class="testimonial-quote-ghost invisible select-none"
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-5 w-5 shrink-0"
             aria-hidden="true"
-            data-testimonial-quote-ghost
           >
-            “{first.quote}”
-          </span>
-          <span
-            class="testimonial-quote-visible"
-            data-testimonial-quote
-            aria-live="polite"
-          >
-            {#if first}
-              “{first.quote}”
-            {/if}
-          </span>
-        </blockquote>
-      </div>
-      <figcaption class="testimonial-attribution mt-6 text-center">
-        <div
-          class="testimonial-attribution-ghost invisible select-none"
-          aria-hidden="true"
-        >
-          <p class="font-semibold">{tallestAttribution.name}</p>
-          <p class="text-muted-foreground text-sm">{tallestAttribution.role}</p>
-        </div>
-        <div
-          class="testimonial-attribution-visible is-visible"
-          data-testimonial-attribution-visible
-        >
-          <p class="font-semibold" data-testimonial-name>
-            {first?.name ?? ""}
-          </p>
-          <p class="text-muted-foreground text-sm" data-testimonial-role>
-            {first?.role ?? ""}
-          </p>
-        </div>
-      </figcaption>
-    </figure>
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+        </button>
+      {/if}
 
-    {#if showControls}
-      <button
-        type="button"
-        class={iconButtonClass("testimonial-nav-btn shrink-0")}
-        data-testimonial-next
-        aria-label={t("home.testimonialNext")}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="h-5 w-5 shrink-0"
-          aria-hidden="true"
+      <figure class="min-w-0 flex-1">
+        <div class="flex justify-center">
+          <blockquote
+            class="testimonial-quote text-left text-xl leading-relaxed font-medium md:text-2xl"
+          >
+            <span
+              class="testimonial-quote-ghost invisible select-none"
+              aria-hidden="true"
+              data-testimonial-quote-ghost
+            >
+              “{first?.quote ?? ""}”
+            </span>
+            <span
+              class="testimonial-quote-visible"
+              data-testimonial-quote
+              aria-live="polite"
+            >
+              {#if first}
+                “{first.quote}”
+              {/if}
+            </span>
+          </blockquote>
+        </div>
+        <figcaption class="testimonial-attribution mt-6 text-center">
+          <div
+            class="testimonial-attribution-ghost invisible select-none"
+            aria-hidden="true"
+          >
+            <p class="font-semibold">{tallestAttribution.name}</p>
+            <p class="text-muted-foreground text-sm">
+              {tallestAttribution.role}
+            </p>
+          </div>
+          <div
+            class="testimonial-attribution-visible is-visible"
+            data-testimonial-attribution-visible
+          >
+            <p class="font-semibold" data-testimonial-name>
+              {first?.name ?? ""}
+            </p>
+            <p class="text-muted-foreground text-sm" data-testimonial-role>
+              {first?.role ?? ""}
+            </p>
+          </div>
+        </figcaption>
+      </figure>
+
+      {#if showControls}
+        <button
+          type="button"
+          class={iconButtonClass("testimonial-nav-btn shrink-0")}
+          data-testimonial-next
+          aria-label={t("home.testimonialNext")}
         >
-          <path d="m9 18 6-6-6-6" />
-        </svg>
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-5 w-5 shrink-0"
+            aria-hidden="true"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
+      {/if}
+    </div>
+
+    {#if marketingContent.customerLogos.enabled}
+      <CustomerLogosMarquee logos={marketingContent.customerLogos.logos} />
     {/if}
-  </div>
+  </Reveal>
 </Section>

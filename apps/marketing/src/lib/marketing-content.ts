@@ -1,29 +1,13 @@
-/** Section toggles — disable blocks in v1 without deleting components. */
+/** Homepage section keys — used for `{#each}` identity in homepage-sections.ts. */
 export type MarketingSectionKey =
-  | "logoBar"
   | "howItWorks"
   | "featureRows"
   | "metrics"
   | "pricing"
+  | "about"
   | "testimonial"
   | "faq"
   | "ctaBand";
-
-export type MarketingSections = Record<
-  MarketingSectionKey,
-  { enabled: boolean }
->;
-
-export const marketingSections: MarketingSections = {
-  logoBar: { enabled: true },
-  howItWorks: { enabled: true },
-  featureRows: { enabled: true },
-  metrics: { enabled: true },
-  pricing: { enabled: true },
-  testimonial: { enabled: true },
-  faq: { enabled: true },
-  ctaBand: { enabled: true },
-};
 
 export type HowItWorksStep = {
   title: string;
@@ -83,6 +67,22 @@ export type TestimonialItem = {
   role: string;
 };
 
+export type CustomerLogo = {
+  name: string;
+  /** Logo image path from site root — omit for dashed placeholder. */
+  imageSrc?: string;
+};
+
+export type AboutTeamMember = {
+  id: string;
+  name: string;
+  title: string;
+  /** Short bio — replace in v1. */
+  bio: string;
+  /** Headshot path from site root (e.g. `/team/jane.jpg`) — omit for initials placeholder. */
+  imageSrc?: string;
+};
+
 export type FaqItem = {
   question: string;
   answer: string;
@@ -94,24 +94,31 @@ export type SubprocessorRow = {
   location: string;
 };
 
-export type FeatureDeepDive = FeatureRowContent;
-
-export type StubPageContent = {
+export type LegalPageContent = {
   /** Intro paragraph — replace in v1. */
   intro: string;
 };
 
+export type LegalSecurityContent = LegalPageContent & {
+  subprocessors: SubprocessorRow[];
+};
+
 /** Template marketing body copy — replace in v1. Labels live in i18n (`mt()`). */
 export const marketingContent = {
-  logoBar: {
-    /** Placeholder logos — replace in v1 with real assets or disable `logoBar`. */
+  customerLogos: {
+    /** Set `enabled: false` to hide the logo strip under testimonials. */
+    enabled: true,
+    /** Placeholder logos — replace with `imageSrc` assets in v1. */
     logos: [
       { name: "Acme Corp" },
       { name: "Northwind" },
       { name: "Globex" },
       { name: "Initech" },
       { name: "Umbrella Co" },
-    ],
+      { name: "Stark Industries" },
+      { name: "Wayne Enterprises" },
+      { name: "Oscorp" },
+    ] satisfies CustomerLogo[],
   },
   howItWorks: {
     steps: [
@@ -299,15 +306,50 @@ export const marketingContent = {
         "The Enterprise row is a stub for custom contracts. Replace with your sales process in v1.",
     },
   ] satisfies FaqItem[],
-  stubs: {
-    features: {
-      intro:
-        "Explore the template’s marketing routes and one example feature deep-dive. Replace with your real product areas in v1.",
-    },
-    customers: {
-      intro:
-        "Customer stories and logos belong here. The template uses labeled placeholders on the homepage — add real quotes and case studies in v1.",
-    },
+  about: {
+    /** Section intro — replace in v1. */
+    intro:
+      "Tell your company story, team, and mission here. Replace this placeholder before launch.",
+    team: [
+      {
+        id: "peter-hewat",
+        name: "Peter Hewat",
+        title: "Founder & CEO",
+        bio: "Coding since age six, with 25+ years of professional development experience. Has shipped multiple high-stakes projects from concept to production.",
+      },
+      {
+        id: "nexus",
+        name: "Nexus Build",
+        title: "Engineering AI Agent",
+        bio: "Implements SvelteKit surfaces, Convex functions, and shared packages from the same codebase. Owns the day-to-day feature work that turns specs into a working product.",
+      },
+      {
+        id: "lens",
+        name: "Lens Flare",
+        title: "Research AI Agent",
+        bio: "Evaluates libraries, Convex patterns, and SvelteKit APIs before Nexus builds. Runs spikes and documents trade-offs so architectural choices are deliberate, not accidental.",
+      },
+      {
+        id: "beacon",
+        name: "Beacon Growth",
+        title: "Marketing AI Agent",
+        bio: "Drafts homepage copy, docs, blog posts, and locale strings across ten languages. Shapes positioning and self-serve narrative while the product stack stays the proof point.",
+      },
+      {
+        id: "sentinel",
+        name: "Sentinel Guard",
+        title: "QA AI Agent",
+        bio: "Runs Playwright flows, ESLint, and the verify gate before anything merges. Catches regressions in product routes, marketing prerender links, and i18n key parity across locales.",
+      },
+      {
+        id: "forge",
+        name: "Forge Ops",
+        title: "DevOps AI Agent",
+        bio: "Keeps CI green across the monorepo, from GitHub Actions through Cloudflare Pages and wrangler deploys. Automates infrastructure work so shipping stays fast and repeatable.",
+      },
+    ] satisfies AboutTeamMember[],
+  },
+  legal: {
     security: {
       intro:
         "Security and compliance copy for your buyers. Replace the subprocessors table and policies before launch.",
@@ -315,12 +357,12 @@ export const marketingContent = {
         {
           name: "Clerk",
           purpose: "Authentication",
-          location: "United States",
+          location: "Europe",
         },
         {
           name: "Convex",
           purpose: "Database and backend",
-          location: "United States",
+          location: "Europe",
         },
         {
           name: "Cloudflare",
@@ -328,29 +370,26 @@ export const marketingContent = {
           location: "Global",
         },
       ] satisfies SubprocessorRow[],
-    },
-    about: {
-      intro:
-        "Tell your company story, team, and mission here. This stub keeps the footer sitemap complete for the template.",
-    },
+    } satisfies LegalSecurityContent,
     privacy: {
       intro:
         "Placeholder privacy policy. Engage counsel and replace this entire page before collecting user data in production.",
-    },
+    } satisfies LegalPageContent,
     terms: {
       intro:
         "Placeholder terms of service. Replace with counsel-reviewed terms before launch.",
-    },
-  } satisfies Record<
-    "features" | "customers" | "security" | "about" | "privacy" | "terms",
-    StubPageContent | (StubPageContent & { subprocessors?: SubprocessorRow[] })
-  >,
+    } satisfies LegalPageContent,
+  },
+  featuresPage: {
+    intro:
+      "Explore the template’s marketing routes and one example feature deep-dive. Replace with your real product areas in v1.",
+  },
 };
 
 /**
  * Returns all feature slugs for prerender entries and deep links.
  */
-export function getFeatureDeepDiveSlugs(): string[] {
+export function getFeatureSlugs(): string[] {
   return marketingContent.featureRows.map((feature) => feature.slug);
 }
 
@@ -359,8 +398,6 @@ export function getFeatureDeepDiveSlugs(): string[] {
  *
  * @param slug - URL segment under `/features/[slug]` or homepage `#` anchor
  */
-export function getFeatureDeepDive(
-  slug: string,
-): FeatureRowContent | undefined {
+export function getFeatureBySlug(slug: string): FeatureRowContent | undefined {
   return marketingContent.featureRows.find((feature) => feature.slug === slug);
 }

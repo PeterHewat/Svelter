@@ -12,12 +12,12 @@ const fr: TranslationDictionary = {
     menu: "Menu",
     features: "Fonctionnalités",
     pricing: "Tarifs",
+    about: "À propos",
     blog: "Blog",
     faq: "FAQ",
     docs: "Docs",
     dashboard: "Tableau de bord",
     signIn: "Se connecter",
-    github: "Voir sur GitHub",
   },
   home: {
     heroTitle: "Développez plus vite avec {{name}}",
@@ -25,7 +25,8 @@ const fr: TranslationDictionary = {
       "Modèle monorepo prêt pour la production pour sites produit et marketing.",
     heroScreenshotAlt: "Image de remplacement de capture produit",
     heroMicrocopy: "Essayez gratuitement, sans compte ni carte bancaire",
-    logoBarTagline: "Adopté par les équipes qui construisent avec le modèle",
+    customerLogosTitle:
+      "Adopté par les équipes qui construisent avec le modèle",
     ctaTitle: "Prêt à lancer votre produit ?",
     ctaSubtitle:
       "Clonez le modèle, personnalisez le contenu placeholder et déployez aujourd'hui.",
@@ -38,6 +39,7 @@ const fr: TranslationDictionary = {
     freeTierBadge: "Gratuit pour toujours",
     popularTierBadge: "Le plus populaire",
     faqTitle: "Questions fréquentes",
+    aboutTitle: "À propos",
   },
   pricing: {
     subtitle: "Choisissez le forfait adapté à votre équipe.",
@@ -70,24 +72,20 @@ const fr: TranslationDictionary = {
     resources: "Ressources",
     legal: "Mentions légales",
     about: "À propos",
-    customers: "Clients",
+    testimonials: "Témoignages",
     security: "Sécurité",
-    github: "GitHub",
     privacy: "Confidentialité",
     terms: "Conditions",
   },
   pages: {
     features: { title: "Fonctionnalités" },
     pricing: { title: "Tarifs" },
-    customers: { title: "Clients" },
+    legal: { title: "Mentions légales" },
     security: { title: "Sécurité" },
     about: { title: "À propos" },
     docs: { title: "Documentation" },
     privacy: { title: "Politique de confidentialité" },
     terms: { title: "Conditions d'utilisation" },
-  },
-  stub: {
-    templateNotice: "Modèle placeholder — remplacer avant le lancement (v1).",
   },
   language: {
     select: "Choisir la langue",

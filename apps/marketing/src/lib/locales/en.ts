@@ -13,27 +13,21 @@ const en = {
       "Documentation for installing, configuring, and deploying the template.",
     featuresDescription:
       "Template feature overview and example deep-dive routes — replace with your product areas in v1.",
-    customersDescription:
-      "Customer stories stub — add real logos and case studies in v1.",
-    securityDescription:
-      "Security overview stub with example subprocessors table.",
+    legalDescription:
+      "Security overview, privacy policy, and terms of service — replace with counsel-reviewed text before launch.",
     aboutDescription: "About page stub for your company story.",
-    privacyDescription:
-      "Placeholder privacy policy — replace with counsel-reviewed text before launch.",
-    termsDescription:
-      "Placeholder terms of service — replace with counsel-reviewed text before launch.",
   },
   nav: {
     main: "Main navigation",
     menu: "Menu",
     features: "Features",
     pricing: "Pricing",
+    about: "About",
     blog: "Blog",
     faq: "FAQ",
     docs: "Docs",
     dashboard: "Dashboard",
     signIn: "Sign in",
-    github: "View on GitHub",
   },
   home: {
     heroTitle: "Build faster with {{name}}",
@@ -41,11 +35,11 @@ const en = {
       "A production-ready monorepo template for product and marketing websites.",
     heroScreenshotAlt: "Product app screenshot placeholder",
     heroMicrocopy: "Try it for free, no account or credit card required",
-    logoBarTagline: "Trusted by teams building with the template",
+    customerLogosTitle: "Trusted by teams building with the template",
     ctaTitle: "Ready to ship your product?",
     ctaSubtitle:
       "Clone the template, customize the placeholder content, and deploy today.",
-    ctaDashboard: "Go to Dashboard",
+    ctaDashboard: "Go to the dashboard",
     howItWorksTitle: "How it works",
     metricsTitle: "Built for speed",
     testimonialTitle: "What teams are saying",
@@ -54,6 +48,7 @@ const en = {
     freeTierBadge: "Free forever",
     popularTierBadge: "Most popular",
     faqTitle: "Frequently Asked Questions",
+    aboutTitle: "About",
   },
   pricing: {
     subtitle: "Choose the plan that fits your team.",
@@ -96,24 +91,20 @@ const en = {
     resources: "Resources",
     legal: "Legal",
     about: "About",
-    customers: "Customers",
+    testimonials: "Testimonials",
     security: "Security",
-    github: "GitHub",
     privacy: "Privacy",
     terms: "Terms",
   },
   pages: {
     features: { title: "Features" },
     pricing: { title: "Pricing" },
-    customers: { title: "Customers" },
+    legal: { title: "Legal" },
     security: { title: "Security" },
     about: { title: "About" },
     docs: { title: "Documentation" },
     privacy: { title: "Privacy Policy" },
     terms: { title: "Terms of Service" },
-  },
-  stub: {
-    templateNotice: "Template placeholder — replace before launch (v1).",
   },
   language: {
     select: "Select language",

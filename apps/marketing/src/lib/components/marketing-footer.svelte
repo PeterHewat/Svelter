@@ -8,12 +8,14 @@
     footerResourceLinks,
     productNavLinks,
   } from "$lib/marketing-nav-links";
+  import { localizedPath } from "$lib/locale-path";
   import { SITE_NAME } from "$lib/site";
 
   const t = useMarketingT();
   const lang = useMarketingLang();
   const year = new Date().getFullYear();
   const copyright = $derived(t("footer.copyright", { year, name: SITE_NAME }));
+  const homeHref = $derived(localizedPath(lang));
 
   const footerLinkClass = cn(
     navSecondaryLinkClass,
@@ -88,6 +90,14 @@
         </div>
       {/each}
     </div>
-    <p class="text-muted-foreground mt-12 text-center text-sm">{copyright}</p>
+    <p class="mt-12 text-center text-sm">
+      <a
+        href={homeHref}
+        class="text-muted-foreground hover:text-foreground transition-colors"
+        data-marketing-home-link
+      >
+        {copyright}
+      </a>
+    </p>
   </div>
 </footer>

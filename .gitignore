@@ -66,7 +66,10 @@ Thumbs.db
 docker-compose.override.yml
 
 # Codegen (run `bun scripts/generate.ts` or `bun run typecheck` / `test`)
-convex/_generated/
+_generated/
+
+# Marketing init bundle (run `bun run build:init` in apps/marketing)
+apps/marketing/static/init.js
 
 # Convex local backend (from `convex dev --once` without cloud login)
 .convex/

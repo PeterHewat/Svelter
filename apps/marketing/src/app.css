@@ -202,6 +202,22 @@ html.light {
     @apply bg-transparent p-0;
   }
 
+  /** Scroll-triggered fade-up — wired by /init.js; content stays visible without JS. */
+  @media (prefers-reduced-motion: no-preference) {
+    html.js [data-reveal]:not(.is-visible) {
+      opacity: 0;
+      transform: translateY(0.75rem);
+    }
+
+    html.js [data-reveal].is-visible {
+      opacity: 1;
+      transform: translateY(0);
+      transition:
+        opacity 0.55s ease-out,
+        transform 0.55s ease-out;
+    }
+  }
+
   .prose-marketing blockquote {
     @apply border-border text-muted-foreground my-6 border-l-4 pl-4 italic;
   }
@@ -210,36 +226,103 @@ html.light {
     @apply sr-only;
   }
 
-  .pricing-table-root .monthly-cards,
-  .pricing-table-root .annual-cards {
-    @apply mx-auto max-w-5xl gap-6 md:grid-cols-3;
+  .pricing-table-root .pricing-cards {
+    @apply grid;
   }
 
-  .pricing-table-root .monthly-cards {
-    display: grid;
+  .pricing-table-root .billing-toggle-thumb {
+    position: absolute;
+    top: 0.25rem;
+    bottom: 0.25rem;
+    left: 0.25rem;
+    width: calc(50% - 0.25rem);
+    border-radius: 0.375rem;
+    background-color: hsl(var(--primary));
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+    pointer-events: none;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 0;
   }
 
-  .pricing-table-root .annual-cards {
-    display: none;
-  }
-
-  .pricing-table-root:has(.billing-annual:checked) .monthly-cards {
-    display: none;
-  }
-
-  .pricing-table-root:has(.billing-annual:checked) .annual-cards {
-    display: grid;
+  .pricing-table-root:has(.billing-annual:checked) .billing-toggle-thumb {
+    transform: translateX(100%);
   }
 
   .pricing-table-root .billing-label {
-    @apply text-muted-foreground;
+    @apply text-muted-foreground relative z-1 transition-colors duration-200;
   }
 
   .pricing-table-root .billing-label-monthly:has(:checked),
   .pricing-table-root .billing-label-annual:has(:checked) {
-    background-color: hsl(var(--primary));
     color: hsl(var(--primary-foreground));
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  }
+
+  .pricing-table-root .pricing-price-display {
+    display: inline-grid;
+    vertical-align: top;
+  }
+
+  .pricing-table-root .pricing-tier-paid .pricing-price-monthly,
+  .pricing-table-root .pricing-tier-paid .pricing-price-annual {
+    grid-area: 1 / 1;
+  }
+
+  /** Equal-width digits — keeps the brand font while stopping period text from shifting. */
+  .pricing-price-amount {
+    @apply inline-block tabular-nums;
+  }
+
+  /** No-JS fallback only — with JS, a single amount is updated in place. */
+  html:not(.js) .pricing-table-root .pricing-tier-paid .pricing-price-monthly,
+  html:not(.js) .pricing-table-root .pricing-tier-paid .pricing-price-annual {
+    transition:
+      opacity 0.25s ease,
+      visibility 0.25s ease;
+  }
+
+  html:not(.js) .pricing-table-root .pricing-tier-paid .pricing-price-annual {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  html:not(.js)
+    .pricing-table-root:has(.billing-annual:checked)
+    .pricing-tier-paid
+    .pricing-price-monthly {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  html:not(.js)
+    .pricing-table-root:has(.billing-annual:checked)
+    .pricing-tier-paid
+    .pricing-price-annual {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  html.js .pricing-table-root .pricing-tier-paid .pricing-price-annual {
+    display: none;
+  }
+
+  .pricing-table-root .pricing-annual-note-text {
+    display: block;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .pricing-table-root:has(.billing-annual:checked)
+    .pricing-annual-note-text.has-note {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pricing-table-root .billing-toggle-thumb,
+    html:not(.js) .pricing-table-root .pricing-tier-paid .pricing-price-monthly,
+    html:not(.js) .pricing-table-root .pricing-tier-paid .pricing-price-annual,
+    .pricing-table-root .pricing-annual-note-text {
+      transition: none;
+    }
   }
 
   .testimonial-quote {
@@ -271,6 +354,59 @@ html.light {
     .testimonial-attribution-visible.is-visible {
       animation: testimonial-attribution-fade-in 1s ease-out both;
     }
+  }
+
+  .marketing-logo-marquee-mask {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 8%,
+      black 92%,
+      transparent
+    );
+  }
+
+  .marketing-logo-marquee-group {
+    gap: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marketing-logo-marquee-mask {
+      mask-image: none;
+    }
+
+    .marketing-logo-marquee-track {
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      gap: 1.5rem 2rem;
+    }
+
+    .marketing-logo-marquee-group[aria-hidden="true"] {
+      display: none;
+    }
+
+    .marketing-logo-marquee-group {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem 2rem;
+    }
+  }
+}
+
+@keyframes marketing-logo-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.js .marketing-logo-marquee-track {
+    animation: marketing-logo-marquee 45s linear infinite;
   }
 }
 

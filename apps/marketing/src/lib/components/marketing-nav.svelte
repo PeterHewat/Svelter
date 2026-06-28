@@ -17,7 +17,7 @@
   import ProductAppLink from "$lib/components/product-app-link.svelte";
   import { MARKETING_LOCALES, SUPPORTED_LOCALES } from "$lib/i18n";
   import { useMarketingLang, useMarketingT } from "$lib/marketing-context";
-  import { productNavLinks } from "$lib/marketing-nav-links";
+  import { headerNavLinks } from "$lib/marketing-nav-links";
   import { localizedPath, switchLocalePath } from "$lib/locale-path";
   import { SITE_NAME } from "$lib/site";
 
@@ -31,7 +31,7 @@
   const lang = useMarketingLang();
   const homeHref = $derived(localizedPath(lang));
   const navLinks = $derived(
-    productNavLinks.map((link) => ({
+    headerNavLinks.map((link) => ({
       href: link.href(lang),
       label: t(link.labelKey),
     })),
@@ -47,7 +47,11 @@
     aria-label={t("nav.main")}
   >
     <div class="flex min-w-0 items-center gap-3">
-      <a href={homeHref} class={cn("truncate text-lg", navLinkClass)}>
+      <a
+        href={homeHref}
+        class={cn("truncate text-lg", navLinkClass)}
+        data-marketing-home-link
+      >
         {SITE_NAME}
       </a>
 
