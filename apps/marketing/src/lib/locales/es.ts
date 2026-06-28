@@ -12,12 +12,12 @@ const es: TranslationDictionary = {
     menu: "Menú",
     features: "Características",
     pricing: "Precios",
+    about: "Acerca de",
     blog: "Blog",
     faq: "FAQ",
     docs: "Docs",
     dashboard: "Panel",
     signIn: "Iniciar sesión",
-    github: "Ver en GitHub",
   },
   home: {
     heroTitle: "Construye más rápido con {{name}}",
@@ -25,7 +25,7 @@ const es: TranslationDictionary = {
       "Plantilla monorepo lista para producción para sitios de producto y marketing.",
     heroScreenshotAlt: "Marcador de captura de pantalla del producto",
     heroMicrocopy: "Pruébalo gratis, sin cuenta ni tarjeta de crédito",
-    logoBarTagline: "Equipos de confianza que construyen con la plantilla",
+    customerLogosTitle: "Equipos de confianza que construyen con la plantilla",
     ctaTitle: "¿Listo para lanzar tu producto?",
     ctaSubtitle:
       "Clona la plantilla, personaliza el contenido de marcador y despliega hoy.",
@@ -38,6 +38,7 @@ const es: TranslationDictionary = {
     freeTierBadge: "Gratis para siempre",
     popularTierBadge: "Más popular",
     faqTitle: "Preguntas frecuentes",
+    aboutTitle: "Acerca de",
   },
   pricing: {
     subtitle: "Elija el plan que se adapte a su equipo.",
@@ -70,25 +71,20 @@ const es: TranslationDictionary = {
     resources: "Recursos",
     legal: "Legal",
     about: "Acerca de",
-    customers: "Clientes",
+    testimonials: "Testimonios",
     security: "Seguridad",
-    github: "GitHub",
     privacy: "Privacidad",
     terms: "Términos",
   },
   pages: {
     features: { title: "Características" },
     pricing: { title: "Precios" },
-    customers: { title: "Clientes" },
+    legal: { title: "Legal" },
     security: { title: "Seguridad" },
     about: { title: "Acerca de" },
     docs: { title: "Documentación" },
     privacy: { title: "Política de privacidad" },
     terms: { title: "Términos de servicio" },
-  },
-  stub: {
-    templateNotice:
-      "Plantilla de marcador — reemplazar antes del lanzamiento (v1).",
   },
   language: {
     select: "Seleccionar idioma",

@@ -3,7 +3,6 @@
   import OgMeta from "$lib/components/og-meta.svelte";
   import { useMarketingT } from "$lib/marketing-context";
   import { homepageSections } from "$lib/homepage-sections";
-  import { marketingSections } from "$lib/marketing-content";
   import { SITE_NAME } from "$lib/site";
 
   let { data } = $props();
@@ -23,8 +22,6 @@
 <Hero />
 
 {#each homepageSections as section (section.key)}
-  {#if marketingSections[section.key].enabled}
-    {@const SectionComponent = section.component}
-    <SectionComponent {...section.props ?? {}} />
-  {/if}
+  {@const SectionComponent = section.component}
+  <SectionComponent {...section.props ?? {}} />
 {/each}

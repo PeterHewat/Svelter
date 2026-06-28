@@ -8,7 +8,8 @@ out/
 node_modules/
 
 # Generated files
-convex/_generated/
+_generated/
+apps/marketing/static/init.js
 .convex/
 .agents/skills/convex/
 .agents/skills/convex-*/

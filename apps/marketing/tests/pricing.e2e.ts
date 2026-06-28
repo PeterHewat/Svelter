@@ -6,7 +6,7 @@ test.describe("Marketing Pricing Section", () => {
     await expect(
       page.getByRole("heading", { name: "Pricing", exact: true }),
     ).toBeVisible();
-    const cards = page.locator("section#pricing .monthly-cards");
+    const cards = page.locator("section#pricing .pricing-cards");
     await expect(
       cards.getByRole("heading", { name: "Free", exact: true }),
     ).toBeVisible();
@@ -59,7 +59,7 @@ test.describe("Marketing Pricing Section", () => {
   test("free tier is not visually highlighted", async ({ page }) => {
     await page.goto("/en#pricing");
     const freeCard = page
-      .locator("section#pricing .monthly-cards article")
+      .locator("section#pricing .pricing-cards article")
       .filter({
         has: page.getByRole("heading", { name: "Free", exact: true }),
       });
@@ -67,14 +67,70 @@ test.describe("Marketing Pricing Section", () => {
     await expect(freeCard.getByText(/free forever/i)).toHaveCount(0);
   });
 
-  test("only one pricing card row is visible at a time", async ({ page }) => {
+  test("billing toggle animates paid tier prices in place", async ({
+    page,
+  }) => {
     await page.goto("/en#pricing");
-    await expect(page.locator("section#pricing .monthly-cards")).toBeVisible();
-    await expect(page.locator("section#pricing .annual-cards")).toBeHidden();
+    const cards = page.locator("section#pricing .pricing-cards");
+    const proPrice = cards
+      .locator("article")
+      .filter({
+        has: page.getByRole("heading", { name: "Pro", exact: true }),
+      })
+      .locator("[data-pricing-amount]");
+    const businessPrice = cards
+      .locator("article")
+      .filter({
+        has: page.getByRole("heading", { name: "Business", exact: true }),
+      })
+      .locator("[data-pricing-amount]");
+    await expect(cards).toBeVisible();
+    await expect(cards.locator("article")).toHaveCount(3);
+    await expect(proPrice).toHaveText("$29");
+    await expect(businessPrice).toHaveText("$79");
 
     await page.locator(".billing-label-annual").click();
-    await expect(page.locator("section#pricing .annual-cards")).toBeVisible();
-    await expect(page.locator("section#pricing .monthly-cards")).toBeHidden();
+    await expect(page.locator(".billing-annual")).toBeChecked();
+    await expect(proPrice).toHaveText("$24", { timeout: 3000 });
+    await expect(businessPrice).toHaveText("$66", { timeout: 3000 });
+    await expect(cards.locator("article")).toHaveCount(3);
+  });
+
+  test("persists billing toggle for the session across refresh", async ({
+    page,
+  }) => {
+    await page.goto("/en#pricing");
+    const proPrice = page
+      .locator("section#pricing .pricing-cards article")
+      .filter({
+        has: page.getByRole("heading", { name: "Pro", exact: true }),
+      })
+      .locator("[data-pricing-amount]");
+    const businessPrice = page
+      .locator("section#pricing .pricing-cards article")
+      .filter({
+        has: page.getByRole("heading", { name: "Business", exact: true }),
+      })
+      .locator("[data-pricing-amount]");
+    await page.locator(".billing-label-annual").click();
+    await expect(page.locator(".billing-annual")).toBeChecked();
+
+    await page.reload();
+    await expect(page.locator(".billing-annual")).toBeChecked();
+    await expect(proPrice).toHaveText("$24");
+    await expect(businessPrice).toHaveText("$66");
+  });
+
+  test("preserves scroll position on refresh", async ({ page }) => {
+    await page.goto("/en");
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    const scrollBefore = await page.evaluate(() => window.scrollY);
+    expect(scrollBefore).toBeGreaterThan(500);
+
+    await page.reload();
+    const scrollAfter = await page.evaluate(() => window.scrollY);
+    expect(scrollAfter).toBeGreaterThan(500);
+    expect(Math.abs(scrollAfter - scrollBefore)).toBeLessThan(80);
   });
 
   test("/en/pricing redirects to homepage pricing anchor", async ({ page }) => {

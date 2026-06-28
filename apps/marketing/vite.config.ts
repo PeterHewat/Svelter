@@ -15,7 +15,41 @@ import {
 import { resolveGithubRepoUrl } from "@repo/config/github-repo";
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
-import { defineConfig } from "vite";
+import { buildSync } from "esbuild";
+import { resolve } from "node:path";
+import { defineConfig, type Plugin } from "vite";
+
+function bundleMarketingInit(): void {
+  buildSync({
+    entryPoints: [resolve("src/init/main.js")],
+    outfile: resolve("static/init.js"),
+    bundle: true,
+    format: "iife",
+    target: "es2018",
+    legalComments: "none",
+    banner: {
+      js: "/** Bundled from src/init/ — edit modules there, then run `bun run build:init`. */",
+    },
+  });
+}
+
+function marketingInitPlugin(): Plugin {
+  const initGlob = /[/\\]src[/\\]init[/\\]/;
+  return {
+    name: "marketing-init",
+    buildStart() {
+      bundleMarketingInit();
+    },
+    configureServer(server) {
+      server.watcher.add("src/init");
+      server.watcher.on("change", (file) => {
+        if (initGlob.test(file)) {
+          bundleMarketingInit();
+        }
+      });
+    },
+  };
+}
 
 function readGitRemoteUrl(): string | undefined {
   try {
@@ -47,7 +81,7 @@ export default defineConfig({
       bakedApexMarketingOrigin(apexDomain),
     ),
   },
-  plugins: [tailwindcss(), sveltekit()],
+  plugins: [marketingInitPlugin(), tailwindcss(), sveltekit()],
   resolve: {
     alias: createRepoAliases([...marketingAliasKeys]),
     dedupe: [...dedupeWebVite],

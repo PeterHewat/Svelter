@@ -5,18 +5,18 @@
 
   interface Props {
     tier: PricingTier;
-    billing: "monthly" | "annual";
   }
 
-  let { tier, billing }: Props = $props();
+  let { tier }: Props = $props();
 
   const t = useMarketingT();
 
-  const price = $derived(
-    billing === "monthly" ? tier.monthlyPrice : tier.annualPrice,
-  );
-  const period = $derived(
-    billing === "monthly" ? tier.monthlyPeriod : tier.annualPeriod,
+  const isFreeTier = $derived(tier.id === "free");
+  const monthlyAmount = $derived(tier.monthlyPrice.replace(/^\$/, ""));
+  const annualAmount = $derived(tier.annualPrice.replace(/^\$/, ""));
+  /** Reserve width for the longest formatted price so the period label does not shift. */
+  const priceMinCh = $derived(
+    Math.max(tier.monthlyPrice.length, tier.annualPrice.length),
   );
 </script>
 
@@ -24,6 +24,7 @@
   class={cn(
     "border-border bg-card flex flex-col rounded-xl border p-6 shadow-sm",
     tier.highlighted && "border-primary ring-primary/20 ring-2",
+    !isFreeTier && "pricing-tier-paid",
   )}
 >
   {#if tier.highlighted}
@@ -42,13 +43,58 @@
     <div class="mb-4 h-5" aria-hidden="true"></div>
   {/if}
   <h3 class="text-lg font-semibold">{tier.name}</h3>
-  <p class="mt-2">
-    <span class="text-3xl font-bold">{price}</span>
-    <span class="text-muted-foreground ml-1 text-sm">{period}</span>
-  </p>
-  {#if billing === "annual" && tier.annualNote}
-    <p class="text-muted-foreground mt-1 text-xs">{tier.annualNote}</p>
+  {#if isFreeTier}
+    <p class="pricing-price mt-2">
+      <span class="pricing-price-static inline-flex items-baseline gap-1">
+        <span
+          class="pricing-price-amount text-3xl font-bold"
+          style:min-width="{priceMinCh}ch"
+        >
+          {tier.monthlyPrice}
+        </span>
+        <span class="text-muted-foreground text-sm">{tier.monthlyPeriod}</span>
+      </span>
+    </p>
+  {:else}
+    <p class="pricing-price mt-2">
+      <span class="pricing-price-display">
+        <span class="pricing-price-monthly">
+          <span class="pricing-price-row inline-flex items-baseline gap-1">
+            <span
+              class="pricing-price-amount text-3xl font-bold"
+              style:min-width="{priceMinCh}ch"
+              data-pricing-amount
+              data-monthly={monthlyAmount}
+              data-annual={annualAmount}
+            >
+              {tier.monthlyPrice}
+            </span>
+            <span class="text-muted-foreground text-sm"
+              >{tier.monthlyPeriod}</span
+            >
+          </span>
+        </span>
+        <span class="pricing-price-annual" aria-hidden="true">
+          <span class="pricing-price-row inline-flex items-baseline gap-1">
+            <span
+              class="pricing-price-amount text-3xl font-bold"
+              style:min-width="{priceMinCh}ch"
+            >
+              {tier.annualPrice}
+            </span>
+            <span class="text-muted-foreground text-sm"
+              >{tier.annualPeriod}</span
+            >
+          </span>
+        </span>
+      </span>
+    </p>
   {/if}
+  <p class="pricing-annual-note text-muted-foreground mt-1 min-h-4 text-xs">
+    <span class={cn("pricing-annual-note-text", tier.annualNote && "has-note")}>
+      {tier.annualNote || "\u00a0"}
+    </span>
+  </p>
   <p class="text-muted-foreground mt-3 text-sm">{tier.description}</p>
   <ul class="mt-4 flex-1 space-y-2 text-sm" role="list">
     {#each tier.limits as limit (limit)}

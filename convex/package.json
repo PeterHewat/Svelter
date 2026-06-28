@@ -5,8 +5,8 @@
   "type": "module",
   "description": "Convex backend",
   "scripts": {
-    "dev": "convex dev",
-    "deploy": "convex deploy",
+    "dev": "cd .. && bunx convex dev",
+    "deploy": "cd .. && bunx convex deploy",
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

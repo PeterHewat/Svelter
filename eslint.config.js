@@ -92,7 +92,8 @@ export default defineConfig(
     "**/.svelte-kit/**",
     "**/.wrangler/**",
     "**/coverage/**",
-    "convex/_generated/**",
+    "**/_generated/**",
     ".agents/skills/**",
+    "apps/marketing/static/init.js",
   ]),
 );

@@ -3,16 +3,18 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { MARKETING_LOCALES } from "./i18n";
 
-const initPath = resolve(import.meta.dirname, "../../static/init.js");
+const constantsPath = resolve(import.meta.dirname, "../init/constants.js");
 
 /**
- * Parses `SUPPORTED_LOCALES` from static init.js for parity checks.
+ * Parses `SUPPORTED_LOCALES` from init source for parity checks.
  */
 function readInitLocaleCodes(): string[] {
-  const init = readFileSync(initPath, "utf8");
-  const match = init.match(/var SUPPORTED_LOCALES = (\[[\s\S]*?\]);/);
+  const source = readFileSync(constantsPath, "utf8");
+  const match = source.match(
+    /export const SUPPORTED_LOCALES = (\[[\s\S]*?\]);/,
+  );
   if (!match) {
-    throw new Error("SUPPORTED_LOCALES not found in static/init.js");
+    throw new Error("SUPPORTED_LOCALES not found in src/init/constants.js");
   }
   return JSON.parse(
     match[1].replace(/\s+/g, "").replace(/,(\])/g, "$1"),

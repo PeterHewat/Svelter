@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Reveal from "$lib/components/reveal.svelte";
   import Section from "$lib/components/section.svelte";
   import type { MarketingTranslationKey } from "$lib/i18n";
   import { useMarketingT } from "$lib/marketing-context";
@@ -55,11 +56,15 @@
 
 <Section id="faq" title={t(titleKey)}>
   <div class="mx-auto max-w-3xl space-y-10">
-    {#each items as item (item.question)}
-      <div>
-        <h3 class="text-foreground text-lg font-semibold">{item.question}</h3>
-        <p class="text-muted-foreground mt-2 leading-relaxed">{item.answer}</p>
-      </div>
+    {#each items as item, index (item.question)}
+      <Reveal delay={index * 60}>
+        <div>
+          <h3 class="text-foreground text-lg font-semibold">{item.question}</h3>
+          <p class="text-muted-foreground mt-2 leading-relaxed">
+            {item.answer}
+          </p>
+        </div>
+      </Reveal>
     {/each}
   </div>
 </Section>
