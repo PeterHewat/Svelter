@@ -11,7 +11,8 @@ import {
   resolveClerkIssuerDomain,
 } from "./clerk-instance";
 import { mintConvexDeployKey } from "./convex-deploy-key";
-import { setConvexEnvVar } from "./convex-env";
+import { getConvexEnvVar, setConvexEnvVar } from "./convex-env";
+import { syncAnonymousAuthEnv } from "./sync-anon-auth";
 import {
   convexUrlFromDeploymentSlug,
   readConvexUrlFromRootEnv,
@@ -210,6 +211,16 @@ export async function bootstrapProduction(
   if (!firstSync) {
     console.log("\nProduction (release-* tags)");
     console.log("✓ Production GitHub secrets already synced — skip");
+    const prodAnonIssuer = await getConvexEnvVar(
+      root,
+      "ANON_AUTH_ISSUER",
+      true,
+    );
+    if (!prodAnonIssuer) {
+      console.log(
+        "○ Production anonymous auth (ANON_AUTH_*) not set — clear `github.syncedSecrets.production` in .svelter/setup.json and re-run setup, or set vars on Convex Production",
+      );
+    }
     await trySyncClerkProductionOriginsOnResume(root, setup, options);
     return "skipped";
   }
@@ -400,6 +411,10 @@ export async function bootstrapProduction(
     console.log(
       "○ Cloudflare Pages secrets sync in the Cloudflare step — complete that first",
     );
+  }
+
+  if (convexUrl) {
+    await syncAnonymousAuthEnv(root, { prod: true, convexCloudUrl: convexUrl });
   }
 
   if (clerkSk.startsWith("sk_live_") && webProject) {

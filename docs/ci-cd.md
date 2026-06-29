@@ -49,9 +49,9 @@ Job definitions live in [ci.yml](../.github/workflows/ci.yml). Use **CI required
 
 **Docs-only PRs:** only **CI checks** runs Prettier; lint/typecheck/build are skipped.
 
-**`CONVEX_DEPLOY_KEY` (repository):** `convex/_generated/` is not committed. The **checks** job runs `bun run check` (codegen + lint + typecheck). Other jobs that build or test the web app or Convex backend run `bun scripts/generate-convex.ts` and **fail** if the repository deploy key is missing. Use a **dev or preview** deploy key at repository level; keep the **production** key in the GitHub **`production`** environment only ([getting-started.md](./getting-started.md#5-github-actions-secrets)).
+**`CONVEX_DEPLOY_KEY` (repository):** `convex/_generated/` is not committed. The **checks** job runs `bun run check` (codegen + lint + typecheck). Other jobs that build or test the web app or Convex backend run `bun scripts/generate-convex.ts` and **fail** if the repository deploy key is missing. Use a **dev or preview** deploy key at repository level; keep the **production** key in the GitHub **`production`** environment only ([repository secrets](#repository-secrets) · [setup wizard](./getting-started.md#2-setup-wizard-bun-run-setup)).
 
-**Web job:** When `apps/web/**` changes, one job builds `@repo/web` and runs `test:coverage` for `@repo/web`, `@repo/ui-svelte`, and `@repo/utils` (plus utils integration tests). `@repo/web` and `@repo/ui-svelte` enforce minimum coverage percentages.
+**Web job:** When `apps/web/**` changes, one job builds `@repo/web` and runs `test:coverage` for `@repo/web`, `@repo/ui-svelte`, and `@repo/utils` (plus utils integration tests). Coverage is reported in CI; no minimum thresholds are enforced — add `coverage.thresholds` in your fork when you want hard gates.
 
 **Package / marketing / Convex jobs:** `test:coverage` for `@repo/config`, `@repo/env-core`, `@repo/marketing`, and `@repo/convex` when those paths change.
 
@@ -170,6 +170,8 @@ Verifies PR CI + successful Staging on the commit, creates `release-2026-06-07-1
 | Input | Purpose                                         |
 | ----- | ----------------------------------------------- |
 | `tag` | e.g. `release-2026-06-07-18-55-37` (full stack) |
+
+**Rollback limits:** Deploy checks out the chosen `release-*` tag and redeploys **Convex functions** plus **web** and **marketing** static assets from that snapshot. It does **not** revert Convex **database rows** or undo schema migrations already applied in production. Clerk user data is unchanged. Pick an older tag when the **code** at that release is what you want live; for breaking schema changes, plan forward migrations (see [convex/README.md](../convex/README.md#schema-changes)).
 
 ### E2E (Playwright)
 

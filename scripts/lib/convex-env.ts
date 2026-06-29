@@ -89,14 +89,17 @@ export async function getConvexEnvVar(
   if (prod) {
     args.push("--prod");
   }
-  const proc = Bun.spawn(args, {
-    cwd: root,
-    stdout: "pipe",
-    stderr: "ignore",
-  });
-  if ((await proc.exited) !== 0) {
-    return null;
-  }
-  const text = await readSpawnPipe(proc.stdout);
-  return text || null;
+  const run = async (): Promise<string | null> => {
+    const proc = Bun.spawn(args, {
+      cwd: root,
+      stdout: "pipe",
+      stderr: "ignore",
+    });
+    if ((await proc.exited) !== 0) {
+      return null;
+    }
+    const text = await readSpawnPipe(proc.stdout);
+    return text || null;
+  };
+  return prod ? withConvexUserAuth(root, run) : run();
 }

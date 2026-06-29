@@ -2,7 +2,7 @@
 
 Starter for a product web app (SvelteKit SPA), marketing site (SvelteKit SSG), and Convex backend with Clerk authentication. Shipping and CI are in [ci-cd.md](./ci-cd.md).
 
-The template includes a small signed-in CRUD todo list (`/tasks`) to prove Clerk, Convex, and the web app work together. Use it as your setup check; replace it with your own product when you are ready.
+The template includes a todo list (`/tasks`) with **guest and signed-in** access — anonymous Convex JWTs, Clerk upgrade, and CRUD — to prove the full auth stack. Use it as your setup check; extend it via [v1 specs](./spec/v1/README.md) when you build your product.
 
 [Prerequisites](./development.md#prerequisites): Git, Bun, Node, `gh`, plus GitHub, Convex, Clerk, and Cloudflare accounts. An apex domain is optional at first — add one when you are ready for custom hostnames.
 
@@ -85,4 +85,4 @@ Resume `bun run setup`, or see [setup-automation.md](./setup-automation.md) for 
 
 - [Platform setup (domains, DNS, Clerk)](./environments.md)
 - [Releases](./ci-cd.md#manual-workflows)
-- [Replace the tasks demo](./spec/README.md) with your own specs
+- [Guest auth and tasks (v0)](./spec/v0/cross-cutting.md) — anonymous sessions, env vars, Clerk merge

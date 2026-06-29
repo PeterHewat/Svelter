@@ -26,7 +26,8 @@ bun run setup
 ## Run locally
 
 ```bash
-bun run dev          # product app — http://localhost:3000
+bun run dev:convex    # convex backend required by the product app
+bun run dev:web       # product app — http://localhost:3000
 bun run dev:marketing # marketing site — http://localhost:3001
 ```
 
