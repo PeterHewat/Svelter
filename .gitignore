@@ -77,6 +77,8 @@ apps/marketing/static/init.js
 # Setup-local metadata (keep templates; ignore local env paste files)
 .svelter/setup.json
 .svelter/*.env
+.svelter/clerk-*.zone
+clerk-*.zone
 
 # Agent skills installed by setup (Convex: `bunx convex ai-files install`)
 .agents/skills/convex*

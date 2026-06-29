@@ -73,28 +73,28 @@ Also writes `packages/config/product.ts`, rebrands `README.md` when forking from
 
 ### Still manual or checklist-only
 
-| Area                     | Today                                                                                                                                                                         |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Account signup / billing | Convex, Clerk, Cloudflare, GitHub dashboards                                                                                                                                  |
-| Convex first link        | Setup runs `convex dev --once` (OAuth in the same terminal); sets Clerk issuer and re-pushes                                                                                  |
-| Clerk app creation       | [Clerk CLI](https://clerk.com/docs/cli) (`clerk apps create`, `clerk env pull`) when authenticated; dashboard fallback                                                        |
-| Clerk JWT template       | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual dashboard fallback on failure                                                                                |
-| Clerk webhook → Convex   | Interactive setup prompts for signing secret after Clerk Dashboard steps (or reads web env) — [details](#clerk-webhook-to-convex-profile-sync)                                |
-| Clerk allowed origins    | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual PATCH fallback on failure                                                                                    |
-| Google OAuth + One Tap   | Guided GCP checklist; enables connection via Clerk CLI `config patch` when linked; prompts for credentials and patches Clerk (manual dashboard fallback)                      |
-| Apex domain              | Optional in identity wizard (Enter to skip). Re-run setup to add a domain later.                                                                                              |
-| DNS at registrar         | When apex is set: setup automates zone/domains/DNS via API, prints Cloudflare nameservers, and **pauses** until you confirm registrar delegation (`cloudflare.dnsConfigured`) |
-| E2E test user            | Wizard defaults `e2e.test@{apex}` when apex is set, else `e2e.test@example.com`; creates user via Clerk API and writes `E2E_USER_EMAIL`                                       |
-| Org GitHub policies      | Branch protection, required reviewers — outside setup                                                                                                                         |
+| Area                     | Today                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Account signup / billing | Convex, Clerk, Cloudflare, GitHub dashboards                                                                                                                                                                                                                                                                                                                           |
+| Convex first link        | Setup runs `convex dev --once` (OAuth in the same terminal); sets Clerk issuer and re-pushes                                                                                                                                                                                                                                                                           |
+| Clerk app creation       | [Clerk CLI](https://clerk.com/docs/cli) (`clerk apps create`, `clerk env pull`) when authenticated; dashboard fallback                                                                                                                                                                                                                                                 |
+| Clerk JWT template       | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual dashboard fallback on failure                                                                                                                                                                                                                                                                         |
+| Clerk webhook → Convex   | Interactive setup prompts for signing secret after Clerk Dashboard steps (or reads web env) — [details](#clerk-webhook-to-convex-profile-sync)                                                                                                                                                                                                                         |
+| Clerk allowed origins    | Automated via Backend API when `CLERK_SECRET_KEY` is set; manual PATCH fallback on failure                                                                                                                                                                                                                                                                             |
+| Google OAuth + One Tap   | Guided GCP checklist; enables connection via Clerk CLI `config patch` when linked; prompts for credentials and patches Clerk (manual dashboard fallback)                                                                                                                                                                                                               |
+| Apex domain              | Optional in identity wizard (Enter to skip). Prints a **Cloudflare-first DNS** checklist when set. Re-run setup to add a domain later.                                                                                                                                                                                                                                 |
+| DNS at registrar         | When apex is set: setup creates the Cloudflare zone (API or **Domains → Add a domain**), creates **Pages CNAMEs** (proxied apex + www), syncs Clerk CNAMEs from the **Clerk Domains API** (`.svelter/clerk-{apex}.zone` BIND fallback), attaches Pages domains, then **pauses** with generic registrar nameserver steps until you confirm (`cloudflare.dnsConfigured`) |
+| E2E test user            | Wizard defaults `e2e.test@{apex}` when apex is set, else `e2e.test@example.com`; creates user via Clerk API and writes `E2E_USER_EMAIL`                                                                                                                                                                                                                                |
+| Org GitHub policies      | Branch protection, required reviewers — outside setup                                                                                                                                                                                                                                                                                                                  |
 
 ### Feasibility summary
 
-| Category    | Examples                                                                                                                                                                                                    |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Script**  | `PRODUCT_NAME`, `.env.local`, `convex env set`, deploy keys, `gh secret set`, `gh label create`, Pages domains via API, Clerk JWT template + origins + webhook prep + Google OAuth enable/credentials patch |
-| **Guided**  | Clerk CLI `env pull` or paste keys, inline Convex link, `wrangler login` or Cloudflare API token paste, DNS, E2E user, **Google Cloud OAuth client** (JavaScript origins + redirect URI)                    |
-| **Manual**  | Account signup, registrar nameserver change (when apex is set), Clerk email/password toggle (if E2E needs it), `release-*` release approval, org GitHub policies, Google Cloud project/consent screen       |
-| **Blocked** | Clerk setup without CLI login or dashboard access                                                                                                                                                           |
+| Category    | Examples                                                                                                                                                                                                                                                       |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Script**  | `PRODUCT_NAME`, `PRODUCT_TAGLINE`, `.env.local`, `convex env set`, deploy keys, `gh secret set`, `gh label create`, Pages domains via API, Clerk DNS import to Cloudflare, Clerk JWT template + origins + webhook prep + Google OAuth enable/credentials patch |
+| **Guided**  | Clerk CLI `env pull` or paste keys, inline Convex link, `wrangler login` or Cloudflare API token paste, DNS, E2E user, **Google Cloud OAuth client** (JavaScript origins + redirect URI)                                                                       |
+| **Manual**  | Account signup, registrar nameserver change (when apex is set), Clerk email/password toggle (if E2E needs it), `release-*` release approval, org GitHub policies, Google Cloud project/consent screen                                                          |
+| **Blocked** | Clerk setup without CLI login or dashboard access                                                                                                                                                                                                              |
 
 ---
 
@@ -217,6 +217,19 @@ Setup creates the **`production`** environment via `gh api` when your token has 
 | Clerk    | `bunx clerk auth login`                                |
 
 Setup probes these at the start of each interactive run. Missing tools print macOS `brew install …` hints or official docs URLs; you can continue in manual mode.
+
+---
+
+## Apex domain and DNS (Cloudflare-first)
+
+When you set an apex domain in the identity wizard, setup assumes **DNS is hosted on Cloudflare**, not at your registrar:
+
+1. **Cloudflare zone** — setup tries the API; fallback is Dashboard → **Domains → Add a domain** (not Workers & Pages). `wrangler login` can create Pages projects but **cannot** create DNS zones.
+2. **Clerk production** — runs only after the Cloudflare zone exists. `clerk deploy` uses the **same** apex domain you entered earlier; Clerk CNAMEs belong in **Cloudflare DNS**, not as individual records at your registrar.
+3. **Clerk DNS sync** — after `clerk deploy`, setup fetches CNAME targets from `GET /v1/domains` (`sk_live_…`) and creates DNS-only records in Cloudflare. `clerk deploy` may write a BIND file at repo root; setup relocates it to `.svelter/clerk-{apex}.zone` as a fallback.
+4. **Registrar** — setup prints **generic** nameserver steps (wording varies by OVH, Namecheap, etc.): switch to custom nameservers using the two values Cloudflare assigns **your** zone (copy from the zone Overview — do not use example hostnames from docs).
+
+Re-run `bun run setup` after the zone exists and after registrar nameservers propagate.
 
 ---
 

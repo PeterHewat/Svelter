@@ -69,6 +69,28 @@ export function formatCloudflareApiError(err: CloudflareApiError): string {
  *
  * @param err - Failed Cloudflare API response
  */
+/**
+ * Whether Cloudflare rejected the token or denied DNS/zone access.
+ *
+ * @param err - Failed Cloudflare API response
+ */
+export function isCloudflareAuthError(err: CloudflareApiError): boolean {
+  if (err.status === 401 || err.status === 403) {
+    return true;
+  }
+  const message = formatCloudflareApiError(err).toLowerCase();
+  return (
+    message.includes("authentication error") ||
+    message.includes("invalid api token") ||
+    message.includes("unauthorized")
+  );
+}
+
+/**
+ * Whether Cloudflare rejected a request because the resource already exists.
+ *
+ * @param err - Failed Cloudflare API response
+ */
 export function isCloudflareAlreadyExistsError(
   err: CloudflareApiError,
 ): boolean {

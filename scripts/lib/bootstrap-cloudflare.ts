@@ -17,9 +17,15 @@ import {
   cloudflareZoneDnsUrl,
 } from "./platform-urls";
 import {
+  registrarNameserverManualSteps,
   resolveCloudflareApiToken,
   resolveWranglerAccountId,
 } from "./cloudflare-auth";
+import {
+  syncApexDnsRecords,
+  trySyncApexDnsToCloudflare,
+} from "./cloudflare-apex-dns";
+import { readClerkProductionSecretKey } from "./clerk-web-env";
 import { ensureCloudflareGithubSecretsSynced } from "./cloudflare-github-secrets";
 import { productNameToSlug, type GitHubRepo } from "./repo-identity";
 import type { SetupBootstrapOptions } from "./setup-args";
@@ -69,10 +75,8 @@ function printRegistrarNameserverInstructions(zone: CloudflareZone): void {
     console.log(`  Nameserver: ${ns}`);
   }
   printManualAction("Update nameservers at your domain registrar", [
-    "Keep domain registration where it is (e.g. OVH) — only DNS moves to Cloudflare",
-    `Copy any email MX/TXT records into Cloudflare DNS before switching: ${cloudflareZoneDnsUrl(zone.name)}`,
-    "Set custom nameservers at your registrar to the values above",
-    "Propagation can take up to 48 hours; Pages hostnames show Active when ready",
+    ...registrarNameserverManualSteps(zone.name_servers),
+    `Cloudflare DNS records: ${cloudflareZoneDnsUrl(zone.name)}`,
   ]);
 }
 
@@ -90,8 +94,7 @@ async function awaitRegistrarNameservers(
   printRegistrarNameserverInstructions(zone);
   if (options?.autoConfirm) {
     printManualAction("Point registrar nameservers to Cloudflare", [
-      `Set nameservers to: ${zone.name_servers.join(", ")}`,
-      "Re-run `bun run setup` when done to confirm",
+      ...registrarNameserverManualSteps(zone.name_servers),
     ]);
     return;
   }
@@ -101,8 +104,7 @@ async function awaitRegistrarNameservers(
   );
   if (!ready) {
     exitWithManualAction("Point registrar nameservers to Cloudflare", [
-      `Set nameservers to: ${zone.name_servers.join(", ")}`,
-      "Re-run `bun run setup` when propagation completes",
+      ...registrarNameserverManualSteps(zone.name_servers),
     ]);
   }
   markCloudflareDnsConfigured(root);
@@ -113,6 +115,7 @@ async function awaitRegistrarNameservers(
  * Ensures zone and production Pages custom domains (apex + www).
  */
 async function configureApexHosting(
+  root: string,
   token: string,
   accountId: string,
   apex: string,
@@ -132,11 +135,23 @@ async function configureApexHosting(
         : String(err).slice(0, 120);
     printManualAction(`Add ${apex} as a Cloudflare zone`, [
       CLOUDFLARE_DASHBOARD,
-      "Add site → enter apex domain → choose Free plan",
+      "Domains → Add a domain → enter apex domain → choose Free plan",
       `API error: ${detail}`,
+      "API alternative: custom token with Account Settings Edit + Zone Edit — see setup Cloudflare token checklist",
+      "`wrangler login` can create Pages projects but cannot create DNS zones",
     ]);
     return { zone: null, ok: false };
   }
+
+  await syncApexDnsRecords(
+    root,
+    token,
+    accountId,
+    zone.name,
+    webProject,
+    marketingProject,
+    readClerkProductionSecretKey(root),
+  );
 
   let ok = true;
   const webDomains = [hostnames.webProduction];
@@ -209,6 +224,9 @@ export async function bootstrapCloudflare(
   if (cloudflareSynced && (dnsConfigured || !hasApex)) {
     console.log("\nCloudflare Pages");
     console.log("✓ Cloudflare already configured — skip");
+    if (hasApex && setup.apexDomain) {
+      await trySyncApexDnsToCloudflare(root, setup);
+    }
     await ensureCloudflareGithubSecretsSynced(root, setup, cliContext, options);
     return;
   }
@@ -221,6 +239,11 @@ export async function bootstrapCloudflare(
   const token = resolved.token;
   if (resolved.source === "env") {
     console.log("✓ Cloudflare API token — CLOUDFLARE_API_TOKEN env");
+  }
+  if (hasApex && resolved.source === "wrangler_oauth") {
+    console.log(
+      "  `wrangler login` works for Pages — use Dashboard → Add a domain (or a long-lived API token) to create the DNS zone",
+    );
   }
 
   const accountId =
@@ -235,6 +258,7 @@ export async function bootstrapCloudflare(
     console.log("  Resume — confirm registrar nameservers for your apex zone.");
     const meta = setup.cloudflare!;
     const { zone } = await configureApexHosting(
+      root,
       token,
       accountId,
       setup.apexDomain!,
@@ -305,6 +329,7 @@ export async function bootstrapCloudflare(
 
   if (hasApex) {
     const { zone, ok } = await configureApexHosting(
+      root,
       token,
       accountId,
       setup.apexDomain!,

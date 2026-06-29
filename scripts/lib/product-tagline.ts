@@ -13,7 +13,9 @@ export function readProductTagline(root: string): string | null {
     return null;
   }
   const raw = readFileSync(productPath, "utf8");
-  const match = raw.match(/export const PRODUCT_TAGLINE = "([^"]*)";/);
+  const match = raw.match(
+    /export const PRODUCT_TAGLINE\s*=\s*(?:\n\s*)?"((?:\\.|[^"\\])*)";/,
+  );
   return match?.[1] ?? null;
 }
 
@@ -35,7 +37,7 @@ export function writeProductTagline(
   const raw = readFileSync(productPath, "utf8");
   const escaped = productTagLine.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   const next = raw.replace(
-    /export const PRODUCT_TAGLINE = "[^"]*";/,
+    /export const PRODUCT_TAGLINE\s*=\s*(?:\n\s*)?"(?:\\.|[^"\\])*";/,
     `export const PRODUCT_TAGLINE = "${escaped}";`,
   );
   if (next === raw) {

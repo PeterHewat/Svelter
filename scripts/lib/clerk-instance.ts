@@ -1,3 +1,5 @@
+import { clerkIssuerDomainFromPublishableKey } from "./clerk-publishable-key";
+
 export type ClerkInstance = {
   frontend_api?: string;
   allowed_origins?: string[];
@@ -44,21 +46,11 @@ export async function fetchClerkFrontendApiHost(
 export function issuerFromPublishableKey(
   publishableKey: string,
 ): string | null {
-  const match = publishableKey.trim().match(/^pk_(?:test|live)_(.+)$/);
-  if (!match?.[1]) {
+  const issuer = clerkIssuerDomainFromPublishableKey(publishableKey);
+  if (!issuer) {
     return null;
   }
-  try {
-    const decoded = Buffer.from(match[1], "base64")
-      .toString("utf8")
-      .replace(/\$$/, "");
-    if (!decoded.includes(".clerk.accounts.")) {
-      return null;
-    }
-    return normalizeClerkIssuerDomain(decoded);
-  } catch {
-    return null;
-  }
+  return normalizeClerkIssuerDomain(issuer);
 }
 
 /**

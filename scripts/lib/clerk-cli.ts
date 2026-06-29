@@ -6,11 +6,13 @@ import {
   isClerkSecretKey,
 } from "./clerk-instance";
 import {
+  CLERK_PRODUCTION_ENV,
   normalizeClerkPulledWebEnv,
   normalizeClerkProductionEnv,
   PUBLIC_CLERK_PUBLISHABLE_KEY,
   readClerkPublishableKey,
 } from "./clerk-web-env";
+import { relocateClerkBindZoneToSvelter } from "./clerk-dns-zone";
 import { readEnvFile } from "./env-file";
 import { printManualAction } from "./manual-action";
 import {
@@ -22,9 +24,13 @@ import { isInteractivePrompt, promptConfirm } from "./prompt";
 import { readSpawnPipe } from "./spawn-io";
 import type { SetupConfig } from "./setup-config";
 import type { CliToolState } from "./setup-cli";
+import { resolveCloudflareApiToken } from "./cloudflare-auth";
+import {
+  findApexCloudflareZone,
+  syncClerkDnsToCloudflare,
+} from "./sync-clerk-cloudflare-dns";
 
 const WEB_ENV = "apps/web/.env.local";
-const CLERK_PROD_ENV = ".svelter/clerk-production.env";
 
 export type ClerkProductionKeys = {
   publishableKey: string;
@@ -578,11 +584,21 @@ export async function deployClerkProduction(
     console.log(
       `→ Provisioning Clerk Production for ${apexDomain} (complete DNS/OAuth in the wizard)`,
     );
+    console.log(
+      `  When Clerk asks for your production domain, enter: ${apexDomain}`,
+    );
+    console.log(
+      "  Clerk DNS syncs to Cloudflare automatically after deploy (Clerk API, BIND fallback in `.svelter/`)",
+    );
   }
 
   if (!(await runClerkDeployInteractive(clerk, root))) {
     console.log("○ clerk deploy did not finish successfully");
     return null;
+  }
+
+  if (apexDomain) {
+    relocateClerkBindZoneToSvelter(root, apexDomain);
   }
 
   const appId = await readLinkedClerkAppId(clerk, root);
@@ -592,6 +608,20 @@ export async function deployClerkProduction(
   }
 
   const pulled = await pullClerkProductionEnv(clerk, root);
+  if (pulled && apexDomain) {
+    const zone = await findApexCloudflareZone(root, apexDomain);
+    const cfToken = await resolveCloudflareApiToken(root);
+    if (zone && cfToken) {
+      await syncClerkDnsToCloudflare(
+        root,
+        cfToken.token,
+        zone,
+        apexDomain,
+        pulled.secretKey,
+      );
+    }
+  }
+
   if (pulled) {
     console.log("✓ Clerk Production keys pulled");
     return pulled;
@@ -614,7 +644,7 @@ export async function pullClerkProductionEnv(
   clerk: CliToolState,
   root: string,
 ): Promise<ClerkProductionKeys | null> {
-  const relPath = CLERK_PROD_ENV;
+  const relPath = CLERK_PRODUCTION_ENV;
   const args = ["env", "pull", "--instance", "prod", "--file", relPath];
   console.log(`\n→ ${[...clerk.command, ...args].join(" ")}`);
   const result = await runClerkCli(clerk.command, args, { cwd: root });
