@@ -10,6 +10,13 @@ export type SyncAnonAuthResult = {
   changed: boolean;
 };
 
+export type SyncAnonAuthOptions = {
+  /** Target the production Convex deployment (`convex env … --prod`). */
+  prod?: boolean;
+  /** `.convex.cloud` URL for the target deployment; defaults to dev from root `.env.local`. */
+  convexCloudUrl?: string;
+};
+
 /**
  * Derives the Convex HTTP actions origin from a `.convex.cloud` deployment URL.
  *
@@ -51,29 +58,35 @@ export async function generateAnonymousAuthMaterial(): Promise<{
 }
 
 /**
- * Ensures anonymous auth env vars exist on the linked Convex deployment.
+ * Ensures anonymous auth env vars exist on a Convex deployment (dev or production).
  *
  * @param root - Repository root
+ * @param options - When `prod` is true, pass the production `PUBLIC_CONVEX_URL`
  */
 export async function syncAnonymousAuthEnv(
   root: string,
+  options?: SyncAnonAuthOptions,
 ): Promise<SyncAnonAuthResult> {
   const unchanged: SyncAnonAuthResult = { configured: false, changed: false };
-  if (!isConvexLinked(root)) {
+  const prod = options?.prod ?? false;
+
+  if (!prod && !isConvexLinked(root)) {
     return unchanged;
   }
 
-  const convexUrl = readConvexUrlFromRootEnv(root);
+  const convexUrl =
+    options?.convexCloudUrl?.trim() || readConvexUrlFromRootEnv(root);
   if (!convexUrl || isPlaceholderEnvValue(convexUrl)) {
     return unchanged;
   }
 
   const issuer = convexSiteUrlFromCloudUrl(convexUrl);
-  const existingIssuer = await getConvexEnvVar(root, "ANON_AUTH_ISSUER");
-  const existingJwks = await getConvexEnvVar(root, "ANON_AUTH_JWKS");
+  const existingIssuer = await getConvexEnvVar(root, "ANON_AUTH_ISSUER", prod);
+  const existingJwks = await getConvexEnvVar(root, "ANON_AUTH_JWKS", prod);
   const existingPrivateKey = await getConvexEnvVar(
     root,
     "ANON_AUTH_PRIVATE_KEY",
+    prod,
   );
 
   if (existingIssuer === issuer && existingJwks && existingPrivateKey) {
@@ -88,7 +101,7 @@ export async function syncAnonymousAuthEnv(
       root,
       "ANON_AUTH_ISSUER",
       issuer,
-      false,
+      prod,
     );
     changed = changed || ok;
   }
@@ -98,7 +111,7 @@ export async function syncAnonymousAuthEnv(
       root,
       "ANON_AUTH_JWKS",
       material.jwksDataUri,
-      false,
+      prod,
     );
     changed = changed || ok;
   }
@@ -108,13 +121,15 @@ export async function syncAnonymousAuthEnv(
       root,
       "ANON_AUTH_PRIVATE_KEY",
       material.privateKeyPem,
-      false,
+      prod,
     );
     changed = changed || ok;
   }
 
   if (changed) {
-    console.log("✓ Configured Convex anonymous auth env vars");
+    console.log(
+      `✓ Configured Convex anonymous auth env vars${prod ? " (production)" : ""}`,
+    );
   }
 
   return { configured: true, changed };

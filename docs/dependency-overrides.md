@@ -13,9 +13,9 @@ Root [package.json](../package.json) `overrides` pin **transitive** dependency v
 | `picomatch`         | `^4.0.4`   | Aligns with tooling that depends on picomatch 4                                                                        |
 | `yaml`              | `^2.9.0`   | [GHSA-48c2-rrv3-qjmp](https://github.com/advisories/GHSA-48c2-rrv3-qjmp) (stack overflow in nested YAML)               |
 | `@tootallnate/once` | `^3.0.1`   | [GHSA-vpq2-c234-7xj6](https://github.com/advisories/GHSA-vpq2-c234-7xj6) (transitive tooling)                          |
-| `smol-toml`         | `^1.6.1`   | [GHSA-v3rj-xjv7-4jmq](https://github.com/advisories/GHSA-v3rj-xjv7-4jmq) (transitive tooling)                          |
-| `tar`               | `^7.5.16`  | [GHSA-83g3-92jg-28cx](https://github.com/advisories/GHSA-83g3-92jg-28cx) (transitive extraction)                       |
-| `srvx`              | `^0.11.16` | [GHSA-p36q-q72m-gchr](https://github.com/advisories/GHSA-p36q-q72m-gchr) (transitive tooling)                          |
+| `smol-toml`         | `^1.7.0`   | [GHSA-v3rj-xjv7-4jmq](https://github.com/advisories/GHSA-v3rj-xjv7-4jmq) (transitive tooling)                          |
+| `tar`               | `^7.5.17`  | [GHSA-83g3-92jg-28cx](https://github.com/advisories/GHSA-83g3-92jg-28cx) (transitive extraction)                       |
+| `srvx`              | `^0.11.17` | [GHSA-p36q-q72m-gchr](https://github.com/advisories/GHSA-p36q-q72m-gchr) (transitive tooling)                          |
 | `path-to-regexp`    | `^8.4.2`   | [GHSA-9wv6-86v2-598j](https://github.com/advisories/GHSA-9wv6-86v2-598j) (transitive tooling pins)                     |
 | `undici`            | `^8.5.0`   | Multiple GHSA advisories in Wrangler / tooling transitive tree                                                         |
 | `esbuild`           | `^0.28.1`  | [GHSA-gv7w-rqvm-qjhr](https://github.com/advisories/GHSA-gv7w-rqvm-qjhr) (binary integrity in Deno API)                |

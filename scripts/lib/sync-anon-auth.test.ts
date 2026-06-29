@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "bun:test";
 import { convexSiteUrlFromCloudUrl } from "./sync-anon-auth";
 
 test("convexSiteUrlFromCloudUrl maps cloud deployment to site origin", () => {

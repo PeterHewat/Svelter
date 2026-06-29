@@ -182,6 +182,8 @@ bunx convex env set CLERK_JWT_ISSUER_DOMAIN "https://your-app.clerk.accounts.dev
 bunx convex deployment token create github-ci --save-env
 ```
 
+Setup also generates `ANON_AUTH_ISSUER`, `ANON_AUTH_JWKS`, and `ANON_AUTH_PRIVATE_KEY` on the **dev** deployment (guest JWT signing). The **Production** setup step repeats the same trio on the **prod** deployment using that deployment’s `.convex.site` issuer.
+
 ### Cloudflare Pages
 
 | Step            | URL                                                                                  |
