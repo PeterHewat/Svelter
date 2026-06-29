@@ -23,6 +23,38 @@ export type ResolveCloudflareApiTokenOptions = {
   interactive?: boolean;
 };
 
+/** Pasted durable token reused for the rest of a single `bun run setup` process. */
+let sessionCloudflareApiToken: string | undefined;
+
+/**
+ * Stores a pasted Cloudflare API token for reuse in the same setup run.
+ *
+ * @param token - Long-lived User API token
+ */
+export function rememberCloudflareApiTokenForSession(token: string): void {
+  const trimmed = token.trim();
+  if (trimmed) {
+    sessionCloudflareApiToken = trimmed;
+  }
+}
+
+/**
+ * Returns a durable token pasted earlier in this setup run, if any.
+ */
+export function getSessionCloudflareApiToken(): ResolvedCloudflareToken | null {
+  if (!sessionCloudflareApiToken) {
+    return null;
+  }
+  return { token: sessionCloudflareApiToken, source: "prompt" };
+}
+
+/**
+ * Clears the in-memory setup session token (tests).
+ */
+export function clearSessionCloudflareApiToken(): void {
+  sessionCloudflareApiToken = undefined;
+}
+
 /**
  * Step-by-step bullets for creating a User API token in the Cloudflare dashboard.
  *
@@ -38,12 +70,38 @@ export function cloudflareApiTokenManualSteps(productName?: string): string[] {
     "Create Token → Create Custom Token",
     `Token name: e.g. "${name} GitHub Actions" (any descriptive label)`,
     "Permissions — Account → Cloudflare Pages → Edit",
-    "Permissions — Account → Account Settings → Read",
-    "Permissions — Zone → Zone → Edit (all zones)",
-    "Permissions — Zone → DNS → Edit (all zones)",
+    "Permissions — Account → Account Settings → Edit",
+    "Permissions — Zone → Zone → Edit",
+    "Permissions — Zone → DNS → Edit",
     "Account Resources — Include → select your Cloudflare account",
+    "Zone Resources — Include → All zones (required before the zone exists)",
     "Create Token → copy the value (shown once)",
     "Return here and paste the token at the prompt below (input is hidden)",
+    "Or skip the token: use Dashboard → Add a domain (same as creating a zone in the UI)",
+  ];
+}
+
+/**
+ * Generic registrar steps for delegating DNS to Cloudflare nameservers.
+ *
+ * Wording varies by registrar (OVH, Namecheap, GoDaddy, etc.) — these steps
+ * describe the task, not a single vendor UI.
+ *
+ * @param nameservers - Cloudflare-assigned nameservers for the zone
+ */
+export function registrarNameserverManualSteps(
+  nameservers: string[],
+): string[] {
+  const joined = nameservers.join(", ");
+  return [
+    "Log in where you registered the domain (your registrar — e.g. OVH, Namecheap, Gandi)",
+    "Open the domain management page for your apex domain",
+    'Find "Nameservers", "DNS servers", or "Delegation" (labels differ by registrar)',
+    'Switch from the registrar\'s default DNS to "Custom nameservers" (or equivalent)',
+    `Enter Cloudflare's nameservers exactly: ${joined}`,
+    "Save — do not change individual DNS records at the registrar after this; manage DNS in Cloudflare",
+    "Copy any email MX/TXT records into Cloudflare DNS before switching if you use email on this domain",
+    "Propagation can take minutes to 48 hours; re-run `bun run setup` when Cloudflare shows the zone Active",
   ];
 }
 
@@ -208,7 +266,11 @@ async function promptForDurableCloudflareApiToken(
     hint: "Copy from the Cloudflare dashboard after Create Token — then paste below.",
   });
   const trimmed = pasted.trim();
-  return trimmed ? { token: trimmed, source: "prompt" } : null;
+  if (trimmed) {
+    rememberCloudflareApiTokenForSession(trimmed);
+    return { token: trimmed, source: "prompt" };
+  }
+  return null;
 }
 
 /**
@@ -228,7 +290,18 @@ export async function resolveCloudflareApiToken(
     return { token: fromEnv, source: "env" };
   }
 
+  if (options?.durableOnly) {
+    const session = getSessionCloudflareApiToken();
+    if (session) {
+      return session;
+    }
+  }
+
   if (!options?.durableOnly) {
+    const session = getSessionCloudflareApiToken();
+    if (session) {
+      return session;
+    }
     const loggedIn = await ensureWranglerLogin(root);
     if (loggedIn) {
       const authToken = await runWrangler(root, ["auth", "token", "--json"]);

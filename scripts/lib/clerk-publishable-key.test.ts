@@ -18,6 +18,14 @@ describe("clerkIssuerDomainFromPublishableKey", () => {
     ).toBe("https://fake-clerk-test.clerk.accounts.dev");
   });
 
+  test("decodes production custom Frontend API host", () => {
+    expect(
+      clerkIssuerDomainFromPublishableKey(
+        "pk_live_Y2xlcmsuZXh0cmFjdG9yYS5jb20k",
+      ),
+    ).toBe("https://clerk.extractora.com");
+  });
+
   test("returns null for invalid key", () => {
     expect(clerkIssuerDomainFromPublishableKey("not-a-key")).toBeNull();
   });

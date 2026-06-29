@@ -59,6 +59,22 @@ export function printHostnameTable(
 }
 
 /**
+ * Prints the Cloudflare-first DNS path when an apex domain is configured.
+ *
+ * @param apex - Apex domain
+ */
+function printApexDnsPathNote(apex: string): void {
+  console.log("\n  Apex DNS (Cloudflare-first):");
+  console.log(`  • Dashboard → Domains → Add a domain → ${apex}`);
+  console.log(
+    "  • Clerk production CNAMEs live in Cloudflare DNS — setup syncs from Clerk API (`.svelter/clerk-{apex}.zone` fallback)",
+  );
+  console.log(
+    "  • Registrar: custom nameservers pointing at Cloudflare only (setup prints steps later)",
+  );
+}
+
+/**
  * Prompts for an optional apex domain; empty input skips custom hostnames.
  *
  * @param defaultValue - Previous apex domain, if any
@@ -138,7 +154,9 @@ async function persistIdentityConfig(
     productNameToSlug(config.productName),
     hasApexDomain(config.apexDomain) ? config.apexDomain : undefined,
   );
-  if (!hasApexDomain(config.apexDomain)) {
+  if (hasApexDomain(config.apexDomain)) {
+    printApexDnsPathNote(config.apexDomain!);
+  } else {
     console.log(
       "  Cloudflare custom domains deferred — Clerk Production still needs a domain you own (can defer in the Production step)",
     );

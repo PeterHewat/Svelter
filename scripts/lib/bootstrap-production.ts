@@ -36,6 +36,11 @@ import {
 import { printManualAction } from "./manual-action";
 import { CONVEX_DASHBOARD, githubEnvironmentsUrl } from "./platform-urls";
 import { maskSecret, promptConfirm, promptLine } from "./prompt";
+import { trySyncApexDnsToCloudflare } from "./cloudflare-apex-dns";
+import {
+  findApexCloudflareZone,
+  printClerkDeferredUntilCloudflareZone,
+} from "./sync-clerk-cloudflare-dns";
 import {
   markProductionGithubSecretsSynced,
   type SetupConfig,
@@ -94,6 +99,17 @@ async function resolveClerkProductionKeys(
       "○ Clerk Production deferred — no apex domain (Clerk requires a domain you own, not `*.pages.dev`)",
     );
     return { kind: "deferred" };
+  }
+
+  if (apexDomain) {
+    const zone = await findApexCloudflareZone(root, apexDomain);
+    if (!zone) {
+      console.log(
+        `○ Clerk Production deferred — no Cloudflare zone for ${apexDomain}`,
+      );
+      printClerkDeferredUntilCloudflareZone(apexDomain);
+      return { kind: "deferred" };
+    }
   }
 
   if (clerkCliReady) {
@@ -222,6 +238,9 @@ export async function bootstrapProduction(
       );
     }
     await trySyncClerkProductionOriginsOnResume(root, setup, options);
+    if (hasApex) {
+      await trySyncApexDnsToCloudflare(root, setup);
+    }
     return "skipped";
   }
 
@@ -323,17 +342,33 @@ export async function bootstrapProduction(
   if (!clerkDeferred) {
     let issuerDomain =
       (await resolveClerkIssuerDomain(clerkPk, clerkSk || undefined)) ?? "";
+    if (!issuerDomain) {
+      const fromKey = issuerFromPublishableKey(clerkPk);
+      if (fromKey) {
+        issuerDomain = fromKey;
+      }
+    }
     if (issuerDomain) {
       console.log(`✓ Clerk production issuer: ${issuerDomain}`);
     } else {
-      const issuerDefault = issuerFromPublishableKey(clerkPk);
+      const apexHint = hasApexDomain(setup.apexDomain)
+        ? `https://clerk.${setup.apexDomain}`
+        : undefined;
+      printManualAction(
+        "Clerk Production Frontend API URL",
+        [
+          "Clerk Dashboard → API keys → switch to **Production**",
+          "Copy the Frontend API URL (e.g. https://clerk.example.com for a custom domain)",
+          apexHint ? `Expected for your apex: ${apexHint}` : "",
+        ].filter(Boolean),
+      );
       let rawIssuer = "";
       while (!rawIssuer) {
         rawIssuer = await promptLine(
           "Clerk Production Frontend API URL (API keys page)",
           {
-            defaultValue: issuerDefault ?? undefined,
-            required: !issuerDefault,
+            defaultValue: apexHint,
+            required: true,
           },
         );
       }
@@ -418,9 +453,13 @@ export async function bootstrapProduction(
   }
 
   if (clerkSk.startsWith("sk_live_") && webProject) {
+    if (hasApex && setup.apexDomain) {
+      await trySyncApexDnsToCloudflare(root, setup);
+    }
     await syncClerkProductionAllowedOrigins(setup, webProject, clerkSk);
     const productionIssuer =
-      (await resolveClerkIssuerDomain(clerkPk, clerkSk)) ?? null;
+      (await resolveClerkIssuerDomain(clerkPk, clerkSk)) ??
+      issuerFromPublishableKey(clerkPk);
     await syncClerkGoogleOAuth(root, setup, {
       issuerDomain: productionIssuer,
       secretKey: clerkSk,

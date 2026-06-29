@@ -12,6 +12,12 @@ describe("issuerFromPublishableKey", () => {
     expect(issuer).toBe("https://just-bulldog-13.clerk.accounts.dev");
   });
 
+  it("decodes production custom Frontend API from pk_live", () => {
+    expect(
+      issuerFromPublishableKey("pk_live_Y2xlcmsuZXh0cmFjdG9yYS5jb20k"),
+    ).toBe("https://clerk.extractora.com");
+  });
+
   it("returns null for invalid keys", () => {
     expect(issuerFromPublishableKey("not-a-key")).toBeNull();
   });

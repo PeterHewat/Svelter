@@ -54,6 +54,20 @@ export function normalizeClerkPulledWebEnv(root: string): void {
   }
 }
 
+/** Production Clerk keys pulled by setup (`clerk env pull --instance prod`). */
+export const CLERK_PRODUCTION_ENV = ".svelter/clerk-production.env";
+
+/**
+ * Reads the Clerk production secret key from `.svelter/clerk-production.env`.
+ *
+ * @param root - Repository root
+ */
+export function readClerkProductionSecretKey(root: string): string | undefined {
+  const env = readEnvFile(root, CLERK_PRODUCTION_ENV);
+  const value = env.CLERK_SECRET_KEY?.trim();
+  return value || undefined;
+}
+
 /**
  * Normalizes production Clerk env pull output to `PUBLIC_*` keys.
  *
@@ -68,6 +82,7 @@ export function normalizeClerkProductionEnv(
   const publishable =
     env[PUBLIC_CLERK_PUBLISHABLE_KEY]?.trim() ||
     env.CLERK_PUBLISHABLE_KEY?.trim() ||
+    env.VITE_CLERK_PUBLISHABLE_KEY?.trim() ||
     "";
   const secretKey = env.CLERK_SECRET_KEY?.trim() || "";
   const normalized: Record<string, string> = {};
