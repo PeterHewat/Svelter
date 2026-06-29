@@ -11,11 +11,12 @@ import {
 import {
   getSessionCloudflareApiToken,
   resolveCloudflareApiToken,
+  type ResolvedCloudflareToken,
 } from "./cloudflare-auth";
 import { ensureCloudflareDnsRecord } from "./cloudflare-dns";
 import { cloudflareZoneDnsUrl } from "./platform-urls";
 import { printManualAction } from "./manual-action";
-import { clerkBindZonePath } from "./clerk-dns-zone";
+import { clerkBindZonePath, readClerkBindZoneRecords } from "./clerk-dns-zone";
 import { syncClerkDnsToCloudflare } from "./sync-clerk-cloudflare-dns";
 import { readClerkProductionSecretKey } from "./clerk-web-env";
 import type { SetupConfig } from "./setup-config";
@@ -161,6 +162,114 @@ function printApexDnsImportFallback(root: string, apex: string): void {
   ]);
 }
 
+type ApexDnsSyncAttempt =
+  { ok: true } | { ok: false; auth: boolean; detail: string };
+
+async function attemptApexDnsSync(
+  root: string,
+  token: string,
+  accountId: string,
+  apex: string,
+  webProject: string,
+  marketingProject: string,
+  clerkSecretKey?: string,
+): Promise<ApexDnsSyncAttempt> {
+  try {
+    await syncApexDnsRecords(
+      root,
+      token,
+      accountId,
+      apex,
+      webProject,
+      marketingProject,
+      clerkSecretKey,
+    );
+    return { ok: true };
+  } catch (err) {
+    const detail =
+      err instanceof CloudflareApiError
+        ? formatCloudflareApiError(err)
+        : String(err).slice(0, 120);
+    const auth =
+      err instanceof CloudflareApiError && isCloudflareAuthError(err);
+    return { ok: false, auth, detail };
+  }
+}
+
+/**
+ * Syncs Pages + Clerk DNS into Cloudflare, retrying with a pasted API token when
+ * `wrangler login` OAuth cannot edit zone DNS.
+ *
+ * @param root - Repository root
+ * @param resolved - API token and how it was obtained
+ * @param accountId - Cloudflare account ID
+ * @param apex - Apex domain
+ * @param webProject - Web Pages project name
+ * @param marketingProject - Marketing Pages project name
+ * @param clerkSecretKey - Optional Clerk production secret (`sk_live_…`)
+ * @returns Whether DNS sync succeeded
+ */
+export async function syncApexDnsForHosting(
+  root: string,
+  resolved: ResolvedCloudflareToken,
+  accountId: string,
+  apex: string,
+  webProject: string,
+  marketingProject: string,
+  clerkSecretKey?: string,
+): Promise<boolean> {
+  let result = await attemptApexDnsSync(
+    root,
+    resolved.token,
+    accountId,
+    apex,
+    webProject,
+    marketingProject,
+    clerkSecretKey,
+  );
+
+  if (
+    !result.ok &&
+    result.auth &&
+    resolved.source === "wrangler_oauth" &&
+    Boolean(process.stdin.isTTY)
+  ) {
+    console.log("○ Apex DNS sync via API failed — Authentication error");
+    console.log(
+      "  `wrangler login` cannot edit zone DNS — paste a long-lived API token to continue",
+    );
+    const durable = await resolveCloudflareApiToken(root, {
+      durableOnly: true,
+      interactive: true,
+    });
+    if (durable) {
+      result = await attemptApexDnsSync(
+        root,
+        durable.token,
+        accountId,
+        apex,
+        webProject,
+        marketingProject,
+        clerkSecretKey,
+      );
+    }
+  }
+
+  if (result.ok) {
+    apexDnsSyncedThisSetupRun = true;
+    return true;
+  }
+
+  console.log(`○ Apex DNS sync via API failed — ${result.detail}`);
+  if (resolved.source === "wrangler_oauth") {
+    console.log(
+      "  `wrangler login` usually cannot edit DNS — use a long-lived API token or Import in the dashboard",
+    );
+  }
+  printApexDnsImportFallback(root, apex);
+  return false;
+}
+
 /**
  * Best-effort sync of Pages + Clerk DNS into Cloudflare for the apex zone.
  *
@@ -186,32 +295,7 @@ export async function trySyncApexDnsToCloudflare(
   const apex = setup.apexDomain!;
   const clerkSecretKey = readClerkProductionSecretKey(root);
 
-  const attempt = async (
-    token: string,
-  ): Promise<{ ok: true } | { ok: false; auth: boolean; detail: string }> => {
-    try {
-      await syncApexDnsRecords(
-        root,
-        token,
-        meta.accountId,
-        apex,
-        meta.projectNameWeb,
-        meta.projectNameMarketing,
-        clerkSecretKey,
-      );
-      return { ok: true };
-    } catch (err) {
-      const detail =
-        err instanceof CloudflareApiError
-          ? formatCloudflareApiError(err)
-          : String(err).slice(0, 120);
-      const auth =
-        err instanceof CloudflareApiError && isCloudflareAuthError(err);
-      return { ok: false, auth, detail };
-    }
-  };
-
-  let resolved =
+  const resolved =
     getSessionCloudflareApiToken() ?? (await resolveCloudflareApiToken(root));
   if (!resolved) {
     console.log("○ Apex DNS sync skipped — no Cloudflare API token");
@@ -219,39 +303,13 @@ export async function trySyncApexDnsToCloudflare(
     return;
   }
 
-  let result = await attempt(resolved.token);
-  if (
-    !result.ok &&
-    result.auth &&
-    resolved.source === "wrangler_oauth" &&
-    Boolean(process.stdin.isTTY)
-  ) {
-    console.log("○ Apex DNS sync via API failed — Authentication error");
-    console.log(
-      "  `wrangler login` cannot edit zone DNS — paste a long-lived API token to continue",
-    );
-    const durable = await resolveCloudflareApiToken(root, {
-      durableOnly: true,
-      interactive: true,
-    });
-    if (durable) {
-      resolved = durable;
-      result = await attempt(durable.token);
-    }
-  }
-
-  if (result.ok) {
-    apexDnsSyncedThisSetupRun = true;
-    return;
-  }
-
-  if (!result.ok) {
-    console.log(`○ Apex DNS sync via API failed — ${result.detail}`);
-    if (resolved.source === "wrangler_oauth") {
-      console.log(
-        "  `wrangler login` usually cannot edit DNS — use a long-lived API token or Import in the dashboard",
-      );
-    }
-    printApexDnsImportFallback(root, apex);
-  }
+  await syncApexDnsForHosting(
+    root,
+    resolved,
+    meta.accountId,
+    apex,
+    meta.projectNameWeb,
+    meta.projectNameMarketing,
+    clerkSecretKey,
+  );
 }
