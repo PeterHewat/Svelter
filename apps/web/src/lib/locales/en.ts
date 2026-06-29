@@ -68,16 +68,13 @@ const en = {
   },
   home: {
     title: PRODUCT_NAME,
-    subtitle: "SvelteKit + Convex + Clerk + Tailwind + Bun",
-    features: {
-      title: "Features",
-      svelte: "SvelteKit SPA with file routes",
-      convex: "Convex sample tasks — try as guest or sign in",
-      auth: "Clerk sign-in upgrades guest tasks to your account",
-      tailwind: "Tailwind v4 with shared tokens",
-      i18n: "Internationalization (9 languages)",
-      themes: "Light and dark themes",
-    },
+    introBeforeSetup: "This is the product web app. After completing ",
+    introAfterSetup:
+      ", Convex and Clerk should be connected. Use it as a starting example, then replace this demo with your own project.",
+    tasksNote:
+      " lets you verify the backend is wired correctly. Works without sign-in (3-task guest limit). Sign in to merge guest tasks into your account.",
+    userNote: " shows your Convex profile.",
+    marketingLink: "Go back to the marketing website",
   },
   backend: {
     setupTitle: "Finish cloud setup",

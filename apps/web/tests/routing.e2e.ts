@@ -30,7 +30,7 @@ test.describe("Routing", () => {
 
   test("tasks link navigates to tasks page", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: /^tasks$/i }).click();
+    await page.getByRole("link", { name: "/tasks", exact: true }).click();
     await expect(page).toHaveURL("/tasks");
   });
 });

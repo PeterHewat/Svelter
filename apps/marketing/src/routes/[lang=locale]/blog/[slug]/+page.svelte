@@ -16,7 +16,7 @@
   <meta name="description" content={data.post.description} />
 </svelte:head>
 
-<article class="marketing-container max-w-2xl py-16 md:py-20">
+<article class="marketing-container max-w-2xl pb-16 md:pb-20">
   <header class="mb-8">
     <h1 class="mb-2 text-4xl font-semibold tracking-tight">
       {data.post.title}

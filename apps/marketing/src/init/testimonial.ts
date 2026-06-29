@@ -1,15 +1,15 @@
 export function wireTestimonialCarousel() {
-  var root = document.querySelector("[data-testimonial-carousel]");
+  const root = document.querySelector("[data-testimonial-carousel]");
   if (!root) {
     return;
   }
 
-  var raw = root.getAttribute("data-testimonials");
+  const raw = root.getAttribute("data-testimonials");
   if (!raw) {
     return;
   }
 
-  var items;
+  let items;
   try {
     items = JSON.parse(raw);
   } catch {
@@ -20,31 +20,31 @@ export function wireTestimonialCarousel() {
     return;
   }
 
-  var quoteEl = root.querySelector("[data-testimonial-quote]");
-  var ghostEl = root.querySelector("[data-testimonial-quote-ghost]");
-  var nameEl = root.querySelector("[data-testimonial-name]");
-  var roleEl = root.querySelector("[data-testimonial-role]");
-  var attributionEl = root.querySelector(
+  const quoteEl = root.querySelector("[data-testimonial-quote]");
+  const ghostEl = root.querySelector("[data-testimonial-quote-ghost]");
+  const nameEl = root.querySelector("[data-testimonial-name]");
+  const roleEl = root.querySelector("[data-testimonial-role]");
+  const attributionEl = root.querySelector<HTMLElement>(
     "[data-testimonial-attribution-visible]",
   );
-  var prevBtn = root.querySelector("[data-testimonial-prev]");
-  var nextBtn = root.querySelector("[data-testimonial-next]");
+  const prevBtn = root.querySelector("[data-testimonial-prev]");
+  const nextBtn = root.querySelector("[data-testimonial-next]");
   if (!quoteEl || !nameEl || !roleEl || !attributionEl) {
     return;
   }
 
-  var reduceMotion = window.matchMedia(
+  const reduceMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)",
   ).matches;
-  var charIntervalMs = 32;
-  var pauseMs = 3000;
-  var index = 0;
-  var typeTimer = null;
-  var advanceTimer = null;
-  var advanceDueAt = 0;
-  var advanceCallback = null;
-  var hoverPaused = false;
-  var touchPaused = false;
+  const charIntervalMs = 32;
+  const pauseMs = 3000;
+  let index = 0;
+  let typeTimer = null;
+  let advanceTimer = null;
+  let advanceDueAt = 0;
+  let advanceCallback = null;
+  let hoverPaused = false;
+  let touchPaused = false;
 
   function clearTypeTimer() {
     if (typeTimer) {
@@ -86,13 +86,13 @@ export function wireTestimonialCarousel() {
         return;
       }
 
-      var remaining = advanceDueAt - Date.now();
+      const remaining = advanceDueAt - Date.now();
       if (remaining > 0) {
         advanceTimer = setTimeout(check, remaining);
         return;
       }
 
-      var fn = advanceCallback;
+      const fn = advanceCallback;
       clearAdvanceTimer();
       fn();
     }
@@ -151,8 +151,8 @@ export function wireTestimonialCarousel() {
   }
 
   function playItem(itemIndex, options) {
-    var opts = options || {};
-    var item = items[itemIndex];
+    const opts = options || {};
+    const item = items[itemIndex];
     if (!item || !item.quote) {
       return;
     }
@@ -183,10 +183,10 @@ export function wireTestimonialCarousel() {
       return;
     }
 
-    var quote = item.quote;
-    var length = quote.length;
-    var charIndex = 0;
-    var attributionShown = false;
+    const quote = item.quote;
+    const length = quote.length;
+    let charIndex = 0;
+    let attributionShown = false;
 
     resetAttribution(item);
     setQuoteGhost(quote);
@@ -230,14 +230,14 @@ export function wireTestimonialCarousel() {
   root.addEventListener(
     "pointerdown",
     function (event) {
-      if (event.pointerType === "touch") {
+      if (event instanceof PointerEvent && event.pointerType === "touch") {
         touchPaused = true;
       }
     },
     { passive: true },
   );
   root.addEventListener("pointerup", function (event) {
-    if (event.pointerType === "touch") {
+    if (event instanceof PointerEvent && event.pointerType === "touch") {
       touchPaused = false;
     }
   });

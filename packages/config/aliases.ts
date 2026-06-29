@@ -24,6 +24,8 @@ const utilsSubpathTargets = {
   "@repo/utils/storage": "packages/utils/src/storage.ts",
   "@repo/utils/focus": "packages/utils/src/focus.ts",
   "@repo/utils/chrome": "packages/utils/src/chrome.ts",
+  "@repo/utils/nav-highlight": "packages/utils/src/nav-highlight.ts",
+  "@repo/utils/nav-indicator": "packages/utils/src/nav-indicator.ts",
   "@repo/utils/cross-app-prefs": "packages/utils/src/cross-app-prefs.ts",
 } as const;
 

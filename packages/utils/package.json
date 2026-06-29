@@ -44,6 +44,16 @@
       "import": "./src/chrome.ts",
       "default": "./src/chrome.ts"
     },
+    "./nav-indicator": {
+      "types": "./src/nav-indicator.ts",
+      "import": "./src/nav-indicator.ts",
+      "default": "./src/nav-indicator.ts"
+    },
+    "./nav-highlight": {
+      "types": "./src/nav-highlight.ts",
+      "import": "./src/nav-highlight.ts",
+      "default": "./src/nav-highlight.ts"
+    },
     "./cross-app-prefs": {
       "types": "./src/cross-app-prefs.ts",
       "import": "./src/cross-app-prefs.ts",

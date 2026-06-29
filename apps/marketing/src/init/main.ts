@@ -3,20 +3,22 @@
  * - Locale: redirect unlocalized paths; persist preference on link navigation.
  * - Theme: apply stored override classes; CSS handles system preference when unset.
  *
- * Source modules live in src/init/ — bundled to static/init.js at build/dev time.
+ * Source modules live in src/init/ — bundled to static/init.js at build/dev time (esbuild).
  */
-import { wireChrome } from "./chrome.js";
+import { wireChrome } from "./chrome";
 import {
   applyCrossAppPrefsFromUrl,
   stripCrossAppPrefsFromUrl,
-} from "./cross-app.js";
-import { persistLocaleFromPath, redirectUnlocalizedPaths } from "./locale.js";
+} from "./cross-app";
+import { persistLocaleFromPath, redirectUnlocalizedPaths } from "./locale";
+import { markHashIntent } from "./hash-intent";
 import {
   persistScrollPosition,
   restoreLocaleNavState,
   restorePageScroll,
-} from "./scroll.js";
-import { initTheme } from "./theme.js";
+  stripStaleHashWhenScrollWasTop,
+} from "./scroll";
+import { initTheme } from "./theme";
 
 document.documentElement.classList.add("js");
 
@@ -29,12 +31,25 @@ if (redirectUnlocalizedPaths()) {
 } else {
   applyCrossAppPrefsFromUrl();
   stripCrossAppPrefsFromUrl();
+  stripStaleHashWhenScrollWasTop();
+  if (location.hash) {
+    markHashIntent(location.hash);
+  }
   if (!restoreLocaleNavState()) {
     restorePageScroll();
   }
   initTheme();
   persistLocaleFromPath();
   window.addEventListener("pagehide", persistScrollPosition);
+  window.addEventListener(
+    "scroll",
+    function () {
+      if (window.scrollY === 0) {
+        persistScrollPosition();
+      }
+    },
+    { passive: true },
+  );
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", wireChrome);

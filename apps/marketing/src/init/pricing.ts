@@ -1,13 +1,13 @@
-import { PRICING_BILLING_KEY } from "./constants.js";
+import { PRICING_BILLING_KEY } from "./constants";
 
 export function wirePricingBilling() {
-  var root = document.querySelector(".pricing-table-root");
+  const root = document.querySelector(".pricing-table-root");
   if (!root) {
     return;
   }
 
   function parseAmount(value) {
-    var amount = parseInt(String(value), 10);
+    const amount = parseInt(String(value), 10);
     return Number.isFinite(amount) ? amount : 0;
   }
 
@@ -20,7 +20,7 @@ export function wirePricingBilling() {
   }
 
   function animatePriceAmount(el, target, duration) {
-    var from = readDisplayedAmount(el);
+    const from = readDisplayedAmount(el);
     if (from === target) {
       el.textContent = formatPrice(target);
       return;
@@ -30,11 +30,11 @@ export function wirePricingBilling() {
       return;
     }
 
-    var start = performance.now();
+    const start = performance.now();
     function tick(now) {
-      var progress = Math.min(1, (now - start) / duration);
-      var eased = 1 - Math.pow(1 - progress, 3);
-      var current = Math.round(from + (target - from) * eased);
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(from + (target - from) * eased);
       el.textContent = formatPrice(current);
       if (progress < 1) {
         requestAnimationFrame(tick);
@@ -50,19 +50,19 @@ export function wirePricingBilling() {
   }
 
   function applyBillingMode(mode, options) {
-    var animate = !(options && options.animate === false);
-    var annual = mode === "annual";
-    var annualInput = root.querySelector(".billing-annual");
-    var monthlyInput = root.querySelector(".billing-monthly");
-    if (annualInput) {
+    const animate = !(options && options.animate === false);
+    const annual = mode === "annual";
+    const annualInput = root.querySelector(".billing-annual");
+    const monthlyInput = root.querySelector(".billing-monthly");
+    if (annualInput instanceof HTMLInputElement) {
       annualInput.checked = annual;
     }
-    if (monthlyInput) {
+    if (monthlyInput instanceof HTMLInputElement) {
       monthlyInput.checked = !annual;
     }
 
     root.querySelectorAll("[data-pricing-amount]").forEach(function (el) {
-      var target = parseAmount(
+      const target = parseAmount(
         el.getAttribute(annual ? "data-annual" : "data-monthly"),
       );
       if (animate) {
@@ -79,7 +79,7 @@ export function wirePricingBilling() {
     }
   }
 
-  var storedMode = null;
+  let storedMode = null;
   try {
     storedMode = sessionStorage.getItem(PRICING_BILLING_KEY);
   } catch {

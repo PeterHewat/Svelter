@@ -1,10 +1,10 @@
-import { THEME_KEY } from "./constants.js";
+import { THEME_KEY } from "./constants";
 
 export function readThemeMode() {
   try {
-    var raw = localStorage.getItem(THEME_KEY);
+    const raw = localStorage.getItem(THEME_KEY);
     if (raw) {
-      var parsed = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
       if (parsed && parsed.state && parsed.state.mode) {
         return parsed.state.mode;
       }
@@ -24,7 +24,7 @@ export function resolveTheme(mode) {
 }
 
 export function applyThemeFromMode(mode) {
-  var root = document.documentElement;
+  const root = document.documentElement;
   root.classList.remove("dark", "light");
   if (mode === "dark") {
     root.classList.add("dark");
@@ -45,27 +45,27 @@ export function enableThemeTransition() {
 }
 
 export function initTheme() {
-  applyThemeFromMode(readThemeMode());
+  applyThemeFromMode(resolveTheme(readThemeMode()));
 }
 
 export function toggleTheme() {
   enableThemeTransition();
-  var resolved = resolveTheme(readThemeMode());
-  var next = resolved === "dark" ? "light" : "dark";
+  const resolved = resolveTheme(readThemeMode());
+  const next = resolved === "dark" ? "light" : "dark";
   writeThemeMode(next);
   applyThemeFromMode(next);
   updateToggleLabels();
 }
 
 export function updateToggleLabels() {
-  var resolved = resolveTheme(readThemeMode());
-  var next = resolved === "dark" ? "light" : "dark";
+  const resolved = resolveTheme(readThemeMode());
+  const next = resolved === "dark" ? "light" : "dark";
   document.querySelectorAll("[data-theme-toggle]").forEach(function (el) {
-    var title = el.getAttribute("data-title-" + next) || next;
-    var ariaLabel = el.getAttribute("data-aria-label-" + next) || title;
+    const title = el.getAttribute("data-title-" + next) || next;
+    const ariaLabel = el.getAttribute("data-aria-label-" + next) || title;
     el.setAttribute("aria-label", ariaLabel);
     el.setAttribute("title", title);
-    var icon = el.querySelector("[data-theme-toggle-icon]");
+    const icon = el.querySelector("[data-theme-toggle-icon]");
     if (icon) {
       icon.innerHTML =
         next === "light"

@@ -3,7 +3,7 @@ import {
   getTasksE2EConfigIssues,
   isPlaywrightUiOnly,
   isTasksE2EConfigured,
-} from "./e2e-auth";
+} from "./e2e-auth-config";
 
 const ENV_KEYS = [
   "PUBLIC_CONVEX_URL",

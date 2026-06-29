@@ -65,16 +65,13 @@ const nl: TranslationDictionary = {
   },
   home: {
     title: PRODUCT_NAME,
-    subtitle: "SvelteKit + Convex + Clerk + Tailwind + Bun",
-    features: {
-      title: "Functies",
-      svelte: "SvelteKit SPA met bestandsroutes",
-      convex: "Convex voorbeeldtaken-API (inschakelen met env)",
-      auth: "Clerk-inloggen (social + e-mail) met Convex-backend",
-      tailwind: "Tailwind v4 met gedeelde tokens",
-      i18n: "Internationalisatie (9 talen)",
-      themes: "Lichte en donkere thema's",
-    },
+    introBeforeSetup: "Dit is de product-webapp. Na ",
+    introAfterSetup:
+      " zouden Convex en Clerk verbonden moeten zijn. Gebruik het als startvoorbeeld en vervang daarna deze demo door je eigen project.",
+    tasksNote:
+      " controleert of de backend correct is aangesloten. Werkt zonder inloggen (gastlimiet: 3 taken). Log in om gasttaken samen te voegen in je account.",
+    userNote: " toont je Convex-profiel.",
+    marketingLink: "Terug naar de marketingwebsite",
   },
   backend: {
     setupTitle: "Cloudconfiguratie afronden",

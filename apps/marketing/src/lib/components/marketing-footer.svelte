@@ -1,6 +1,6 @@
 <script lang="ts">
   import { cn } from "@repo/utils";
-  import { navSecondaryLinkClass } from "@repo/utils/chrome";
+  import { siteNavLinkClass } from "@repo/utils/chrome";
   import { useMarketingLang, useMarketingT } from "$lib/marketing-context";
   import {
     footerCompanyLinks,
@@ -18,7 +18,7 @@
   const homeHref = $derived(localizedPath(lang));
 
   const footerLinkClass = cn(
-    navSecondaryLinkClass,
+    siteNavLinkClass,
     "hover:text-foreground transition-colors",
   );
 
@@ -94,7 +94,7 @@
       <a
         href={homeHref}
         class="text-muted-foreground hover:text-foreground transition-colors"
-        data-marketing-home-link
+        data-site-home-link
       >
         {copyright}
       </a>

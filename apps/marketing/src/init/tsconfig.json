@@ -1,0 +1,12 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": ["ES2018", "DOM"],
+    "types": [],
+    "verbatimModuleSyntax": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false
+  },
+  "include": ["./**/*.ts"]
+}

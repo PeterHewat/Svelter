@@ -21,7 +21,7 @@ import { defineConfig, type Plugin } from "vite";
 
 function bundleMarketingInit(): void {
   buildSync({
-    entryPoints: [resolve("src/init/main.js")],
+    entryPoints: [resolve("src/init/main.ts")],
     outfile: resolve("static/init.js"),
     bundle: true,
     format: "iife",

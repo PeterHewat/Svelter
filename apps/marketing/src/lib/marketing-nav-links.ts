@@ -9,6 +9,10 @@ export type MarketingLinkDef = {
   href: (lang: Locale) => string;
   labelKey: MarketingTranslationKey;
   external?: boolean;
+  /** Homepage section id for scroll-spy highlighting (anchor links). */
+  sectionId?: string;
+  /** Path segment after locale for page-level highlighting (e.g. `docs`). */
+  pathSegment?: string;
 };
 
 const anchor = (
@@ -18,6 +22,7 @@ const anchor = (
   ({
     href: (lang: Locale) => localizedAnchor(lang, fragment),
     labelKey,
+    sectionId: fragment.replace(/^#/, ""),
   }) as const;
 
 const path = (
@@ -27,6 +32,7 @@ const path = (
   ({
     href: (lang: Locale) => localizedPath(lang, segment),
     labelKey,
+    pathSegment: segment,
   }) as const;
 
 const legalAnchor = (

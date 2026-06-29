@@ -7,19 +7,19 @@ export class HomePage {
   readonly page: Page;
   readonly themeToggle: Locator;
   readonly title: Locator;
-  readonly subtitle: Locator;
-  readonly featuresTitle: Locator;
-  readonly featuresList: Locator;
+  readonly intro: Locator;
+  readonly marketingLink: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.themeToggle = page.getByRole("button", {
       name: /switch to .* theme/i,
     });
-    this.title = page.getByRole("heading", { level: 1 });
-    this.subtitle = page.locator("main p").first();
-    this.featuresTitle = page.locator("main h2").first();
-    this.featuresList = page.locator("main ul");
+    this.title = page.getByRole("heading", { level: 1, hidden: true });
+    this.intro = page.locator("main p").first();
+    this.marketingLink = page.getByRole("link", {
+      name: /go back to the marketing website/i,
+    });
   }
 
   async goto(): Promise<void> {
@@ -30,19 +30,8 @@ export class HomePage {
     return (await this.title.textContent()) ?? "";
   }
 
-  async getSubtitleText(): Promise<string> {
-    return (await this.subtitle.textContent()) ?? "";
-  }
-
-  async getFeaturesTitleText(): Promise<string> {
-    return (await this.featuresTitle.textContent()) ?? "";
-  }
-
-  async getFeatureItems(): Promise<string[]> {
-    const items = await this.featuresList.locator("li").all();
-    return Promise.all(
-      items.map((item) => item.textContent().then((t) => t ?? "")),
-    );
+  async getIntroText(): Promise<string> {
+    return (await this.intro.textContent()) ?? "";
   }
 
   async toggleTheme(): Promise<void> {
@@ -55,6 +44,6 @@ export class HomePage {
   }
 
   async waitForLoad(): Promise<void> {
-    await this.title.waitFor({ state: "visible" });
+    await this.intro.waitFor({ state: "visible" });
   }
 }

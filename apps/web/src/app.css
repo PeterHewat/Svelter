@@ -1,7 +1,9 @@
 @import "@repo/tokens/theme.css";
 @import "tailwindcss";
+@import "@repo/tokens/site-nav.css";
 
-@source "../../../packages/ui-svelte/src/**/*.svelte";
+@source "../../../packages/ui-svelte/src/site-nav-links.svelte";
+@source "../../../packages/ui-svelte/src/site-logo.svelte";
 @source "../../../packages/utils/src/chrome.ts";
 @source "../../../packages/utils/src/focus.ts";
 
@@ -36,6 +38,10 @@ html {
   a:focus-visible,
   button:focus-visible {
     @apply ring-ring rounded-sm ring-2 outline-none;
+  }
+
+  button.rounded-full:focus-visible {
+    @apply rounded-full;
   }
 }
 

@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
     "lint": "eslint .",
-    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && bunx tsc -p src/init/tsconfig.json --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests",
     "e2e:install": "playwright install",

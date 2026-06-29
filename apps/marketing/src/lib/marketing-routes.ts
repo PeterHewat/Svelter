@@ -1,34 +1,20 @@
 import { getDocSlugs } from "$lib/docs";
 import { MARKETING_LOCALES } from "$lib/i18n";
-import { getFeatureSlugs } from "$lib/marketing-content";
 import { localizedPath } from "$lib/locale-path";
 import { getAllPosts } from "$lib/posts";
 
 /** Static route segments under `/[lang]/` (no leading slash). */
-export const MARKETING_STATIC_ROUTES = [
-  "",
-  "pricing",
-  "features",
-  "security",
-  "about",
-  "blog",
-  "docs",
-  "legal",
-  "legal/privacy",
-  "legal/terms",
-] as const;
+export const MARKETING_STATIC_ROUTES = ["", "blog", "docs", "legal"] as const;
 
 /**
  * All prerendered marketing paths (locale prefix included, no origin).
  */
 export function getMarketingPaths(): string[] {
-  const featureSlugs = getFeatureSlugs();
   const postSlugs = getAllPosts().map((post) => post.slug);
   const docSlugs = getDocSlugs();
 
   return MARKETING_LOCALES.flatMap((locale) => [
     ...MARKETING_STATIC_ROUTES.map((route) => localizedPath(locale, route)),
-    ...featureSlugs.map((slug) => localizedPath(locale, `features/${slug}`)),
     ...postSlugs.map((slug) => localizedPath(locale, `blog/${slug}`)),
     ...docSlugs.map((slug) => localizedPath(locale, `docs/${slug}`)),
   ]);

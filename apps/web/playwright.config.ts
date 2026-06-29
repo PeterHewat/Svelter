@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import {
   clerkPublishableKeyForE2E,
   isPlaywrightUiOnly,
-} from "./tests/helpers/e2e-auth";
+} from "./tests/helpers/e2e-auth-config";
 
 const webRoot = import.meta.dirname;
 
