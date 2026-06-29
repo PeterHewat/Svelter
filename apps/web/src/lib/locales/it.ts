@@ -64,16 +64,13 @@ const it: TranslationDictionary = {
   },
   home: {
     title: PRODUCT_NAME,
-    subtitle: "SvelteKit + Convex + Clerk + Tailwind + Bun",
-    features: {
-      title: "Funzionalità",
-      svelte: "SPA SvelteKit con route basate su file",
-      convex: "API attività di esempio con Convex (attiva con env)",
-      auth: "Accesso con Clerk (social + email) e backend Convex",
-      tailwind: "Tailwind v4 con token condivisi",
-      i18n: "Internazionalizzazione (9 lingue)",
-      themes: "Temi chiaro e scuro",
-    },
+    introBeforeSetup: "Questa è l'app web prodotto. Dopo ",
+    introAfterSetup:
+      ", Convex e Clerk dovrebbero essere connessi. Usala come esempio iniziale, poi sostituisci questa demo con il tuo progetto.",
+    tasksNote:
+      " verifica che il backend sia collegato correttamente. Funziona senza accesso (limite ospite: 3 attività). Accedi per unire le attività ospite al tuo account.",
+    userNote: " mostra il tuo profilo Convex.",
+    marketingLink: "Torna al sito marketing",
   },
   backend: {
     setupTitle: "Completa la configurazione cloud",

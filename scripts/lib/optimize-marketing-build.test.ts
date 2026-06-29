@@ -1,5 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { removeHashFragmentHtmlArtifacts } from "./optimize-marketing-build";
+import {
   stripSvelteSsrMarkers,
   SVELTE_SSR_MARKERS,
 } from "./optimize-marketing-html";
@@ -27,6 +37,28 @@ describe("stripSvelteSsrMarkers", () => {
       "<!--sp5bfr-->",
     ]) {
       expect(marker.replace(SVELTE_SSR_MARKERS, "")).toBe("");
+    }
+  });
+});
+
+describe("removeHashFragmentHtmlArtifacts", () => {
+  test("deletes hash-suffixed HTML files but keeps base pages", () => {
+    const dir = mkdtempSync(join(tmpdir(), "marketing-build-"));
+    try {
+      writeFileSync(join(dir, "legal.html"), "<html></html>");
+      writeFileSync(join(dir, "legal#privacy.html"), "<html></html>");
+      mkdirSync(join(dir, "en"));
+      writeFileSync(join(dir, "en", "legal.html"), "<html></html>");
+      writeFileSync(join(dir, "en", "legal#terms.html"), "<html></html>");
+
+      removeHashFragmentHtmlArtifacts(dir);
+
+      expect(existsSync(join(dir, "legal.html"))).toBe(true);
+      expect(existsSync(join(dir, "legal#privacy.html"))).toBe(false);
+      expect(existsSync(join(dir, "en", "legal.html"))).toBe(true);
+      expect(existsSync(join(dir, "en", "legal#terms.html"))).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
     }
   });
 });

@@ -88,3 +88,11 @@ export type {
   Locale,
   TranslationDictionary,
 } from "./i18n";
+
+export {
+  animateNavIndicatorBetween,
+  animateNavIndicatorFromHome,
+  dismissNavIndicatorToHome,
+  positionNavIndicator,
+  subscribeNavIndicator,
+} from "./nav-indicator";

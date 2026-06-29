@@ -1,12 +1,12 @@
-import { I18N_KEY, LOCALE_NAV_KEY, SUPPORTED_LOCALES } from "./constants.js";
-import { captureScrollState } from "./scroll.js";
+import { I18N_KEY, LOCALE_NAV_KEY, SUPPORTED_LOCALES } from "./constants";
+import { captureScrollState } from "./scroll";
 
 export function isSupportedLocale(lang) {
   return SUPPORTED_LOCALES.indexOf(lang) !== -1;
 }
 
 export function localeFromPath(path) {
-  var match = /^\/([a-z]{2})(?:\/|$)/.exec(path);
+  const match = /^\/([a-z]{2})(?:\/|$)/.exec(path);
   if (match && isSupportedLocale(match[1])) {
     return match[1];
   }
@@ -15,9 +15,9 @@ export function localeFromPath(path) {
 
 export function readStoredLocale() {
   try {
-    var raw = localStorage.getItem(I18N_KEY);
+    const raw = localStorage.getItem(I18N_KEY);
     if (raw) {
-      var parsed = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
       if (
         parsed &&
         parsed.state &&
@@ -41,7 +41,7 @@ export function writeLocale(locale) {
 }
 
 export function getBrowserLocale() {
-  var lang = (navigator.language || "").split("-")[0];
+  const lang = (navigator.language || "").split("-")[0];
   return isSupportedLocale(lang) ? lang : "en";
 }
 
@@ -50,8 +50,8 @@ export function resolvePreferredLocale() {
 }
 
 export function redirectUnlocalizedPaths() {
-  var path = location.pathname.replace(/\/$/, "") || "/";
-  var locale = resolvePreferredLocale();
+  const path = location.pathname.replace(/\/$/, "") || "/";
+  const locale = resolvePreferredLocale();
 
   if (path === "/") {
     location.replace("/" + locale + "/");
@@ -62,7 +62,7 @@ export function redirectUnlocalizedPaths() {
 }
 
 export function persistLocaleFromPath() {
-  var locale = localeFromPath(location.pathname);
+  const locale = localeFromPath(location.pathname);
   if (locale) {
     writeLocale(locale);
   }

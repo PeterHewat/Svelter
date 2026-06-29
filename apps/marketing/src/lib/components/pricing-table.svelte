@@ -33,14 +33,16 @@
       </p>
     </Reveal>
 
-    <Reveal delay={120}>
+    <div
+      class="pricing-cards-stack mb-10 flex w-full flex-col items-center gap-8"
+    >
       <div
-        class="mb-10 flex flex-col items-center gap-2"
+        class="bg-background/90 flex w-auto flex-col items-center gap-2 rounded-lg max-md:sticky max-md:top-20 max-md:z-10 max-md:px-4 max-md:py-3 max-md:backdrop-blur-sm"
         role="group"
         aria-label={t("pricing.billingToggle")}
       >
         <div
-          class="billing-toggle border-border bg-muted/40 relative inline-grid grid-cols-2 rounded-lg border p-1"
+          class="billing-toggle border-border bg-muted/40 focus-within:ring-ring relative inline-grid grid-cols-2 rounded-lg border p-1 focus-within:ring-2"
         >
           <span class="billing-toggle-thumb" aria-hidden="true"></span>
           <label
@@ -69,14 +71,14 @@
         </div>
         <p class="text-muted-foreground text-sm">{t("pricing.annualSave")}</p>
       </div>
-    </Reveal>
 
-    <div class="pricing-cards mx-auto max-w-5xl gap-6 md:grid-cols-3">
-      {#each tiers as tier, index (tier.id)}
-        <Reveal delay={160 + index * 80}>
-          <PricingTierCard {tier} />
-        </Reveal>
-      {/each}
+      <div class="pricing-cards mx-auto w-full max-w-5xl gap-6 md:grid-cols-3">
+        {#each tiers as tier, index (tier.id)}
+          <Reveal delay={160 + index * 80}>
+            <PricingTierCard {tier} />
+          </Reveal>
+        {/each}
+      </div>
     </div>
   </Section>
 

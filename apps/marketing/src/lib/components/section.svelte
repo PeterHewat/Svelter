@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from "@repo/utils";
+  import Reveal from "$lib/components/reveal.svelte";
   import type { Snippet } from "svelte";
 
   type Props = {
@@ -18,11 +19,13 @@
 >
   <div class="marketing-container">
     {#if title}
-      <h2
-        class="marketing-section-title mb-8 text-center font-semibold tracking-tight text-balance"
-      >
-        {title}
-      </h2>
+      <Reveal>
+        <h2
+          class="marketing-section-title mb-8 text-center font-semibold tracking-tight text-balance"
+        >
+          {title}
+        </h2>
+      </Reveal>
     {/if}
     {#if children}
       {@render children()}

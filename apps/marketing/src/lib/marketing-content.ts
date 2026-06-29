@@ -380,24 +380,4 @@ export const marketingContent = {
         "Placeholder terms of service. Replace with counsel-reviewed terms before launch.",
     } satisfies LegalPageContent,
   },
-  featuresPage: {
-    intro:
-      "Explore the template’s marketing routes and one example feature deep-dive. Replace with your real product areas in v1.",
-  },
 };
-
-/**
- * Returns all feature slugs for prerender entries and deep links.
- */
-export function getFeatureSlugs(): string[] {
-  return marketingContent.featureRows.map((feature) => feature.slug);
-}
-
-/**
- * Loads a feature by slug.
- *
- * @param slug - URL segment under `/features/[slug]` or homepage `#` anchor
- */
-export function getFeatureBySlug(slug: string): FeatureRowContent | undefined {
-  return marketingContent.featureRows.find((feature) => feature.slug === slug);
-}

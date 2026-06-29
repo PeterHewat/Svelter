@@ -4,9 +4,11 @@
   "private": true,
   "description": "Shared CSS design tokens for web and marketing",
   "exports": {
-    "./theme.css": "./theme.css"
+    "./theme.css": "./theme.css",
+    "./site-nav.css": "./site-nav.css"
   },
   "files": [
-    "theme.css"
+    "theme.css",
+    "site-nav.css"
   ]
 }

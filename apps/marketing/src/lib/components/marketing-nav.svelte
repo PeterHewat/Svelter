@@ -10,10 +10,13 @@
     languageSwitcherMenuClass,
     languageSwitcherMenuLinkClass,
     languageSwitcherSizes,
-    navLinkClass,
-    navSecondaryLinkClass,
+    languageSwitcherSummaryClass,
     siteHeaderClass,
+    siteNavIndicatorClass,
+    siteNavLinkClass,
+    siteNavLinksClass,
   } from "@repo/utils/chrome";
+  import { SiteLogo } from "@repo/ui-svelte";
   import ProductAppLink from "$lib/components/product-app-link.svelte";
   import { MARKETING_LOCALES, SUPPORTED_LOCALES } from "$lib/i18n";
   import { useMarketingLang, useMarketingT } from "$lib/marketing-context";
@@ -34,26 +37,40 @@
     headerNavLinks.map((link) => ({
       href: link.href(lang),
       label: t(link.labelKey),
+      sectionId: link.sectionId,
+      pathSegment: link.pathSegment,
     })),
   );
 
   const primaryCtaClass =
     "bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 shrink-0 items-center rounded-lg px-4 text-sm font-medium transition-colors";
+
+  function headerNavLinkAttrs(link: {
+    href: string;
+    sectionId?: string;
+    pathSegment?: string;
+  }) {
+    const attrs: Record<string, string | undefined> = {
+      "data-nav-header-link": "",
+      href: link.href,
+    };
+    if (link.sectionId) {
+      attrs["data-nav-section"] = link.sectionId;
+    }
+    if (link.pathSegment) {
+      attrs["data-nav-path"] = link.pathSegment;
+    }
+    return attrs;
+  }
 </script>
 
 <header class={siteHeaderClass}>
   <nav
-    class="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-6 py-3"
+    class="flex w-full items-center gap-2 px-4 py-3 sm:px-6"
     aria-label={t("nav.main")}
   >
-    <div class="flex min-w-0 items-center gap-3">
-      <a
-        href={homeHref}
-        class={cn("truncate text-lg", navLinkClass)}
-        data-marketing-home-link
-      >
-        {SITE_NAME}
-      </a>
+    <div class="flex min-w-0 items-center gap-2 sm:gap-3">
+      <SiteLogo href={homeHref} name={SITE_NAME} />
 
       <details
         class={cn(
@@ -65,7 +82,10 @@
         data-nav-menu
       >
         <summary
-          class={languageSwitcherIconOnlySummaryClass}
+          class={cn(
+            languageSwitcherSummaryClass,
+            "size-10 shrink-0 items-center justify-center p-0",
+          )}
           aria-label={t("nav.menu")}
         >
           <svg
@@ -100,22 +120,33 @@
         </ul>
       </details>
 
-      <div class="hidden items-center gap-4 nav:flex">
+      <div class="nav:hidden shrink-0">
+        <ProductAppLink {lang} class={cn(primaryCtaClass, "h-10 px-3 text-sm")}>
+          {t("nav.dashboard")}
+        </ProductAppLink>
+      </div>
+
+      <div class={cn("hidden nav:flex", siteNavLinksClass)} data-nav-links>
         {#each navLinks as link (link.href)}
-          <a href={link.href} class={navSecondaryLinkClass}>
+          <a {...headerNavLinkAttrs(link)} class={siteNavLinkClass}>
             {link.label}
           </a>
         {/each}
+        <span
+          class={siteNavIndicatorClass}
+          data-nav-indicator
+          aria-hidden="true"
+        ></span>
       </div>
     </div>
 
-    <div class="flex justify-center">
+    <div class="hidden grow justify-center nav:flex">
       <ProductAppLink {lang} class={primaryCtaClass}>
         {t("nav.dashboard")}
       </ProductAppLink>
     </div>
 
-    <div class="flex items-center justify-end gap-2">
+    <div class="ml-auto flex shrink-0 items-center gap-2">
       <details
         class={cn(
           languageSwitcherDetailsClass,
@@ -216,7 +247,6 @@
       <div class={iconSlotClass}>
         <ProductAppLink
           {lang}
-          auth
           class={iconButtonClass()}
           aria-label={t("nav.signIn")}
           title={t("nav.signIn")}

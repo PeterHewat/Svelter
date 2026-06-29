@@ -1,13 +1,15 @@
 <script lang="ts">
-  import { LanguageSwitcher, ThemeToggle } from "@repo/ui-svelte";
-  import { cn } from "@repo/utils";
+  import { goto } from "$app/navigation";
+  import { page } from "$app/state";
   import {
-    navLinkClass,
-    navSecondaryLinkClass,
-    siteHeaderClass,
-    siteNavClass,
-  } from "@repo/utils/chrome";
+    LanguageSwitcher,
+    SiteLogo,
+    SiteNavLinks,
+    ThemeToggle,
+  } from "@repo/ui-svelte";
+  import { siteHeaderClass } from "@repo/utils/chrome";
   import AuthAccountButton from "$lib/components/auth-account-button.svelte";
+  import { getAppNavLinks } from "$lib/app-nav-links";
   import { openAuthModal } from "$lib/auth-ui.svelte";
   import { isAuthEnabled } from "$lib/backend";
   import { useTranslation } from "$lib/i18n";
@@ -20,32 +22,32 @@
 
   let { mode }: Props = $props();
 
+  let homeLinkEl = $state<HTMLElement | null>(null);
+
   const { t } = useTranslation();
 
-  let ClerkHeader = $state<
+  let ClerkAuthButton = $state<
     typeof import("$lib/components/app-header-clerk.svelte").default | null
   >(null);
 
-  const authNavPlaceholder = $derived(
-    mode === "loading" || (mode === "ready" && !ClerkHeader),
+  const authActionLoading = $derived(
+    mode === "loading" || (mode === "ready" && ClerkAuthButton === null),
   );
 
-  const authActionLoading = $derived(
-    mode === "loading" || (mode === "ready" && ClerkHeader === null),
-  );
+  const navLinks = $derived(getAppNavLinks(page.url.pathname, t));
 
   function handleOpenAuth(redirectTo?: string) {
     openAuthModal(redirectTo);
   }
 
   $effect(() => {
-    if (mode !== "ready") {
-      ClerkHeader = null;
+    if (mode !== "ready" || !isAuthEnabled()) {
+      ClerkAuthButton = null;
       return;
     }
     let cancelled = false;
     void import("$lib/components/app-header-clerk.svelte").then((module) => {
-      if (!cancelled) ClerkHeader = module.default;
+      if (!cancelled) ClerkAuthButton = module.default;
     });
     return () => {
       cancelled = true;
@@ -54,28 +56,22 @@
 </script>
 
 <header class={siteHeaderClass}>
-  <nav class={siteNavClass} aria-label={t("nav.main")}>
-    <div class="flex items-center gap-4">
-      <a href="/" class={cn("text-lg", navLinkClass)}>{t("home.title")}</a>
+  <nav
+    class="flex w-full items-center gap-2 px-4 py-3 sm:px-6"
+    aria-label={t("nav.main")}
+  >
+    <div class="flex min-w-0 items-center gap-3">
+      <SiteLogo href="/" name={t("home.title")} bind:element={homeLinkEl} />
       {#if isAuthEnabled()}
-        {#if mode === "ready" && ClerkHeader}
-          <ClerkHeader part="nav" />
-        {:else if authNavPlaceholder}
-          <span
-            class={cn(navSecondaryLinkClass, "invisible")}
-            aria-hidden="true">{t("nav.tasks")}</span
-          >
-          <span
-            class={cn(navSecondaryLinkClass, "invisible")}
-            aria-hidden="true">{t("nav.user")}</span
-          >
-        {:else}
-          <a href="/tasks" class={navSecondaryLinkClass}>{t("nav.tasks")}</a>
-          <a href="/user" class={navSecondaryLinkClass}>{t("nav.user")}</a>
-        {/if}
+        <SiteNavLinks
+          links={navLinks}
+          homeLink={homeLinkEl}
+          onNavigateHome={(href) => goto(href)}
+        />
       {/if}
     </div>
-    <div class="flex items-center gap-2">
+
+    <div class="ml-auto flex shrink-0 items-center gap-2">
       <LanguageSwitcher ariaLabel={t("language.select")} />
       <ThemeToggle
         labels={{
@@ -86,8 +82,8 @@
         }}
       />
       {#if isAuthEnabled()}
-        {#if mode === "ready" && ClerkHeader}
-          <ClerkHeader part="actions" />
+        {#if mode === "ready" && ClerkAuthButton}
+          <ClerkAuthButton />
         {:else}
           <AuthAccountButton
             loading={authActionLoading}

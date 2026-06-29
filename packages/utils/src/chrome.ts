@@ -23,9 +23,14 @@ export const siteFooterClass =
 /** Primary nav link (brand / home). */
 export const navLinkClass = "text-foreground hover:text-primary font-semibold";
 
-/** Secondary nav link or button (blog, tasks, etc.). */
-export const navSecondaryLinkClass =
-  "text-muted-foreground hover:text-primary cursor-pointer text-sm";
+/** Nav link row with sliding underline indicator. */
+export const siteNavLinksClass = "site-nav-links";
+
+/** Individual nav link inside `siteNavLinksClass`. */
+export const siteNavLinkClass = "site-nav-link";
+
+/** Sliding underline bar — positioned by JS or `SiteNavLinks`. */
+export const siteNavIndicatorClass = "site-nav-indicator";
 
 /** Fixed-size slot for the trailing icon action (sign-in, GitHub). */
 export const iconSlotClass =

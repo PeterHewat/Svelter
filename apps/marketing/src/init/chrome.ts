@@ -1,17 +1,21 @@
-import { wireLocaleLinks, wireLocaleMenus } from "./locale-links.js";
-import { syncProductAppLinks } from "./product-links.js";
-import { wirePricingBilling } from "./pricing.js";
-import { wireRevealInView } from "./reveal.js";
-import { wireTestimonialCarousel } from "./testimonial.js";
+import { wireLocaleLinks, wireLocaleMenus } from "./locale-links";
+import { wireNavActive } from "./nav-active";
+import { syncProductAppLinks } from "./product-links";
+import { wirePricingBilling } from "./pricing";
+import { wireRevealInView } from "./reveal";
+import { wireTestimonialCarousel } from "./testimonial";
 import {
   enableThemeTransition,
   toggleTheme,
   updateToggleLabels,
-} from "./theme.js";
+} from "./theme";
 
 export function wireChrome() {
   updateToggleLabels();
   document.querySelectorAll("[data-theme-toggle]").forEach(function (el) {
+    if (!(el instanceof HTMLButtonElement)) {
+      return;
+    }
     el.disabled = false;
     el.addEventListener("click", function () {
       toggleTheme();
@@ -20,6 +24,7 @@ export function wireChrome() {
   });
   wireLocaleLinks();
   wireLocaleMenus();
+  wireNavActive();
   wireRevealInView();
   wirePricingBilling();
   wireTestimonialCarousel();

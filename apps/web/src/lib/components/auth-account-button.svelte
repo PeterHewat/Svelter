@@ -27,30 +27,47 @@
   }: Props = $props();
 </script>
 
-<div class={iconSlotClass}>
-  <div class="relative flex h-10 w-10 items-center justify-center">
+<div
+  class={cn(
+    iconSlotClass,
+    "rounded-full focus-within:ring-ring focus-within:ring-2",
+  )}
+>
+  <div
+    class="relative flex h-10 w-10 items-center justify-center overflow-visible"
+  >
     {#if loading}
       <AuthIconSpinner />
     {/if}
 
     <button
       type="button"
-      class={cn(
-        iconButtonClass(),
-        hideAnonymous && "pointer-events-none invisible",
-      )}
+      class={cn(iconButtonClass(), hideAnonymous && "pointer-events-none")}
       {onclick}
       aria-haspopup="dialog"
       aria-label={ariaLabel}
       {title}
       aria-busy={loading || undefined}
-      aria-hidden={hideAnonymous || undefined}
       tabindex={hideAnonymous ? -1 : undefined}
-      disabled={loading || hideAnonymous}
+      disabled={loading}
     >
-      <AnonymousUserIcon />
+      {#if !hideAnonymous}
+        <AnonymousUserIcon />
+      {/if}
     </button>
 
     {@render overlay?.()}
   </div>
 </div>
+
+<style>
+  :global(.auth-account-avatar-image) {
+    width: 38px;
+    height: 38px;
+    max-width: 38px;
+    max-height: 38px;
+    border-radius: 9999px;
+    object-fit: cover;
+    object-position: center;
+  }
+</style>

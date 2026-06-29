@@ -15,20 +15,28 @@ export function useClerkAvatarReady(
     if (ready) return;
 
     const img = root.querySelector("img");
-    if (!img) return;
+    if (img) {
+      if (img.complete && img.naturalWidth > 0) {
+        ready = true;
+        return;
+      }
 
-    if (img.complete && img.naturalWidth > 0) {
-      ready = true;
+      img.addEventListener(
+        "load",
+        () => {
+          ready = true;
+        },
+        { once: true },
+      );
       return;
     }
 
-    img.addEventListener(
-      "load",
-      () => {
-        ready = true;
-      },
-      { once: true },
+    const avatarBox = root.querySelector(
+      ".cl-avatarBox, .cl-userButtonAvatarBox",
     );
+    if (avatarBox instanceof HTMLElement && avatarBox.textContent?.trim()) {
+      ready = true;
+    }
   }
 
   $effect(() => {

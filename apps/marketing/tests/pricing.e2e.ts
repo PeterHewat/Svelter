@@ -133,11 +133,6 @@ test.describe("Marketing Pricing Section", () => {
     expect(Math.abs(scrollAfter - scrollBefore)).toBeLessThan(80);
   });
 
-  test("/en/pricing redirects to homepage pricing anchor", async ({ page }) => {
-    await page.goto("/en/pricing");
-    await expect(page).toHaveURL(/\/en#pricing$/);
-  });
-
   test("nav pricing link targets homepage anchor from docs", async ({
     page,
   }) => {

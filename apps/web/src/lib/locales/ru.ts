@@ -64,16 +64,13 @@ const ru: TranslationDictionary = {
   },
   home: {
     title: PRODUCT_NAME,
-    subtitle: "SvelteKit + Convex + Clerk + Tailwind + Bun",
-    features: {
-      title: "Возможности",
-      svelte: "SPA на SvelteKit с файловыми маршрутами",
-      convex: "Пример API задач Convex (включить через env)",
-      auth: "Вход через Clerk (соцсети + почта) с бэкендом Convex",
-      tailwind: "Tailwind v4 с общими токенами",
-      i18n: "Интернационализация (9 языков)",
-      themes: "Светлая и тёмная темы",
-    },
+    introBeforeSetup: "Это продуктовое веб-приложение. После ",
+    introAfterSetup:
+      " Convex и Clerk должны быть подключены. Используйте его как отправную точку, затем замените это демо своим проектом.",
+    tasksNote:
+      " позволяет проверить, что бэкенд подключён правильно. Работает без входа (лимит гостя: 3 задачи). Войдите, чтобы объединить задачи гостя с аккаунтом.",
+    userNote: " показывает ваш профиль Convex.",
+    marketingLink: "Вернуться на маркетинговый сайт",
   },
   backend: {
     setupTitle: "Завершите настройку в облаке",

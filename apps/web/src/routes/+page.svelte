@@ -2,34 +2,52 @@
   import { useTranslation } from "$lib/i18n";
   import BackendSetup from "$lib/components/backend-setup.svelte";
   import { isAuthEnabled } from "$lib/backend";
+  import { marketingHomeHref } from "$lib/marketing-link";
+  import { useThemeStore } from "@repo/utils/theme";
   import { focusRing } from "@repo/utils/focus";
 
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const themeStore = useThemeStore;
+  let linkTheme = $state(themeStore.getState().resolvedTheme);
+
+  $effect(() => {
+    return themeStore.subscribe((state) => {
+      linkTheme = state.resolvedTheme;
+    });
+  });
+
+  const marketingUrl = $derived(
+    marketingHomeHref(locale, { theme: linkTheme }),
+  );
 </script>
 
-<div class="mx-auto max-w-2xl text-center">
-  <h1 class="mb-2 text-4xl font-bold">{t("home.title")}</h1>
-  <p class="text-muted-foreground mb-8">{t("home.subtitle")}</p>
+<div class="mx-auto max-w-xl space-y-4 text-left text-sm">
+  <h1 class="sr-only">{t("home.title")}</h1>
 
-  <section class="text-left">
-    <h2 class="mb-4 text-xl font-semibold">{t("home.features.title")}</h2>
-    <ul class="text-muted-foreground list-disc space-y-2 pl-5 text-sm">
-      <li>{t("home.features.svelte")}</li>
-      <li>{t("home.features.convex")}</li>
-      <li>{t("home.features.auth")}</li>
-      <li>{t("home.features.tailwind")}</li>
-      <li>{t("home.features.i18n")}</li>
-      <li>{t("home.features.themes")}</li>
-    </ul>
-  </section>
+  <p class="text-muted-foreground">
+    {t("home.introBeforeSetup")}<code class="font-mono text-xs"
+      >bun run setup</code
+    >{t("home.introAfterSetup")}
+  </p>
 
   <BackendSetup />
 
   {#if isAuthEnabled()}
-    <p class="mt-8">
-      <a href="/tasks" class="text-primary underline {focusRing}">
-        {t("nav.tasks")} →
-      </a>
+    <p class="text-muted-foreground">
+      <a href="/tasks" class="text-primary underline {focusRing}">/tasks</a>{t(
+        "home.tasksNote",
+      )}
+    </p>
+    <p class="text-muted-foreground">
+      <a href="/user" class="text-primary underline {focusRing}">/user</a>{t(
+        "home.userNote",
+      )}
     </p>
   {/if}
+
+  <p>
+    <a href={marketingUrl} class="text-primary underline {focusRing}">
+      {t("home.marketingLink")}
+    </a>
+  </p>
 </div>

@@ -9,7 +9,7 @@ import { buildSync } from "esbuild";
 import { resolve } from "node:path";
 
 const marketingDir = resolve(import.meta.dir, "..");
-const entry = resolve(marketingDir, "src/init/main.js");
+const entry = resolve(marketingDir, "src/init/main.ts");
 const outfile = resolve(marketingDir, "static/init.js");
 
 buildSync({

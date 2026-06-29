@@ -4,6 +4,7 @@ import {
   readdirSync,
   rmSync,
   statSync,
+  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { resolve } from "node:path";
@@ -15,6 +16,33 @@ const CLIENT_JS_PATHS = [
   "_app/immutable/nodes",
   "_app/version.json",
 ] as const;
+
+/**
+ * Drops prerender artifacts for hash URLs (e.g. `legal#privacy.html`).
+ * Same-page anchors are served from the base page; fragment files duplicate HTML.
+ *
+ * @param dir - Directory to scan recursively
+ */
+export function removeHashFragmentHtmlArtifacts(dir: string): void {
+  if (!statSync(dir, { throwIfNoEntry: false })?.isDirectory()) {
+    return;
+  }
+
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = resolve(dir, entry.name);
+    if (entry.isDirectory()) {
+      removeHashFragmentHtmlArtifacts(path);
+      continue;
+    }
+    if (
+      entry.isFile() &&
+      entry.name.includes("#") &&
+      entry.name.endsWith(".html")
+    ) {
+      unlinkSync(path);
+    }
+  }
+}
 
 /**
  * Minifies `init.js` in the marketing build output.
@@ -45,6 +73,8 @@ export function optimizeMarketingBuild(buildDir: string): void {
   if (statSync(initPath, { throwIfNoEntry: false })?.isFile()) {
     minifyMarketingInitJs(initPath);
   }
+
+  removeHashFragmentHtmlArtifacts(buildDir);
 
   for (const entry of readdirSync(buildDir, { withFileTypes: true })) {
     if (!entry.isFile() || !entry.name.endsWith(".html")) continue;

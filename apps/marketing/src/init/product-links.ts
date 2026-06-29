@@ -1,10 +1,10 @@
-import { isSupportedLocale, localeFromPath } from "./locale.js";
-import { readThemeMode, resolveTheme } from "./theme.js";
+import { isSupportedLocale, localeFromPath } from "./locale";
+import { readThemeMode, resolveTheme } from "./theme";
 
 function readProductAppOrigin() {
-  var meta = document.querySelector('meta[name="product-app-origin"]');
+  const meta = document.querySelector('meta[name="product-app-origin"]');
   if (meta) {
-    var baked = meta.getAttribute("content");
+    const baked = meta.getAttribute("content");
     if (baked) {
       return baked.replace(/\/$/, "");
     }
@@ -16,9 +16,9 @@ function readProductAppOrigin() {
  * Keep in sync with resolveProductSiteOrigin in @repo/config/cross-app-origin.
  */
 function resolveSiblingProductOrigin() {
-  var port = location.port;
+  const port = location.port;
   if (port !== "" && port !== "443" && port !== "80") {
-    var siblingPort = parseInt(port, 10) - 1;
+    const siblingPort = parseInt(port, 10) - 1;
     return location.protocol + "//" + location.hostname + ":" + siblingPort;
   }
   if (
@@ -35,17 +35,17 @@ function resolveSiblingProductOrigin() {
 }
 
 export function syncProductAppLinks() {
-  var productOrigin = readProductAppOrigin();
+  const productOrigin = readProductAppOrigin();
   if (!productOrigin) {
     return;
   }
-  var pageLocale = localeFromPath(location.pathname);
-  var theme = resolveTheme(readThemeMode());
+  const pageLocale = localeFromPath(location.pathname);
+  const theme = resolveTheme(readThemeMode());
 
   document.querySelectorAll("[data-product-app-link]").forEach(function (el) {
-    var lang = el.getAttribute("data-lang") || pageLocale;
+    const lang = el.getAttribute("data-lang") || pageLocale;
     try {
-      var url = new URL("/", productOrigin);
+      const url = new URL("/", productOrigin);
       if (lang && isSupportedLocale(lang)) {
         url.searchParams.set("lang", lang);
       }

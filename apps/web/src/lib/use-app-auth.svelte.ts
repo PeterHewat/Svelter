@@ -1,4 +1,5 @@
 import { useClerkContext } from "svelte-clerk/client";
+import { clearCachedAvatarUrl } from "$lib/clerk-avatar-cache";
 import { clearGoogleOneTapTried } from "$lib/google-one-tap-auth";
 import { isAuthEnabled } from "$lib/backend";
 
@@ -30,6 +31,7 @@ export function useAppAuth() {
     },
     signOut: async () => {
       clearGoogleOneTapTried();
+      clearCachedAvatarUrl();
       await clerk.clerk?.signOut();
     },
   };

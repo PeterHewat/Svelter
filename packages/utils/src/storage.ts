@@ -125,3 +125,37 @@ export function getLocalStorageOrMemory(): StorageLike {
 export function clearPersistedStorage(): void {
   getLocalStorageOrMemory().clear();
 }
+
+/**
+ * Read from `sessionStorage` without throwing when unavailable.
+ *
+ * @param key - Storage key
+ * @returns Stored value or `null`
+ */
+export function safeSessionGet(key: string): string | null {
+  if (typeof sessionStorage === "undefined") {
+    return null;
+  }
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Write to `sessionStorage` without throwing when unavailable.
+ *
+ * @param key - Storage key
+ * @param value - Value to store
+ */
+export function safeSessionSet(key: string, value: string): void {
+  if (typeof sessionStorage === "undefined") {
+    return;
+  }
+  try {
+    sessionStorage.setItem(key, value);
+  } catch {
+    /* ignore quota / privacy mode */
+  }
+}

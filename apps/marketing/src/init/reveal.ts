@@ -1,7 +1,8 @@
-import { scrollToHashTarget } from "./scroll.js";
+import { scrollToHashTarget } from "./scroll";
+import { markHashIntent } from "./hash-intent";
 
 function normalizeMarketingPath(path) {
-  var normalized = path || "/";
+  const normalized = path || "/";
   if (
     normalized.length > 1 &&
     normalized.charAt(normalized.length - 1) === "/"
@@ -16,7 +17,7 @@ function parseSamePageNavHref(href) {
     return null;
   }
   try {
-    var url = new URL(href, location.href);
+    const url = new URL(href, location.href);
     if (
       normalizeMarketingPath(url.pathname) !==
       normalizeMarketingPath(location.pathname)
@@ -49,7 +50,7 @@ function wireNavRevealReplay(replayAllReveals) {
   }
 
   function handleSamePageNavClick(event, link) {
-    var nav = parseSamePageNavHref(link.getAttribute("href") || "");
+    const nav = parseSamePageNavHref(link.getAttribute("href") || "");
     if (!nav) {
       return;
     }
@@ -59,15 +60,18 @@ function wireNavRevealReplay(replayAllReveals) {
       return;
     }
 
-    var hash = "#" + nav.sectionId;
-    var isSameHash = location.hash === hash;
+    const hash = "#" + nav.sectionId;
+    const isSameHash = location.hash === hash;
 
     if (isSameHash) {
       event.preventDefault();
       scrollToHashTarget(hash);
+      markHashIntent(hash);
       scheduleReplay();
       return;
     }
+
+    markHashIntent(hash);
 
     window.addEventListener(
       "hashchange",
@@ -83,11 +87,11 @@ function wireNavRevealReplay(replayAllReveals) {
       return;
     }
     container.addEventListener("click", function (event) {
-      var target = event.target;
+      const target = event.target;
       if (!(target instanceof Element)) {
         return;
       }
-      var link = target.closest("a[href]");
+      const link = target.closest("a[href]");
       if (!link || !container.contains(link)) {
         return;
       }
@@ -106,7 +110,7 @@ function wireNavRevealReplay(replayAllReveals) {
 }
 
 export function wireRevealInView() {
-  var nodes = document.querySelectorAll("[data-reveal]");
+  const nodes = document.querySelectorAll("[data-reveal]");
   if (!nodes.length) {
     return;
   }
@@ -119,7 +123,7 @@ export function wireRevealInView() {
   }
 
   function applyRevealVisible(el) {
-    var delay = parseInt(el.getAttribute("data-reveal-delay") || "0", 10);
+    const delay = parseInt(el.getAttribute("data-reveal-delay") || "0", 10);
     if (delay > 0) {
       window.setTimeout(function () {
         el.classList.add("is-visible");
@@ -130,12 +134,12 @@ export function wireRevealInView() {
   }
 
   function isRevealCandidate(el) {
-    var rect = el.getBoundingClientRect();
-    var margin = window.innerHeight * 0.06;
+    const rect = el.getBoundingClientRect();
+    const margin = window.innerHeight * 0.06;
     return rect.top < window.innerHeight - margin && rect.bottom > 0;
   }
 
-  var observer = new IntersectionObserver(
+  const observer = new IntersectionObserver(
     function (entries) {
       entries.forEach(function (entry) {
         if (!entry.isIntersecting) {
@@ -166,7 +170,7 @@ export function wireRevealInView() {
   }
 
   function replayAllReveals() {
-    var allNodes = document.querySelectorAll("[data-reveal]");
+    const allNodes = document.querySelectorAll("[data-reveal]");
     if (!allNodes.length) {
       return;
     }

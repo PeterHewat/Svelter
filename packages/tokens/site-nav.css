@@ -1,0 +1,44 @@
+/**
+ * Shared header nav with sliding underline indicator (marketing + web app).
+ * Import after theme.css in each app global stylesheet.
+ */
+@layer components {
+  .site-nav-links {
+    @apply relative flex items-center gap-4 self-center;
+  }
+
+  .site-nav-link {
+    @apply text-muted-foreground hover:text-primary relative z-10 px-0 py-0.5 text-sm font-medium whitespace-nowrap transition-colors;
+  }
+
+  .site-nav-link[aria-current="page"] {
+    @apply text-foreground;
+  }
+
+  .site-nav-indicator {
+    @apply bg-primary pointer-events-none absolute bottom-0 left-0 z-0 h-0.5 rounded-full;
+    opacity: 0;
+    transition:
+      transform 200ms ease,
+      width 200ms ease,
+      opacity 150ms ease;
+  }
+
+  .site-nav-indicator.is-visible {
+    opacity: 1;
+  }
+
+  .site-nav-indicator.is-instant {
+    transition: none;
+  }
+
+  .site-nav-indicator.is-dismissing {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-nav-indicator {
+      transition: none;
+    }
+  }
+}

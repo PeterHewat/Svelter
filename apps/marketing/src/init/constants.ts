@@ -15,5 +15,6 @@ export const THEME_KEY = "theme";
 export const I18N_KEY = "i18n";
 export const LOCALE_NAV_KEY = "marketing-locale-nav";
 export const SCROLL_RESTORE_KEY = "marketing-scroll";
+export const HASH_INTENT_KEY = "marketing-hash-intent";
 export const PRICING_BILLING_KEY = "marketing-pricing-billing";
 export const HEADER_OFFSET = 80;
