@@ -14,7 +14,7 @@ import {
 import { resolveCloudflareApiToken } from "./cloudflare-auth";
 import { importClerkDnsRecordsToCloudflare } from "./cloudflare-dns";
 import { cloudflareZoneDnsUrl } from "./platform-urls";
-import { printManualAction } from "./manual-action";
+import { printManualAction, requireManualAction } from "./manual-action";
 
 export type ResolveClerkDnsRecordsResult = {
   records: BindDnsRecord[];
@@ -215,12 +215,16 @@ export function printClerkDnsImportFallback(root: string, apex: string): void {
 }
 
 /**
- * Prints guidance when Clerk production deploy runs before a Cloudflare zone exists.
+ * Blocks setup until a Cloudflare zone exists for Clerk production deploy.
  *
  * @param apex - Apex domain
+ * @param options - Setup options (`autoConfirm` for non-interactive sync)
  */
-export function printClerkDeferredUntilCloudflareZone(apex: string): void {
-  printManualAction(
+export function requireCloudflareZoneForClerkProduction(
+  apex: string,
+  options?: { autoConfirm?: boolean },
+): void {
+  requireManualAction(
     "Create the Cloudflare zone before Clerk production deploy",
     [
       `Dashboard → Domains → Add a domain → ${apex} (Free plan)`,
@@ -229,5 +233,11 @@ export function printClerkDeferredUntilCloudflareZone(apex: string): void {
       "Then point registrar nameservers at Cloudflare — setup prints generic registrar steps",
       "Re-run `bun run setup` when the zone exists",
     ],
+    options,
   );
+}
+
+/** @deprecated Use {@link requireCloudflareZoneForClerkProduction} */
+export function printClerkDeferredUntilCloudflareZone(apex: string): void {
+  requireCloudflareZoneForClerkProduction(apex);
 }

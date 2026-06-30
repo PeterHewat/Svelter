@@ -6,16 +6,21 @@ import {
   ensurePagesProject,
   ensurePagesProjectDomain,
   ensureZone,
+  findZoneByName,
   formatCloudflareApiError,
   type CloudflareZone,
 } from "./cloudflare-api";
-import { pagesProjectNames } from "./hosting-project-spec";
-import { printManualAction, exitWithManualAction } from "./manual-action";
 import {
-  CLOUDFLARE_DASHBOARD,
-  cloudflarePagesProjectUrl,
-  cloudflareZoneDnsUrl,
-} from "./platform-urls";
+  cloudflareApexDnsAutomationFailedSteps,
+  cloudflarePagesCustomDomainManualSteps,
+} from "./cloudflare-manual-steps";
+import {
+  printManualAction,
+  requireManualAction,
+  exitWithManualAction,
+} from "./manual-action";
+import { CLOUDFLARE_DASHBOARD, cloudflareZoneDnsUrl } from "./platform-urls";
+import { openUrlInBrowser } from "./open-url";
 import {
   registrarNameserverManualSteps,
   resolveCloudflareApiToken,
@@ -38,6 +43,9 @@ import {
   type SetupConfig,
 } from "./setup-config";
 import { promptConfirm, promptLine } from "./prompt";
+import { logSetupStackSection } from "./setup-stack-labels";
+
+export type BootstrapCloudflareResult = "complete" | "skipped" | "blocked";
 
 /**
  * Resolves Cloudflare account ID (saved meta, Wrangler, API, or prompt).
@@ -112,6 +120,124 @@ async function awaitRegistrarNameservers(
   console.log("✓ Registrar nameserver delegation confirmed");
 }
 
+function apexZoneManualSteps(apex: string, detail?: string): string[] {
+  return [
+    CLOUDFLARE_DASHBOARD,
+    "Domains → Add a domain → enter apex domain → choose Free plan",
+    ...(detail ? [`API error: ${detail}`] : []),
+    "API alternative: custom token with Account Settings Edit + Zone Edit — see setup Cloudflare token checklist",
+    "`wrangler login` can create Pages projects but cannot create DNS zones",
+    `Re-run \`bun run setup\` after ${apex} appears in Cloudflare`,
+  ];
+}
+
+/**
+ * Creates or finds the apex zone, retrying with a durable API token and dashboard confirmation.
+ */
+async function resolveApexCloudflareZone(
+  root: string,
+  resolved: ResolvedCloudflareToken,
+  accountId: string,
+  apex: string,
+  options?: SetupBootstrapOptions,
+): Promise<{ zone: CloudflareZone; token: ResolvedCloudflareToken }> {
+  let token = resolved;
+
+  const lookupOrCreate = async (): Promise<CloudflareZone | null> => {
+    try {
+      return await ensureZone(token.token, accountId, apex);
+    } catch {
+      const existing = await findZoneByName(token.token, apex);
+      if (existing) {
+        return existing;
+      }
+      return null;
+    }
+  };
+
+  let zone = await lookupOrCreate();
+  if (zone) {
+    console.log(`✓ Cloudflare zone ${zone.name}`);
+    return { zone, token };
+  }
+
+  let lastDetail = "";
+  try {
+    await ensureZone(token.token, accountId, apex);
+  } catch (err) {
+    lastDetail =
+      err instanceof CloudflareApiError
+        ? formatCloudflareApiError(err)
+        : String(err).slice(0, 120);
+  }
+
+  if (
+    token.source === "wrangler_oauth" &&
+    !options?.autoConfirm &&
+    Boolean(process.stdin.isTTY)
+  ) {
+    console.log(
+      "○ Cloudflare zone not found — `wrangler login` cannot create DNS zones",
+    );
+    console.log(
+      "  Paste a long-lived API token (Account Settings Edit + Zone Edit) or add the zone in the dashboard",
+    );
+    const durable = await resolveCloudflareApiToken(root, {
+      durableOnly: true,
+      interactive: true,
+    });
+    if (durable) {
+      token = durable;
+      zone = await lookupOrCreate();
+      if (zone) {
+        console.log(`✓ Cloudflare zone ${zone.name}`);
+        return { zone, token };
+      }
+    }
+  }
+
+  const interactive = Boolean(process.stdin.isTTY) && !options?.autoConfirm;
+  if (interactive) {
+    while (!zone) {
+      printManualAction(
+        `Add ${apex} as a Cloudflare zone`,
+        apexZoneManualSteps(apex, lastDetail),
+        {
+          immediate: true,
+        },
+      );
+      await openUrlInBrowser(CLOUDFLARE_DASHBOARD);
+      const retry = await promptConfirm(
+        "Created the zone in Cloudflare? (setup will look it up now)",
+        { defaultYes: false },
+      );
+      if (!retry) {
+        requireManualAction(
+          `Add ${apex} as a Cloudflare zone`,
+          apexZoneManualSteps(apex, lastDetail),
+          options,
+        );
+      }
+      zone = await findZoneByName(token.token, apex);
+      if (zone) {
+        console.log(`✓ Cloudflare zone ${zone.name}`);
+        return { zone, token };
+      }
+      console.log(
+        "○ Zone still not visible — confirm the domain is on this Cloudflare account and token has Zone Read",
+      );
+      lastDetail = "Zone not found after dashboard lookup";
+    }
+  }
+
+  requireManualAction(
+    `Add ${apex} as a Cloudflare zone`,
+    apexZoneManualSteps(apex, lastDetail),
+    options,
+  );
+  throw new Error("unreachable");
+}
+
 /**
  * Ensures zone and production Pages custom domains (apex + www).
  */
@@ -122,32 +248,24 @@ async function configureApexHosting(
   apex: string,
   webProject: string,
   marketingProject: string,
-): Promise<{ zone: CloudflareZone | null; ok: boolean }> {
+  options?: SetupBootstrapOptions,
+): Promise<{
+  zone: CloudflareZone;
+  token: ResolvedCloudflareToken;
+  ok: boolean;
+}> {
   const hostnames = deriveProductionHostnames(apex);
-  const token = resolved.token;
-
-  let zone: CloudflareZone;
-  try {
-    zone = await ensureZone(token, accountId, apex);
-    console.log(`✓ Cloudflare zone ${zone.name}`);
-  } catch (err) {
-    const detail =
-      err instanceof CloudflareApiError
-        ? formatCloudflareApiError(err)
-        : String(err).slice(0, 120);
-    printManualAction(`Add ${apex} as a Cloudflare zone`, [
-      CLOUDFLARE_DASHBOARD,
-      "Domains → Add a domain → enter apex domain → choose Free plan",
-      `API error: ${detail}`,
-      "API alternative: custom token with Account Settings Edit + Zone Edit — see setup Cloudflare token checklist",
-      "`wrangler login` can create Pages projects but cannot create DNS zones",
-    ]);
-    return { zone: null, ok: false };
-  }
+  const { zone, token } = await resolveApexCloudflareZone(
+    root,
+    resolved,
+    accountId,
+    apex,
+    options,
+  );
 
   const dnsOk = await syncApexDnsForHosting(
     root,
-    resolved,
+    { token: token.token, source: token.source },
     accountId,
     zone.name,
     webProject,
@@ -159,7 +277,12 @@ async function configureApexHosting(
   const webDomains = [hostnames.webProduction];
   for (const domain of webDomains) {
     try {
-      await ensurePagesProjectDomain(token, accountId, webProject, domain);
+      await ensurePagesProjectDomain(
+        token.token,
+        accountId,
+        webProject,
+        domain,
+      );
       console.log(`✓ Pages domain ${domain} → ${webProject}`);
     } catch (err) {
       ok = false;
@@ -167,10 +290,20 @@ async function configureApexHosting(
         err instanceof CloudflareApiError
           ? formatCloudflareApiError(err)
           : String(err).slice(0, 120);
-      printManualAction(`Attach ${domain} to Pages project ${webProject}`, [
-        cloudflarePagesProjectUrl(accountId, webProject),
-        `API error: ${detail}`,
-      ]);
+      requireManualAction(
+        `Attach ${domain} to Pages project ${webProject}`,
+        [
+          ...cloudflarePagesCustomDomainManualSteps(
+            accountId,
+            webProject,
+            marketingProject,
+            apex,
+          ),
+          `API error: ${detail}`,
+          "Re-run `bun run setup` after custom domains show Active in Cloudflare Pages",
+        ],
+        options,
+      );
     }
   }
 
@@ -178,7 +311,7 @@ async function configureApexHosting(
   for (const domain of marketingDomains) {
     try {
       await ensurePagesProjectDomain(
-        token,
+        token.token,
         accountId,
         marketingProject,
         domain,
@@ -190,17 +323,37 @@ async function configureApexHosting(
         err instanceof CloudflareApiError
           ? formatCloudflareApiError(err)
           : String(err).slice(0, 120);
-      printManualAction(
+      requireManualAction(
         `Attach ${domain} to Pages project ${marketingProject}`,
         [
-          cloudflarePagesProjectUrl(accountId, marketingProject),
+          ...cloudflarePagesCustomDomainManualSteps(
+            accountId,
+            webProject,
+            marketingProject,
+            apex,
+          ),
           `API error: ${detail}`,
+          "Re-run `bun run setup` after custom domains show Active in Cloudflare Pages",
         ],
+        options,
       );
     }
   }
 
-  return { zone, ok };
+  if (!ok) {
+    requireManualAction(
+      "Finish Cloudflare DNS for your apex domain",
+      cloudflareApexDnsAutomationFailedSteps(
+        apex,
+        accountId,
+        webProject,
+        marketingProject,
+      ),
+      options,
+    );
+  }
+
+  return { zone, token, ok };
 }
 
 /**
@@ -217,26 +370,39 @@ export async function bootstrapCloudflare(
   github: GitHubRepo | null,
   cliContext?: SetupCliContext,
   options?: SetupBootstrapOptions,
-): Promise<void> {
+): Promise<BootstrapCloudflareResult> {
   void github;
   const hasApex = hasApexDomain(setup.apexDomain);
   const cloudflareSynced = setup.cloudflare?.synced;
   const dnsConfigured = setup.cloudflare?.dnsConfigured;
 
   if (cloudflareSynced && (dnsConfigured || !hasApex)) {
-    console.log("\nCloudflare Pages");
+    logSetupStackSection(
+      "production",
+      "Cloudflare Pages",
+      "Skip — already configured",
+    );
     console.log("✓ Cloudflare already configured — skip");
     if (hasApex && setup.apexDomain) {
       await trySyncApexDnsToCloudflare(root, setup);
     }
     await ensureCloudflareGithubSecretsSynced(root, setup, cliContext, options);
-    return;
+    return "complete";
   }
 
   const resolved = await resolveCloudflareApiToken(root);
   if (!resolved) {
-    console.log("○ CLOUDFLARE_API_TOKEN required");
-    return;
+    requireManualAction(
+      "Provide a Cloudflare API token",
+      [
+        CLOUDFLARE_DASHBOARD,
+        "Create a custom token with Account Pages Edit + Zone Edit + DNS Edit",
+        "Export CLOUDFLARE_API_TOKEN or paste when setup prompts",
+        "Re-run `bun run setup`",
+      ],
+      options,
+    );
+    return "blocked";
   }
   const token = resolved.token;
   if (resolved.source === "env") {
@@ -244,39 +410,54 @@ export async function bootstrapCloudflare(
   }
   if (hasApex && resolved.source === "wrangler_oauth") {
     console.log(
-      "  `wrangler login` works for Pages and zones — paste a long-lived API token when prompted if DNS sync fails",
+      "  `wrangler login` works for Pages — paste a long-lived API token when prompted for DNS zones",
     );
   }
 
   const accountId =
     setup.cloudflare?.accountId ?? (await resolveAccountId(root, token));
   if (!accountId) {
-    console.log("○ CLOUDFLARE_ACCOUNT_ID required");
-    return;
+    requireManualAction(
+      "Set CLOUDFLARE_ACCOUNT_ID",
+      [
+        `Dashboard: ${CLOUDFLARE_DASHBOARD}`,
+        "Copy account ID from Workers & Pages overview",
+        "Re-run `bun run setup`",
+      ],
+      options,
+    );
+    return "blocked";
   }
 
   if (cloudflareSynced && !dnsConfigured && hasApex) {
-    console.log("\nCloudflare Pages");
-    console.log("  Resume — confirm registrar nameservers for your apex zone.");
+    logSetupStackSection(
+      "production",
+      "Cloudflare Pages",
+      "Resume apex zone, automated DNS, and registrar nameservers",
+    );
+    console.log("  Resume — finish apex zone, DNS, and registrar nameservers.");
     const meta = setup.cloudflare!;
-    const { zone } = await configureApexHosting(
+    const hosting = await configureApexHosting(
       root,
       resolved,
       accountId,
       setup.apexDomain!,
       meta.projectNameWeb,
       meta.projectNameMarketing,
+      options,
     );
-    if (zone) {
-      await awaitRegistrarNameservers(root, zone, options);
-    }
     await ensureCloudflareGithubSecretsSynced(root, setup, cliContext, options);
-    return;
+    await awaitRegistrarNameservers(root, hosting.zone, options);
+    return "complete";
   }
 
   const firstSetup = !cloudflareSynced;
 
-  console.log("\nCloudflare Pages");
+  logSetupStackSection(
+    "production",
+    "Cloudflare Pages",
+    "Pages projects · apex DNS (automatic) · GitHub deploy secrets for release-* and staging repo secrets",
+  );
   console.log(
     "  Automates: direct-upload Pages projects, zone + production custom domains, GitHub secrets.",
   );
@@ -293,7 +474,7 @@ export async function bootstrapCloudflare(
     console.log(
       "○ Skipped — docs/environments.md#cloudflare-pages-web--marketing",
     );
-    return;
+    return "skipped";
   }
 
   const names = pagesProjectNames(productNameToSlug(setup.productName));
@@ -314,12 +495,17 @@ export async function bootstrapCloudflare(
       err instanceof CloudflareApiError
         ? formatCloudflareApiError(err)
         : String(err).slice(0, 120);
-    printManualAction("Create Cloudflare Pages projects manually", [
-      CLOUDFLARE_DASHBOARD,
-      `Create direct-upload projects: ${names.web}, ${names.marketing} (no Git link)`,
-      `API error: ${detail}`,
-    ]);
-    return;
+    requireManualAction(
+      "Create Cloudflare Pages projects manually",
+      [
+        CLOUDFLARE_DASHBOARD,
+        `Create direct-upload projects: ${names.web}, ${names.marketing} (no Git link)`,
+        `API error: ${detail}`,
+        "Re-run `bun run setup` after both projects exist",
+      ],
+      options,
+    );
+    return "blocked";
   }
 
   const meta: CloudflareSetupMeta = {
@@ -330,25 +516,17 @@ export async function bootstrapCloudflare(
   markCloudflareSynced(root, meta);
 
   if (hasApex) {
-    const { zone, ok } = await configureApexHosting(
+    const hosting = await configureApexHosting(
       root,
       resolved,
       accountId,
       setup.apexDomain!,
       webProject.name,
       marketingProject.name,
+      options,
     );
     await ensureCloudflareGithubSecretsSynced(root, setup, cliContext, options);
-    if (zone) {
-      await awaitRegistrarNameservers(root, zone, options);
-    }
-    if (!ok) {
-      printManualAction("Fix Cloudflare hosting setup before go-live", [
-        `Web: ${cloudflarePagesProjectUrl(accountId, webProject.name)}`,
-        `Marketing: ${cloudflarePagesProjectUrl(accountId, marketingProject.name)}`,
-        "Re-run `bun run setup` after fixing API errors above",
-      ]);
-    }
+    await awaitRegistrarNameservers(root, hosting.zone, options);
   } else {
     console.log("\n○ Custom domains deferred — no apex domain in setup");
     console.log(
@@ -356,4 +534,6 @@ export async function bootstrapCloudflare(
     );
     await ensureCloudflareGithubSecretsSynced(root, setup, cliContext, options);
   }
+
+  return "complete";
 }

@@ -2,8 +2,10 @@
 import {
   clerkDevelopmentOrigins,
   clerkProductionOrigins,
+  deriveProductionHostnames,
   pagesProductionHostname,
 } from "../../packages/config/hostnames";
+import { normalizeApexDomainInput } from "../../packages/config/validate-domain";
 import { isPlaceholderEnvValue } from "../../packages/config/env-placeholders";
 import { runClerkConfigPatch } from "./clerk-cli";
 import { isClerkSecretKey, normalizeClerkIssuerDomain } from "./clerk-instance";
@@ -11,6 +13,7 @@ import { readEnvFile, upsertEnvKeys } from "./env-file";
 import { pagesProjectNames } from "./hosting-project-spec";
 import { printManualAction } from "./manual-action";
 import {
+  CLERK_GOOGLE_OAUTH_DOCS,
   CLERK_SSO_CONNECTIONS,
   GOOGLE_CLOUD_CONSOLE,
   GOOGLE_CLOUD_CREDENTIALS,
@@ -21,6 +24,10 @@ import { maskSecret, promptSecret } from "./prompt";
 import { normalizeEnvPaste } from "./env-paste";
 import type { CliToolState } from "./setup-cli";
 import type { SetupConfig } from "./setup-config";
+import {
+  clerkDashboardInstanceStep,
+  type SetupStack,
+} from "./setup-stack-labels";
 
 const WEB_ENV = "apps/web/.env.local";
 
@@ -134,14 +141,59 @@ export function readGoogleOAuthCredentials(
 }
 
 /**
- * Manual Clerk Dashboard steps when CLI patch is unavailable or fails.
+ * Production JavaScript origins shown during `clerk deploy` Google OAuth setup.
+ *
+ * @param apex - Apex domain (e.g. `example.com`)
  */
-export function clerkGoogleManualSteps(): string[] {
+export function googleOAuthProductionJavaScriptOrigins(apex: string): string[] {
+  const { webProduction, marketingProduction } =
+    deriveProductionHostnames(apex);
+  return [`https://${webProduction}`, `https://${marketingProduction}`];
+}
+
+/**
+ * Clerk Production Google OAuth redirect URI (`accounts.{apex}`).
+ *
+ * @param apex - Apex domain
+ */
+export function clerkProductionGoogleOAuthRedirectUri(apex: string): string {
+  const normalized = normalizeApexDomainInput(apex);
+  return `https://accounts.${normalized}/v1/oauth_callback`;
+}
+
+/**
+ * Linked checklist for Google OAuth during interactive `clerk deploy`.
+ *
+ * @param apex - Production apex domain
+ */
+export function clerkDeployGoogleOAuthManualSteps(apex: string): string[] {
+  const origins = googleOAuthProductionJavaScriptOrigins(apex);
+  const redirectUri = clerkProductionGoogleOAuthRedirectUri(apex);
   return [
-    `Clerk Dashboard → Configure → SSO connections: ${CLERK_SSO_CONNECTIONS}`,
-    "Select **Google** (add connection → For all users → Google if missing)",
+    `Google Cloud Console (select your project in the top bar): ${GOOGLE_CLOUD_CONSOLE}`,
+    `OAuth consent screen — before go-live set Publishing status to In production: ${GOOGLE_CLOUD_OAUTH_CONSENT}`,
+    `Create OAuth client: ${GOOGLE_CLOUD_CREDENTIALS} → Create Credentials → OAuth client ID → Web application`,
+    `Authorized JavaScript origins: ${origins.join(", ")}`,
+    `Authorized redirect URI: ${redirectUri}`,
+    `In the clerk deploy prompt → Google OAuth → "I already have my Client ID and Client Secret" → paste both`,
+    `Or paste later in Clerk (Production): ${CLERK_SSO_CONNECTIONS} → Google → Use custom credentials`,
+    `Clerk Google OAuth guide: ${CLERK_GOOGLE_OAUTH_DOCS}`,
+  ];
+}
+
+/**
+ * Manual Clerk Dashboard steps when CLI patch is unavailable or fails.
+ *
+ * @param stack - When set, prefixes with which Clerk instance to select
+ */
+export function clerkGoogleManualSteps(stack?: SetupStack): string[] {
+  return [
+    stack
+      ? clerkDashboardInstanceStep(stack)
+      : `Open Clerk SSO connections: ${CLERK_SSO_CONNECTIONS}`,
+    `Google connection: ${CLERK_SSO_CONNECTIONS} → add or open **Google** → For all users`,
     "Enable for sign-up and sign-in → turn on **Use custom credentials**",
-    "Paste Client ID and Client Secret → Save",
+    `Paste Client ID and Client Secret from ${GOOGLE_CLOUD_CREDENTIALS} → Save`,
   ];
 }
 
@@ -162,7 +214,9 @@ export function printGoogleOAuthGcpChecklist(options: {
   const steps = [
     `Sign in at ${GOOGLE_CLOUD_CONSOLE} — create or select a project (top bar) if you do not have one yet`,
     `Configure OAuth consent screen: ${GOOGLE_CLOUD_OAUTH_CONSENT} — required on new projects (Credentials shows a yellow banner until this is done)`,
-    "Consent screen: User type **External** → app name + support email → Save (defaults are fine for development)",
+    options.instanceLabel === "Production"
+      ? "Consent screen: set Publishing status to **In production** before go-live (Testing mode caps at 100 users)"
+      : "Consent screen: User type **External** → app name + support email → Save (defaults are fine for development)",
     `Open ${GOOGLE_CLOUD_CREDENTIALS} → Create Credentials → OAuth client ID → Web application`,
     `Authorized JavaScript origins: ${originList}`,
     `Authorized redirect URI: ${options.redirectUri}`,
@@ -232,7 +286,10 @@ export async function syncClerkGoogleOAuth(
   if (!options.issuerDomain) {
     console.log(`\nClerk Google OAuth (${instanceLabel})`);
     console.log("○ Skipped — Clerk issuer domain unknown");
-    printManualAction("Configure Google in Clerk", clerkGoogleManualSteps());
+    printManualAction(
+      "Configure Google in Clerk",
+      clerkGoogleManualSteps("development"),
+    );
     return unchanged;
   }
 
@@ -257,12 +314,14 @@ export async function syncClerkGoogleOAuth(
         `○ Could not enable Google via Clerk CLI${enable.message ? `: ${enable.message}` : ""}`,
       );
       printManualAction("Enable Google in Clerk Dashboard", [
-        ...clerkGoogleManualSteps().slice(0, 2),
+        clerkDashboardInstanceStep(instance),
+        ...clerkGoogleManualSteps().slice(1),
       ]);
     }
   } else {
     printManualAction("Enable Google in Clerk Dashboard", [
-      ...clerkGoogleManualSteps().slice(0, 2),
+      clerkDashboardInstanceStep(instance),
+      ...clerkGoogleManualSteps().slice(1),
     ]);
   }
 
@@ -348,7 +407,8 @@ export async function syncClerkGoogleOAuth(
   }
 
   printManualAction("Paste Google credentials in Clerk Dashboard", [
-    ...clerkGoogleManualSteps(),
+    ...clerkGoogleManualSteps(instance),
+    `Clerk Google OAuth guide: ${CLERK_GOOGLE_OAUTH_DOCS}`,
     "Verify Google One Tap on /tasks in the web app",
   ]);
 

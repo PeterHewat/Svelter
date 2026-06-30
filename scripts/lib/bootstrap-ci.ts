@@ -11,11 +11,12 @@ import {
   isGhAuthenticated,
   listGhRepoSecrets,
 } from "./gh-secrets";
-import { printManualAction } from "./manual-action";
+import { requireManualAction } from "./manual-action";
 import { canAutomateGh, type SetupCliContext } from "./setup-cli";
 import { githubEnvironmentsUrl, githubSecretsUrl } from "./platform-urls";
 import { promptConfirm } from "./prompt";
 import type { SetupBootstrapOptions } from "./setup-args";
+import { logSetupStackSection } from "./setup-stack-labels";
 import { markGithubSecretsSynced, type SetupConfig } from "./setup-config";
 
 const WEB_ENV = "apps/web/.env.local";
@@ -63,7 +64,11 @@ export async function bootstrapCiSecrets(
   const needsSync = firstSync || needsDeployKey || missingOnGitHub.length > 0;
 
   if (!needsSync) {
-    console.log("\nGitHub Actions");
+    logSetupStackSection(
+      "development",
+      "GitHub Actions",
+      "Repository secrets — skip (already synced)",
+    );
     console.log("✓ Dev CI secrets already synced — skip");
     return;
   }
@@ -72,7 +77,11 @@ export async function bootstrapCiSecrets(
     ? canAutomateGh(cliContext)
     : await isGhAuthenticated();
 
-  console.log("\nGitHub Actions");
+  logSetupStackSection(
+    "development",
+    "GitHub Actions",
+    "Repository secrets for PR CI, Playwright E2E, and merge-to-main staging (pk_test_ / Convex dev)",
+  );
   if (!firstSync && missingOnGitHub.length > 0) {
     console.log(`  Missing on GitHub: ${missingOnGitHub.join(", ")}`);
   }
@@ -104,18 +113,24 @@ export async function bootstrapCiSecrets(
       console.log(`  Manual fallback: ${githubSecretsUrl(github)}`);
       console.log(`  Environments: ${githubEnvironmentsUrl(github)}`);
     }
-    printManualAction("Authenticate GitHub CLI", [
-      "Install from https://cli.github.com/",
-      "Run `gh auth login -s repo,workflow`",
-      "Resume `bun run setup`",
-    ]);
+    requireManualAction(
+      "Authenticate GitHub CLI",
+      [
+        "Install from https://cli.github.com/",
+        "Run `gh auth login -s repo,workflow`",
+        "Resume `bun run setup`",
+      ],
+      options,
+    );
     return;
   }
 
   if (!isConvexLinked(root)) {
-    printManualAction("Link Convex before syncing CI secrets", [
-      "Resume `bun run setup` — complete the Convex + Clerk step first",
-    ]);
+    requireManualAction(
+      "Link Convex before syncing CI secrets",
+      ["Resume `bun run setup` — complete the Convex + Clerk step first"],
+      options,
+    );
     return;
   }
 
@@ -136,9 +151,11 @@ export async function bootstrapCiSecrets(
   if (firstSync || needsDeployKey) {
     const deployKey = await resolveDevConvexDeployKey(root, "github-ci");
     if (!deployKey) {
-      printManualAction("Mint CONVEX_DEPLOY_KEY for CI", [
-        "Resume `bun run setup` after linking Convex",
-      ]);
+      requireManualAction(
+        "Mint CONVEX_DEPLOY_KEY for CI",
+        ["Resume `bun run setup` after linking Convex"],
+        options,
+      );
       return;
     }
     deployKeyOk = await ghSecretSet(root, "CONVEX_DEPLOY_KEY", deployKey);

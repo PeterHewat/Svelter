@@ -5,6 +5,11 @@ export type ManualActionOptions = {
   immediate?: boolean;
 };
 
+export type RequireManualActionOptions = {
+  /** When true (e.g. `--sync-secrets`), log follow-up and return without exiting. */
+  autoConfirm?: boolean;
+};
+
 /**
  * Prints a manual checklist (deferred follow-up or immediate next step before a prompt).
  *
@@ -42,4 +47,23 @@ export function exitWithManualAction(title: string, steps: string[]): never {
     "\nSetup paused — complete the steps above, then resume with `bun run setup`.",
   );
   process.exit(1);
+}
+
+/**
+ * Blocks setup until the user completes a manual step (exits unless `autoConfirm`).
+ *
+ * @param title - Short action title
+ * @param steps - Ordered instructions
+ * @param options - `autoConfirm` logs follow-up only (non-interactive secret sync)
+ */
+export function requireManualAction(
+  title: string,
+  steps: string[],
+  options?: RequireManualActionOptions,
+): void {
+  if (options?.autoConfirm) {
+    printManualAction(title, steps);
+    return;
+  }
+  exitWithManualAction(title, steps);
 }

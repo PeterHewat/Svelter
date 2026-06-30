@@ -11,7 +11,7 @@ import { getConvexEnvVar, setConvexEnvVar } from "./convex-env";
 import { isConvexLinked } from "./convex-link";
 import { readConvexUrlFromRootEnv } from "./convex-url";
 import { upsertEnvKeys, readEnvFile } from "./env-file";
-import { printManualAction } from "./manual-action";
+import { printManualAction, requireManualAction } from "./manual-action";
 import { openUrlInBrowser } from "./open-url";
 import { CLERK_WEBHOOKS } from "./platform-urls";
 import { maskSecret, promptSecret } from "./prompt";
@@ -197,10 +197,11 @@ export async function syncClerkWebhookEnv(
   ).trim();
 
   if (!webSigningSecret.startsWith("whsec_")) {
-    console.log(
-      "○ Skipped webhook signing secret — add endpoint in Clerk, then re-run setup",
-    );
-    return { configured: svixApp.ok, changed: false };
+    requireManualAction("Add Clerk webhook signing secret", [
+      ...manualSteps.slice(0, -1),
+      "Paste the whsec_… signing secret when setup prompts, or set CLERK_WEBHOOK_SIGNING_SECRET in apps/web/.env.local",
+      "Re-run `bun run setup`",
+    ]);
   }
 
   upsertEnvKeys(root, WEB_ENV, {

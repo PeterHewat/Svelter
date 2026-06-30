@@ -8,5 +8,12 @@ export const PRODUCT_NAME = "Svelter";
 export const PRODUCT_TAGLINE =
   "A production-ready monorepo template for product and marketing websites.";
 
-/** Signup route on the product app (Clerk — used in-product only, not marketing CTAs). */
+/**
+ * Clerk sign-up path on the **product** app (`apps/web`), not marketing.
+ *
+ * Marketing CTAs link to the product origin root (`productAppHref("/")`) — users
+ * sign up via the in-app Clerk modal, not a marketing URL. This constant exists
+ * so deep links (e.g. `productAppHref(PRODUCT_SIGNUP_PATH)`) stay centralized if
+ * you add a dedicated `/sign-up` route later; Clerk’s default is `/sign-up`.
+ */
 export const PRODUCT_SIGNUP_PATH = "/sign-up";
