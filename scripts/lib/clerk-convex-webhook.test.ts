@@ -7,6 +7,7 @@ import {
 import {
   clerkConvexWebhookUrl,
   clerkWebhookManualSteps,
+  shouldRestoreWebhookSecretFromConvex,
   validateClerkWebhookSigningSecret,
 } from "./sync-clerk-webhook";
 
@@ -34,6 +35,44 @@ describe("validateClerkWebhookSigningSecret", () => {
   it("rejects empty or malformed values", () => {
     expect(validateClerkWebhookSigningSecret("")).not.toBeNull();
     expect(validateClerkWebhookSigningSecret("not-a-secret")).not.toBeNull();
+  });
+});
+
+describe("shouldRestoreWebhookSecretFromConvex", () => {
+  const convexSecret = "whsec_test_secret_value";
+
+  it("restores when web env is missing or placeholder", () => {
+    expect(shouldRestoreWebhookSecretFromConvex(undefined, convexSecret)).toBe(
+      true,
+    );
+    expect(shouldRestoreWebhookSecretFromConvex("", convexSecret)).toBe(true);
+    expect(
+      shouldRestoreWebhookSecretFromConvex("your-webhook-secret", convexSecret),
+    ).toBe(true);
+  });
+
+  it("restores when web env has an invalid secret", () => {
+    expect(
+      shouldRestoreWebhookSecretFromConvex("pk_test_abc", convexSecret),
+    ).toBe(true);
+  });
+
+  it("skips when web env already has a valid secret", () => {
+    expect(
+      shouldRestoreWebhookSecretFromConvex(convexSecret, convexSecret),
+    ).toBe(false);
+    expect(
+      shouldRestoreWebhookSecretFromConvex("whsec_other_valid", convexSecret),
+    ).toBe(false);
+  });
+
+  it("skips when Convex secret is missing or invalid", () => {
+    expect(shouldRestoreWebhookSecretFromConvex(undefined, undefined)).toBe(
+      false,
+    );
+    expect(shouldRestoreWebhookSecretFromConvex(undefined, "pk_test_abc")).toBe(
+      false,
+    );
   });
 });
 
@@ -66,7 +105,7 @@ describe("ensureClerkSvixApp", () => {
   it("returns ok when svix app already exists (409)", async () => {
     globalThis.fetch = mock(
       async () => new Response("already exists", { status: 409 }),
-    ) as typeof fetch;
+    ) as unknown as typeof fetch;
 
     await expect(ensureClerkSvixApp("sk_test_fixture")).resolves.toEqual({
       ok: true,
@@ -88,7 +127,7 @@ describe("ensureClerkSvixApp", () => {
           }),
           { status: 400 },
         ),
-    ) as typeof fetch;
+    ) as unknown as typeof fetch;
 
     await expect(ensureClerkSvixApp("sk_test_fixture")).resolves.toEqual({
       ok: true,

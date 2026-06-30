@@ -50,6 +50,28 @@ export function validateClerkWebhookSigningSecret(
 }
 
 /**
+ * Whether to copy `CLERK_WEBHOOK_SIGNING_SECRET` from Convex into web env.
+ * Used when a prior setup run uploaded the secret to Convex but local env was reset.
+ *
+ * @param webSecret - Value from `apps/web/.env.local`, if any
+ * @param convexSecret - Value from the linked Convex deployment, if any
+ */
+export function shouldRestoreWebhookSecretFromConvex(
+  webSecret: string | undefined,
+  convexSecret: string | undefined,
+): boolean {
+  const convex = convexSecret?.trim();
+  if (!convex || validateClerkWebhookSigningSecret(convex) !== null) {
+    return false;
+  }
+  const web = webSecret?.trim();
+  if (!web || isPlaceholderEnvValue(web)) {
+    return true;
+  }
+  return validateClerkWebhookSigningSecret(web) !== null;
+}
+
+/**
  * Builds the Convex HTTP webhook URL from a `.convex.cloud` deployment URL.
  *
  * @param convexCloudUrl - Value of `PUBLIC_CONVEX_URL`
@@ -179,9 +201,31 @@ export async function syncClerkWebhookEnv(
     );
   }
 
-  if (existingConvexSecret) {
-    console.log("✓ Convex CLERK_WEBHOOK_SIGNING_SECRET already set");
-    return { configured: true, changed: false };
+  if (existingConvexSecret?.trim()) {
+    const convexSigningSecret = existingConvexSecret.trim();
+    if (
+      shouldRestoreWebhookSecretFromConvex(
+        webSigningSecret,
+        convexSigningSecret,
+      )
+    ) {
+      upsertEnvKeys(root, WEB_ENV, {
+        CLERK_WEBHOOK_SIGNING_SECRET: convexSigningSecret,
+      });
+      console.log(
+        `✓ Restored CLERK_WEBHOOK_SIGNING_SECRET from Convex → ${WEB_ENV}`,
+      );
+      return { configured: true, changed: true };
+    }
+
+    if (validateClerkWebhookSigningSecret(convexSigningSecret) === null) {
+      console.log("✓ Convex CLERK_WEBHOOK_SIGNING_SECRET already set");
+      return { configured: true, changed: false };
+    }
+
+    console.log(
+      "○ Convex CLERK_WEBHOOK_SIGNING_SECRET is invalid — create a new endpoint",
+    );
   }
 
   const manualSteps = clerkWebhookManualSteps(webhookUrl, events);

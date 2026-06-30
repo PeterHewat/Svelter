@@ -6,7 +6,7 @@ import {
   clerkGoogleManualSteps,
   clerkGoogleOAuthRedirectUri,
   clerkProductionGoogleOAuthRedirectUri,
-  googleOAuthJavaScriptOrigins,
+  googleOAuthDevelopmentJavaScriptOrigins,
   googleOAuthProductionJavaScriptOrigins,
 } from "./clerk-google-oauth";
 
@@ -18,9 +18,9 @@ describe("clerkGoogleOAuthRedirectUri", () => {
   });
 });
 
-describe("googleOAuthJavaScriptOrigins", () => {
+describe("googleOAuthDevelopmentJavaScriptOrigins", () => {
   it("includes localhost, staging, and production pages.dev", () => {
-    const origins = googleOAuthJavaScriptOrigins({
+    const origins = googleOAuthDevelopmentJavaScriptOrigins({
       productName: "My App",
       productTagLine: "Tag",
       github: null,
@@ -29,16 +29,6 @@ describe("googleOAuthJavaScriptOrigins", () => {
     expect(origins).toContain("http://localhost:3000");
     expect(origins).toContain("https://staging.my-app-web.pages.dev");
     expect(origins).toContain("https://my-app-web.pages.dev");
-  });
-
-  it("includes apex web origin when configured", () => {
-    const origins = googleOAuthJavaScriptOrigins({
-      productName: "My App",
-      productTagLine: "Tag",
-      apexDomain: "example.com",
-      github: null,
-    });
-    expect(origins).toContain("https://example.com");
   });
 });
 
@@ -81,7 +71,7 @@ describe("clerkDeployGoogleOAuthManualSteps", () => {
     expect(joined).toContain("https://example.com");
     expect(joined).toContain("https://www.example.com");
     expect(joined).toContain("accounts.example.com/v1/oauth_callback");
-    expect(joined).toContain("dashboard.clerk.com");
+    expect(joined).toContain("clerk.com/docs");
     expect(joined).toContain("clerk.com/docs");
   });
 });

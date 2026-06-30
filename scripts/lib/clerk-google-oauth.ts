@@ -12,6 +12,7 @@ import { isPlaceholderEnvValue } from "../../packages/config/env-placeholders";
 import { runClerkConfigPatch } from "./clerk-cli";
 import { isClerkSecretKey, normalizeClerkIssuerDomain } from "./clerk-instance";
 import { readEnvFile, upsertEnvKeys } from "./env-file";
+import { openUrlInBrowser } from "./open-url";
 import { pagesProjectNames } from "./hosting-project-spec";
 import { printManualAction, requireManualAction } from "./manual-action";
 import {
@@ -259,6 +260,122 @@ export function readGoogleOAuthCredentials(
     credentials,
     source: instance === "production" ? "production" : "development",
   };
+}
+
+/**
+ * Ensures Google OAuth credentials for a Clerk instance are saved in `apps/web/.env.local`.
+ * Reuses stored values when present; otherwise prompts once during interactive setup.
+ *
+ * @param root - Repository root
+ * @param setup - Persisted setup config
+ * @param options - Target instance and prompt behavior
+ */
+export async function ensureGoogleOAuthCredentialsInWebEnv(
+  root: string,
+  setup: SetupConfig,
+  options: {
+    instance: "development" | "production";
+    interactive: boolean;
+    apexDomain?: string;
+    autoConfirm?: boolean;
+  },
+): Promise<GoogleOAuthCredentials | null> {
+  const { instance, interactive, apexDomain, autoConfirm } = options;
+  const resolved = readGoogleOAuthCredentials(root, instance);
+  if (resolved) {
+    const label = instance === "production" ? "Production" : "Development";
+    console.log(`✓ ${label} Google OAuth credentials in ${WEB_ENV}`);
+    return resolved.credentials;
+  }
+
+  if (!interactive) {
+    return null;
+  }
+
+  const envKeys = googleOAuthCredentialEnvKeys(instance);
+  const instanceLabel =
+    instance === "production" ? "Production" : "Development";
+  const origins =
+    instance === "production" && apexDomain?.trim()
+      ? googleOAuthProductionJavaScriptOrigins(apexDomain)
+      : googleOAuthDevelopmentJavaScriptOrigins(setup);
+  const redirectUri =
+    instance === "production" && apexDomain?.trim()
+      ? clerkProductionGoogleOAuthRedirectUri(apexDomain)
+      : "";
+
+  if (instance === "production" && requiresSeparateGoogleOAuthClients(setup)) {
+    const proceed = await promptConfirm(
+      "Set up Google OAuth for Clerk Production now? (required with a custom apex domain)",
+      { defaultYes: true },
+    );
+    if (!proceed) {
+      requireManualAction(
+        "Add Production Google OAuth credentials",
+        clerkDeployGoogleOAuthManualSteps(apexDomain ?? "", setup.productName),
+        { autoConfirm },
+      );
+      return null;
+    }
+  }
+
+  printGoogleOAuthGcpChecklist({
+    origins,
+    redirectUri,
+    instanceLabel,
+    clientNameHint:
+      instance === "production"
+        ? `${setup.productName} (Production)`
+        : `${setup.productName} (Development)`,
+    credentialEnvKeys: envKeys,
+    setupAppliesCredentials: true,
+    immediate: true,
+  });
+  const opened = await openUrlInBrowser(GOOGLE_CLOUD_CREDENTIALS);
+  if (opened) {
+    console.log("✓ Opened Google Cloud Credentials in browser");
+  } else {
+    console.log(`  Open manually: ${GOOGLE_CLOUD_CREDENTIALS}`);
+  }
+
+  const webEnv = readEnvFile(root, WEB_ENV);
+  const existingId =
+    readEnvCredential(webEnv, envKeys.clientIdKey) || undefined;
+  const existingSecret =
+    readEnvCredential(webEnv, envKeys.clientSecretKey) || undefined;
+
+  const rawId = await promptSecret(envKeys.clientIdKey, {
+    defaultValue: existingId,
+    displayDefault: existingId ? maskSecret(existingId) : undefined,
+    label: envKeys.clientIdKey,
+    required: true,
+    hint: "Paste Client ID from the OAuth client you created above",
+    validate: validateGoogleOAuthClientId,
+  });
+  const clientId = normalizeEnvPaste(envKeys.clientIdKey, rawId).trim();
+
+  const rawSecret = await promptSecret(envKeys.clientSecretKey, {
+    defaultValue: existingSecret,
+    displayDefault: existingSecret ? maskSecret(existingSecret) : undefined,
+    label: envKeys.clientSecretKey,
+    hint: "Paste Client secret (GOCSPX-…) from the same OAuth client — not the Client ID",
+    required: true,
+    validate: (value) =>
+      validateGoogleOAuthClientSecret(value) ??
+      validateGoogleOAuthCredentialPair(clientId, value),
+  });
+  const clientSecret = normalizeEnvPaste(
+    envKeys.clientSecretKey,
+    rawSecret,
+  ).trim();
+
+  const credentials = { clientId, clientSecret };
+  upsertEnvKeys(root, WEB_ENV, {
+    [envKeys.clientIdKey]: credentials.clientId,
+    [envKeys.clientSecretKey]: credentials.clientSecret,
+  });
+  console.log(`✓ Saved ${envKeys.clientIdKey} → ${WEB_ENV}`);
+  return credentials;
 }
 
 /**

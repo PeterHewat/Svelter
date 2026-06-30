@@ -104,7 +104,7 @@ function finishSetup(root: string, ranPipelineBootstrap: boolean): void {
   const status = assessSetupPipelineStatus(finalConfig);
 
   if (!status.developmentReady) {
-    console.error("\nSetup incomplete — development pipeline not ready.");
+    console.error("\n✗ Setup incomplete — development pipeline not ready.");
     for (const item of status.developmentMissing) {
       console.error(`  ○ ${item}`);
     }
@@ -112,24 +112,28 @@ function finishSetup(root: string, ranPipelineBootstrap: boolean): void {
     process.exit(1);
   }
 
-  console.log(
-    "\n✓ Development pipeline ready — PR CI and merge-to-main staging can run.",
-  );
-  console.log("  Continue with docs/getting-started.md");
+  console.log("\n── Setup result ──");
+  console.log("✓ Development — PR CI and merge-to-main staging can run.");
 
   if (!status.productionReady) {
-    console.log(
-      "\n○ Production pipeline incomplete — re-run `bun run setup` when ready:",
-    );
+    console.log("○ Production — not finished yet:");
     for (const item of status.productionMissing) {
       console.log(`  • ${item}`);
     }
+    console.log(
+      "\n✓ Setup complete (development only) — re-run `bun run setup` when production is ready.",
+    );
+    console.log("  Next: docs/getting-started.md");
     return;
   }
 
   console.log(
-    "\n✓ Production pipeline ready — `release-*` tags can deploy production.",
+    "✓ Production — `release-*` tags can deploy to your apex and Pages.",
   );
+  console.log(
+    "\n✓ Setup complete — development and production pipelines are ready.",
+  );
+  console.log("  Next: docs/getting-started.md");
 }
 
 async function main(): Promise<void> {

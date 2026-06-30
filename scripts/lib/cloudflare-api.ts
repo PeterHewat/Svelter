@@ -98,6 +98,7 @@ export function isCloudflareAlreadyExistsError(
   return (
     err.status === 409 ||
     message.includes("already exists") ||
+    message.includes("already added") ||
     message.includes("duplicate")
   );
 }

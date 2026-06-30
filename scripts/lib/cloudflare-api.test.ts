@@ -32,4 +32,21 @@ describe("isCloudflareAlreadyExistsError", () => {
     );
     expect(isCloudflareAlreadyExistsError(err)).toBe(true);
   });
+
+  test("detects Pages custom domain already attached", () => {
+    const err = new CloudflareApiError(
+      "failed",
+      400,
+      JSON.stringify({
+        errors: [
+          {
+            code: 8000018,
+            message:
+              "You have already added this custom domain. Select another custom domain or check your project configuration.",
+          },
+        ],
+      }),
+    );
+    expect(isCloudflareAlreadyExistsError(err)).toBe(true);
+  });
 });
