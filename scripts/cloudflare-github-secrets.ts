@@ -20,6 +20,7 @@ import type { SetupBootstrapOptions } from "./setup-args";
 import { canAutomateGh, type SetupCliContext } from "./setup-cli";
 import {
   markCloudflareGithubSecretsSynced,
+  readSetupConfig,
   type CloudflareSetupMeta,
   type SetupConfig,
 } from "./setup-config";
@@ -116,7 +117,7 @@ async function pushCloudflareDeploySecrets(
  * Staging reads repository secrets; release deploys read the production environment.
  *
  * @param root - Repository root
- * @param setup - Persisted setup config
+ * @param setup - Setup config snapshot (may be stale; disk is re-read)
  * @param cliContext - Optional CLI auth context
  * @param options - Bootstrap options (`forceResync` with `--sync-secrets`)
  */
@@ -126,12 +127,13 @@ export async function ensureCloudflareGithubSecretsSynced(
   cliContext?: SetupCliContext,
   options?: SetupBootstrapOptions,
 ): Promise<void> {
-  const meta = setup.cloudflare;
+  const config = readSetupConfig(root) ?? setup;
+  const meta = config.cloudflare;
   if (!meta?.synced) {
     return;
   }
 
-  const alreadySynced = setup.github?.syncedSecrets?.cloudflare;
+  const alreadySynced = config.github?.syncedSecrets?.cloudflare;
   if (alreadySynced && !options?.forceResync) {
     return;
   }
@@ -165,11 +167,11 @@ export async function ensureCloudflareGithubSecretsSynced(
     interactive: !options?.autoConfirm,
   });
   if (!resolved) {
-    if (hasApexDomain(setup.apexDomain)) {
+    if (hasApexDomain(config.apexDomain)) {
       requireManualAction(
         "Provide a Cloudflare API token for CI deploys",
         [
-          ...cloudflareApiTokenManualSteps(setup.productName),
+          ...cloudflareApiTokenManualSteps(config.productName),
           "Re-run `bun run setup` after pasting the token",
         ],
         options,
@@ -195,7 +197,7 @@ export async function ensureCloudflareGithubSecretsSynced(
     requireManualAction(
       "Fix Cloudflare API token permissions",
       [
-        ...cloudflareApiTokenManualSteps(setup.productName).filter((step) =>
+        ...cloudflareApiTokenManualSteps(config.productName).filter((step) =>
           step.startsWith("Permissions"),
         ),
         `Account scope must include ${meta.accountId}`,
@@ -216,14 +218,14 @@ export async function ensureCloudflareGithubSecretsSynced(
     meta.accountId,
     meta,
   );
-  if (allOk && hasApexDomain(setup.apexDomain)) {
+  if (allOk && hasApexDomain(config.apexDomain)) {
     const github = resolveGitHubRepo(root);
     if (github) {
       const apexOk = await ghSecretSetEnv(
         root,
         "production",
         "APEX_DOMAIN",
-        setup.apexDomain!,
+        config.apexDomain!,
       );
       console.log(
         apexOk
