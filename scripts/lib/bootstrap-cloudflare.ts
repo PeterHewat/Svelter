@@ -20,9 +20,10 @@ import {
   registrarNameserverManualSteps,
   resolveCloudflareApiToken,
   resolveWranglerAccountId,
+  type ResolvedCloudflareToken,
 } from "./cloudflare-auth";
 import {
-  syncApexDnsRecords,
+  syncApexDnsForHosting,
   trySyncApexDnsToCloudflare,
 } from "./cloudflare-apex-dns";
 import { readClerkProductionSecretKey } from "./clerk-web-env";
@@ -116,13 +117,14 @@ async function awaitRegistrarNameservers(
  */
 async function configureApexHosting(
   root: string,
-  token: string,
+  resolved: ResolvedCloudflareToken,
   accountId: string,
   apex: string,
   webProject: string,
   marketingProject: string,
 ): Promise<{ zone: CloudflareZone | null; ok: boolean }> {
   const hostnames = deriveProductionHostnames(apex);
+  const token = resolved.token;
 
   let zone: CloudflareZone;
   try {
@@ -143,9 +145,9 @@ async function configureApexHosting(
     return { zone: null, ok: false };
   }
 
-  await syncApexDnsRecords(
+  const dnsOk = await syncApexDnsForHosting(
     root,
-    token,
+    resolved,
     accountId,
     zone.name,
     webProject,
@@ -153,7 +155,7 @@ async function configureApexHosting(
     readClerkProductionSecretKey(root),
   );
 
-  let ok = true;
+  let ok = dnsOk;
   const webDomains = [hostnames.webProduction];
   for (const domain of webDomains) {
     try {
@@ -242,7 +244,7 @@ export async function bootstrapCloudflare(
   }
   if (hasApex && resolved.source === "wrangler_oauth") {
     console.log(
-      "  `wrangler login` works for Pages — use Dashboard → Add a domain (or a long-lived API token) to create the DNS zone",
+      "  `wrangler login` works for Pages and zones — paste a long-lived API token when prompted if DNS sync fails",
     );
   }
 
@@ -259,7 +261,7 @@ export async function bootstrapCloudflare(
     const meta = setup.cloudflare!;
     const { zone } = await configureApexHosting(
       root,
-      token,
+      resolved,
       accountId,
       setup.apexDomain!,
       meta.projectNameWeb,
@@ -330,7 +332,7 @@ export async function bootstrapCloudflare(
   if (hasApex) {
     const { zone, ok } = await configureApexHosting(
       root,
-      token,
+      resolved,
       accountId,
       setup.apexDomain!,
       webProject.name,

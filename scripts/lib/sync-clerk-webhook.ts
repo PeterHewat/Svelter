@@ -12,6 +12,7 @@ import { isConvexLinked } from "./convex-link";
 import { readConvexUrlFromRootEnv } from "./convex-url";
 import { upsertEnvKeys, readEnvFile } from "./env-file";
 import { printManualAction } from "./manual-action";
+import { openUrlInBrowser } from "./open-url";
 import { CLERK_WEBHOOKS } from "./platform-urls";
 import { maskSecret, promptSecret } from "./prompt";
 import { normalizeEnvPaste } from "./env-paste";
@@ -32,6 +33,24 @@ export type SyncClerkWebhookResult = {
 export function clerkConvexWebhookUrl(convexCloudUrl: string): string {
   const origin = convexSiteUrlFromCloudUrl(convexCloudUrl);
   return `${origin}${CLERK_CONVEX_WEBHOOK_PATH}`;
+}
+
+/**
+ * Manual Clerk Dashboard steps when the webhook signing secret is not in env yet.
+ *
+ * @param webhookUrl - Convex HTTP endpoint (`https://…convex.site/clerk-webhook`)
+ * @param events - Comma-separated Clerk event names to subscribe to
+ */
+export function clerkWebhookManualSteps(
+  webhookUrl: string,
+  events: string,
+): string[] {
+  return [
+    `Open ${CLERK_WEBHOOKS} — stay on **Development**`,
+    `Add endpoint → paste ${webhookUrl}`,
+    `Events: ${events} → Create`,
+    "Copy Signing secret (`whsec_…`) → paste at the prompt below (Enter to skip)",
+  ];
 }
 
 /**
@@ -134,22 +153,28 @@ export async function syncClerkWebhookEnv(
     return { configured: true, changed: false };
   }
 
-  const manualSteps = [
-    `Webhooks: ${CLERK_WEBHOOKS}`,
-    `Endpoint URL: ${webhookUrl}`,
-    `Events: ${events}`,
-    "Copy the endpoint Signing secret (whsec_…)",
-  ];
+  const manualSteps = clerkWebhookManualSteps(webhookUrl, events);
 
-  printManualAction("Add Clerk webhook endpoint for Convex profile sync", [
-    ...manualSteps,
+  printManualAction(
+    "Add Clerk webhook endpoint for Convex profile sync",
     interactive
-      ? "Paste the signing secret when prompted below (Enter to skip and finish later)"
-      : "Re-run `bun run setup` interactively to paste the signing secret, or set CLERK_WEBHOOK_SIGNING_SECRET in apps/web/.env.local",
-  ]);
+      ? manualSteps
+      : [
+          ...manualSteps.slice(0, -1),
+          "Re-run `bun run setup` interactively to paste the signing secret, or set CLERK_WEBHOOK_SIGNING_SECRET in apps/web/.env.local",
+        ],
+    { immediate: interactive },
+  );
 
   if (!interactive) {
     return { configured: svixApp.ok, changed: false };
+  }
+
+  const opened = await openUrlInBrowser(CLERK_WEBHOOKS);
+  if (opened) {
+    console.log("✓ Opened Clerk webhooks in browser");
+  } else {
+    console.log(`  Open manually: ${CLERK_WEBHOOKS}`);
   }
 
   const existingWebSecret = webEnv.CLERK_WEBHOOK_SIGNING_SECRET;
@@ -163,7 +188,7 @@ export async function syncClerkWebhookEnv(
         existingWebSecret && !isPlaceholderEnvValue(existingWebSecret)
           ? maskSecret(existingWebSecret)
           : undefined,
-      hint: "Clerk Dashboard → Webhooks → your endpoint → Signing secret",
+      hint: "From the endpoint you just created: Signing secret → copy whsec_… (Enter to skip)",
     },
   );
   webSigningSecret = normalizeEnvPaste(
