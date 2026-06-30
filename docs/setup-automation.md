@@ -17,31 +17,33 @@ Setup configures **two stacks**. Staging (`staging.*.pages.dev` on merge to `mai
 
 **Is Production fully set up?**
 
-| Path                                            | Development                      | Production                                                                                                                                                                       |
-| ----------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Happy path + apex**                           | Complete                         | Complete when setup exits 0 and summary shows `pk_live_` synced — release sign-in works on `*.pages.dev` and apex                                                                |
-| **Happy path, no apex**                         | Complete                         | **Partial** — Convex prod + Pages may sync; Clerk Production **deferred** (no domain for `clerk deploy`); release **web sign-in will not work** until you add an apex and re-run |
-| **Troublesome path** (ACTION REQUIRED / exit 1) | Usually complete up to the pause | **Incomplete** — fix the blocking step and re-run; nothing after the pause runs in that session                                                                                  |
+| Path                                            | Development                                     | Production                                                                                                                           |
+| ----------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Happy path + apex**                           | Complete when dev CI + Cloudflare flags are set | Complete when `github.syncedSecrets.production` and `cloudflare.dnsConfigured` — re-run setup if summary lists production follow-ups |
+| **Happy path, no apex**                         | Complete when dev CI + Cloudflare flags are set | **Incomplete** until production secrets sync — setup exits 0 but prints production follow-ups; re-run when ready for `release-*`     |
+| **Troublesome path** (ACTION REQUIRED / exit 1) | Incomplete until CI + Cloudflare sync           | Incomplete — fix blocking steps and re-run                                                                                           |
 
-Production is **not** always fully set up: only when `github.syncedSecrets.production` is true (needs `PUBLIC_CLERK_PUBLISHABLE_KEY` = `pk_live_…` plus Convex prod URL and deploy key) and, with an apex, `cloudflare.dnsConfigured` is true.
+**Development pipeline complete** when `github.syncedSecrets.repo`, `github.syncedSecrets.cloudflare`, `github.labelsSynced`, and `cloudflare.synced` are all true — setup **exits 1** otherwise. **Production pipeline** is reported separately; when incomplete, setup exits 0 after development is ready but lists what to finish on the next `bun run setup`.
 
 ## Wizard behavior
 
-- **Idempotent** (safe to re-run anytime): should not duplicate Clerk apps, corrupt [`.svelter/setup.json`](../.svelter/setup.json), or worsen secret placement. Interrupted runs resume; create-or-skip steps skip when already done. Prompts still run (with saved defaults); optional sync steps (GitHub secrets, Cloudflare) run again only when you confirm them.
+- **Idempotent** (safe to re-run anytime): should not duplicate Clerk apps, corrupt [`.svelter/setup.json`](../.svelter/setup.json), or worsen secret placement. Interrupted runs resume; create-or-skip steps skip when already done. Prompts still run (with saved defaults). GitHub CI secrets and Cloudflare Pages are **required** for a successful development pipeline — declining them pauses setup.
 - **Interactive** (local TTY): prompts run each time; previous answers from `.svelter/setup.json` are defaults (Enter keeps them).
 - **Non-TTY** (CI, piped stdin): skip prompts; use existing `.svelter/setup.json` and env only. GitHub Actions secret sync, Cloudflare bootstrap, and production bootstrap require an interactive TTY — or pass `--sync-secrets` when `gh` / `CLOUDFLARE_API_TOKEN` are already set.
 - Dashboard URLs appear as clickable links in setup output. Manual tiers:
   - **ACTION REQUIRED** — setup **exits**; finish the step, then re-run `bun run setup` (Convex not linked, Cloudflare zone missing, Clerk Production incomplete, registrar nameservers not delegated, etc.).
   - **→** (immediate) — do this **now** before the next prompt in the same run (e.g. create GCP OAuth client, then paste credentials; create Cloudflare zone in dashboard, then confirm lookup).
-  - **→ Follow up:** — optional or informational only; setup continues (skipped optional steps, agent skills install warnings).
+  - **→ Follow up:** — optional or informational only; setup continues (agent skills install warnings, production pipeline follow-ups when development is already ready).
 
 Step-by-step summary: [getting-started.md](./getting-started.md#2-setup-wizard-bun-run-setup).
 
 ## Config persistence
 
-### `.svelter/setup.json` (local, no secrets)
+### `.svelter/setup.json` (no secrets)
 
-Gitignored in the template repo — created on first `bun run setup`. Stores identity defaults, Cloudflare Pages project names, and which bootstrap steps already ran so re-runs stay idempotent. **Fork maintainers** who want non-interactive CI (`--sync-secrets`) can commit theirs after setup: `git add -f .svelter/setup.json`.
+Created on first `bun run setup`. Stores product identity, Cloudflare Pages project names, and which bootstrap steps already ran so re-runs stay idempotent. The file never contains API keys or tokens.
+
+**Git:** The upstream **Svelter** repository keeps `.svelter/setup.json` in [`.gitignore`](../.gitignore). When you create **your own repo** with GitHub **Use this template** ([getting-started.md](./getting-started.md#1-create-the-repository)), the first `bun run setup` removes that gitignore entry so you can commit `setup.json` for teammates.
 
 ```json
 {
@@ -76,7 +78,7 @@ Gitignored in the template repo — created on first `bun run setup`. Stores ide
 - `cloudflare.synced` — Pages projects and domains configured (not a GitHub sync step).
 - `cloudflare.dnsConfigured` — Cloudflare DNS / custom domains confirmed when an apex domain is set.
 
-Also writes `packages/config/product.ts`, rebrands `README.md` when forking from the template, and optionally replaces MIT [`LICENSE`](../LICENSE).
+Also writes `packages/config/product.ts`, rebrands `README.md` when adopting the template into your own repo, and optionally replaces MIT [`LICENSE`](../LICENSE).
 
 ### Secrets (never in `.svelter/`)
 
@@ -157,11 +159,13 @@ When `CLERK_SECRET_KEY` is set and the Clerk issuer is known, setup:
 1. Prints **Authorized JavaScript origins** (localhost, staging `*.pages.dev`, production URLs) and Clerk’s **OAuth redirect URI**
 2. Guides **OAuth consent screen** on new GCP projects ([consent screen](https://console.cloud.google.com/apis/credentials/consent) — Credentials shows a yellow banner until configured), then a **Web application** OAuth client ([Credentials](https://console.cloud.google.com/apis/credentials))
 3. Enables the Google SSO connection via `clerk config patch` when the project is linked (`clerk auth login` + `clerk link`). On an interactive run, prints a GCP-only checklist, then prompts for credentials and patches Clerk — **no Clerk dashboard paste** when the patch succeeds.
-4. Prompts for `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` (or reads them from `apps/web/.env.local`) and patches Clerk. Manual **Configure → SSO connections → Google** steps appear only when the CLI patch fails.
+4. Prompts for `GOOGLE_OAUTH_DEVELOPMENT_CLIENT_ID` / `GOOGLE_OAUTH_DEVELOPMENT_CLIENT_SECRET` (Development). When an apex domain is configured, Production bootstrap **requires** separate `GOOGLE_OAUTH_PRODUCTION_*` credentials — setup blocks until both are set. Manual **Configure → SSO connections → Google** steps appear only when the CLI patch fails.
+
+**Best practice:** two OAuth clients in the same GCP project — `{Product} (Development)` with localhost + staging origins and the Clerk Development redirect URI; `{Product} (Production)` with apex + www origins and `https://accounts.{apex}/v1/oauth_callback`.
 
 **Google Cloud:** standard Sign-in OAuth clients are created in the [console](https://console.cloud.google.com/apis/credentials) only (no `gcloud` automation) — see feasibility table below.
 
-**Production:** before interactive `clerk deploy`, setup prints a **linked checklist** (Google Cloud Console, OAuth consent, Credentials, Clerk SSO connections) with the exact JavaScript origins and redirect URI (`https://accounts.{apex}/v1/oauth_callback`), opens [Credentials](https://console.cloud.google.com/apis/credentials) in the browser, then runs the Clerk deploy wizard. At the Google OAuth prompt, choose **I already have my Client ID and Client Secret** and paste values from Google Cloud. Setup also repeats Google OAuth patching after deploy when `sk_live_…` keys are available.
+**Production:** before interactive `clerk deploy`, setup prints a Production OAuth checklist (separate client required when apex is set), opens [Credentials](https://console.cloud.google.com/apis/credentials), then runs the Clerk deploy wizard. At the Google OAuth prompt, paste Production credentials. Setup patches Clerk Production again after deploy when `sk_live_…` keys are available.
 
 Without custom credentials, Google One Tap will not render; the sign-in modal’s Google button may still work in Development.
 
@@ -172,7 +176,7 @@ Convex stores Clerk profile fields (`firstName`, `lastName`, `email`, `imageUrl`
 When `CLERK_SECRET_KEY` and a linked Convex deployment are present, setup (after the first Convex push):
 
 1. Prints the webhook URL: `https://<deployment>.convex.site/clerk-webhook`
-2. If `CLERK_WEBHOOK_SIGNING_SECRET` is in `apps/web/.env.local`, uploads it to the **dev** Convex deployment. On an interactive run, setup prompts for the signing secret after you create the endpoint (Enter to skip).
+2. On an interactive run, setup prompts for the signing secret after you create the endpoint (required).
 
 Create the endpoint in the [Clerk Dashboard](https://dashboard.clerk.com/last-active?path=webhooks):
 
@@ -323,6 +327,6 @@ bunx clerk deploy                        # provision Production
 ## Security
 
 - Never log secret values; mask in prompts (`pk_test_…`, `sk_test_…`).
-- Deploy keys and `CLERK_SECRET_KEY` only in `.env.local`, GitHub Secrets, or CI env — never in `.svelter/setup.json` or git.
+- Deploy keys and `CLERK_SECRET_KEY` only in `.env.local`, GitHub Secrets, or CI env — never in `.svelter/setup.json`.
 - `gh secret set` reads from stdin or env vars, not echo.
 - Preview/dev share Clerk test users and Convex dev — never prod credentials in repository secrets ([environments.md](./environments.md)).

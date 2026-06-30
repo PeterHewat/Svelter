@@ -31,8 +31,10 @@ import { isConvexLinked } from "./lib/convex-link";
 import { runIdentityWizard } from "./lib/prompt-identity";
 import { runReadiness } from "./lib/readiness";
 import { parseSetupFlags } from "./lib/setup-args";
+import { ensureSetupJsonCommittable } from "./lib/setup-gitignore";
 import { readSetupConfig } from "./lib/setup-config";
 import { printSetupStackSummary } from "./lib/setup-stack-labels";
+import { assessSetupPipelineStatus } from "./lib/setup-pipeline-status";
 import {
   runSetupCliPrerequisites,
   type SetupCliContext,
@@ -75,6 +77,61 @@ async function runGenerate(): Promise<number> {
   return (await proc.exited) ?? 1;
 }
 
+/**
+ * Prints setup outcome from persisted pipeline flags and exits when incomplete.
+ *
+ * @param root - Repository root
+ * @param ranPipelineBootstrap - Whether CI / Cloudflare bootstrap steps ran
+ */
+function finishSetup(root: string, ranPipelineBootstrap: boolean): void {
+  const finalConfig = readSetupConfig(root);
+  if (finalConfig) {
+    printSetupStackSummary({
+      hasApex: hasApexDomain(finalConfig.apexDomain),
+      productionSecretsSynced: Boolean(
+        finalConfig.github?.syncedSecrets?.production,
+      ),
+      cloudflareDnsConfigured: Boolean(finalConfig.cloudflare?.dnsConfigured),
+      cloudflareSynced: Boolean(finalConfig.cloudflare?.synced),
+    });
+  }
+
+  if (!ranPipelineBootstrap || !finalConfig) {
+    console.log("\n✓ Setup complete — continue with docs/getting-started.md");
+    return;
+  }
+
+  const status = assessSetupPipelineStatus(finalConfig);
+
+  if (!status.developmentReady) {
+    console.error("\nSetup incomplete — development pipeline not ready.");
+    for (const item of status.developmentMissing) {
+      console.error(`  ○ ${item}`);
+    }
+    console.error("\nRe-run `bun run setup` after fixing the items above.");
+    process.exit(1);
+  }
+
+  console.log(
+    "\n✓ Development pipeline ready — PR CI and merge-to-main staging can run.",
+  );
+  console.log("  Continue with docs/getting-started.md");
+
+  if (!status.productionReady) {
+    console.log(
+      "\n○ Production pipeline incomplete — re-run `bun run setup` when ready:",
+    );
+    for (const item of status.productionMissing) {
+      console.log(`  • ${item}`);
+    }
+    return;
+  }
+
+  console.log(
+    "\n✓ Production pipeline ready — `release-*` tags can deploy production.",
+  );
+}
+
 async function main(): Promise<void> {
   const flags = parseSetupFlags();
   const interactive = Boolean(process.stdin.isTTY);
@@ -102,6 +159,17 @@ async function main(): Promise<void> {
   const setupConfig = interactive
     ? await runIdentityWizard(root, github)
     : readSetupConfig(root);
+
+  if (
+    ensureSetupJsonCommittable(root, {
+      github,
+      productName: setupConfig?.productName,
+    })
+  ) {
+    console.log(
+      "✓ Removed .svelter/setup.json from .gitignore — commit setup.json for your team",
+    );
+  }
 
   if (!setupConfig && !interactive) {
     console.log(
@@ -181,13 +249,21 @@ async function main(): Promise<void> {
     process.exit(readinessCode);
   }
 
+  let ranPipelineBootstrap = false;
+
   if (setupConfig && (interactive || flags.syncSecrets)) {
+    ranPipelineBootstrap = true;
     const bootstrapOptions = {
       autoConfirm: flags.syncSecrets,
       forceResync: flags.syncSecrets,
     };
     await bootstrapCiSecrets(root, setupConfig, cliContext, bootstrapOptions);
-    await bootstrapGithubLabels(root, setupConfig, cliContext);
+    await bootstrapGithubLabels(
+      root,
+      setupConfig,
+      cliContext,
+      bootstrapOptions,
+    );
     const cloudflareResult = await bootstrapCloudflare(
       root,
       setupConfig,
@@ -200,7 +276,7 @@ async function main(): Promise<void> {
     }
     const setupForProduction = readSetupConfig(root) ?? setupConfig;
     const prodResult =
-      cloudflareResult === "complete" || cloudflareResult === "skipped"
+      cloudflareResult === "complete"
         ? await bootstrapProduction(root, setupForProduction, {
             cliContext,
             autoConfirm: flags.syncSecrets,
@@ -212,39 +288,15 @@ async function main(): Promise<void> {
       );
       process.exit(1);
     }
-    if (prodResult === "partial") {
-      if (hasApexDomain(setupConfig.apexDomain)) {
-        process.exit(1);
-      }
-      const finalConfig = readSetupConfig(root) ?? setupConfig;
-      printSetupStackSummary({
-        hasApex: hasApexDomain(finalConfig.apexDomain),
-        productionSecretsSynced: Boolean(
-          finalConfig.github?.syncedSecrets?.production,
-        ),
-        cloudflareDnsConfigured: Boolean(finalConfig.cloudflare?.dnsConfigured),
-        cloudflareSynced: Boolean(finalConfig.cloudflare?.synced),
-      });
+    if (prodResult === "partial" && hasApexDomain(setupConfig.apexDomain)) {
       console.log(
-        "\n✓ Setup complete — production partially synced (add an apex domain for Clerk when ready)",
+        "\n○ Setup incomplete — production pipeline not finished. Re-run `bun run setup` after fixing items above.",
       );
-      return;
+      process.exit(1);
     }
   }
 
-  if (setupConfig) {
-    const finalConfig = readSetupConfig(root) ?? setupConfig;
-    printSetupStackSummary({
-      hasApex: hasApexDomain(finalConfig.apexDomain),
-      productionSecretsSynced: Boolean(
-        finalConfig.github?.syncedSecrets?.production,
-      ),
-      cloudflareDnsConfigured: Boolean(finalConfig.cloudflare?.dnsConfigured),
-      cloudflareSynced: Boolean(finalConfig.cloudflare?.synced),
-    });
-  }
-
-  console.log("\n✓ Setup complete — continue with docs/getting-started.md");
+  finishSetup(root, ranPipelineBootstrap);
 }
 
 main().catch((err: unknown) => {

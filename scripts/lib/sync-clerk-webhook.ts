@@ -11,7 +11,7 @@ import { getConvexEnvVar, setConvexEnvVar } from "./convex-env";
 import { isConvexLinked } from "./convex-link";
 import { readConvexUrlFromRootEnv } from "./convex-url";
 import { upsertEnvKeys, readEnvFile } from "./env-file";
-import { printManualAction, requireManualAction } from "./manual-action";
+import { printManualAction, exitWithManualAction } from "./manual-action";
 import { openUrlInBrowser } from "./open-url";
 import { CLERK_WEBHOOKS } from "./platform-urls";
 import { maskSecret, promptSecret } from "./prompt";
@@ -24,6 +24,30 @@ export type SyncClerkWebhookResult = {
   configured: boolean;
   changed: boolean;
 };
+
+/**
+ * Validates a Clerk webhook signing secret pasted during setup.
+ *
+ * @param value - Raw signing secret
+ */
+export function validateClerkWebhookSigningSecret(
+  value: string,
+): string | null {
+  const normalized = value.trim();
+  if (normalized.startsWith("pk_") || normalized.startsWith("sk_")) {
+    return "That looks like a Clerk API key — paste the webhook signing secret (whsec_…)";
+  }
+  if (/\.apps\.googleusercontent\.com$/i.test(normalized)) {
+    return "That looks like a Google OAuth Client ID — paste the webhook signing secret (whsec_…)";
+  }
+  if (normalized.startsWith("GOCSPX-")) {
+    return "That looks like a Google OAuth Client secret — paste the webhook signing secret (whsec_…)";
+  }
+  if (!/^whsec_[A-Za-z0-9+/=_-]+$/.test(normalized)) {
+    return "Expected signing secret starting with whsec_ — copy from the endpoint you created";
+  }
+  return null;
+}
 
 /**
  * Builds the Convex HTTP webhook URL from a `.convex.cloud` deployment URL.
@@ -47,9 +71,10 @@ export function clerkWebhookManualSteps(
 ): string[] {
   return [
     `Open ${CLERK_WEBHOOKS} — stay on **Development**`,
-    `Add endpoint → paste ${webhookUrl}`,
-    `Events: ${events} → Create`,
-    "Copy Signing secret (`whsec_…`) → paste at the prompt below (Enter to skip)",
+    "In Configure → Webhooks → Endpoints, click **Add Endpoint**",
+    `Set Endpoint URL: ${webhookUrl}`,
+    `Subscribe to events: ${events} → click **Create**`,
+    "Open the endpoint → copy **Signing secret** (`whsec_…`)",
   ];
 }
 
@@ -145,7 +170,13 @@ export async function syncClerkWebhookEnv(
     : webEnv.CLERK_WEBHOOK_SIGNING_SECRET?.trim();
 
   if (webSigningSecret) {
-    return syncSigningSecretToConvex(root, webSigningSecret);
+    const webhookError = validateClerkWebhookSigningSecret(webSigningSecret);
+    if (!webhookError) {
+      return syncSigningSecretToConvex(root, webSigningSecret);
+    }
+    console.log(
+      `○ Invalid CLERK_WEBHOOK_SIGNING_SECRET in ${WEB_ENV} — re-enter below`,
+    );
   }
 
   if (existingConvexSecret) {
@@ -188,7 +219,10 @@ export async function syncClerkWebhookEnv(
         existingWebSecret && !isPlaceholderEnvValue(existingWebSecret)
           ? maskSecret(existingWebSecret)
           : undefined,
-      hint: "From the endpoint you just created: Signing secret → copy whsec_… (Enter to skip)",
+      label: "CLERK_WEBHOOK_SIGNING_SECRET",
+      required: true,
+      hint: "Paste signing secret from the webhook endpoint you created above",
+      validate: validateClerkWebhookSigningSecret,
     },
   );
   webSigningSecret = normalizeEnvPaste(
@@ -196,10 +230,10 @@ export async function syncClerkWebhookEnv(
     rawSecret,
   ).trim();
 
-  if (!webSigningSecret.startsWith("whsec_")) {
-    requireManualAction("Add Clerk webhook signing secret", [
-      ...manualSteps.slice(0, -1),
-      "Paste the whsec_… signing secret when setup prompts, or set CLERK_WEBHOOK_SIGNING_SECRET in apps/web/.env.local",
+  if (!webSigningSecret) {
+    exitWithManualAction("Configure Clerk webhook signing secret", [
+      ...manualSteps,
+      `Save as CLERK_WEBHOOK_SIGNING_SECRET in ${WEB_ENV}`,
       "Re-run `bun run setup`",
     ]);
   }

@@ -5,7 +5,7 @@ import {
   ensureConvexLinkedInteractive,
   pushConvexDevOnce,
 } from "./link-convex";
-import { requireManualAction } from "./manual-action";
+import { requireManualAction, exitWithManualAction } from "./manual-action";
 import { CONVEX_DASHBOARD } from "./platform-urls";
 import { logSetupStackSection } from "./setup-stack-labels";
 import { productNameToSlug } from "./repo-identity";
@@ -86,5 +86,12 @@ export async function bootstrapConvexClerk(
   const webhookSync = await syncClerkWebhookEnv(root, interactive);
   if (webhookSync.changed) {
     await pushConvexDevOnce(root);
+  }
+
+  if (interactive && !webhookSync.configured) {
+    exitWithManualAction("Configure Clerk webhook for Convex profile sync", [
+      "Create the Clerk webhook endpoint and paste CLERK_WEBHOOK_SIGNING_SECRET",
+      "Re-run `bun run setup`",
+    ]);
   }
 }

@@ -166,3 +166,173 @@ export function isClerkPublishableKey(value: string): boolean {
 export function isClerkSecretKey(value: string): boolean {
   return /^sk_(test|live)_[a-zA-Z0-9]+$/.test(value.trim());
 }
+
+function clerkKeyInstance(value: string): "test" | "live" | null {
+  const normalized = value.trim();
+  if (normalized.includes("_test_")) {
+    return "test";
+  }
+  if (normalized.includes("_live_")) {
+    return "live";
+  }
+  return null;
+}
+
+/**
+ * Validates a Clerk publishable key pasted during setup.
+ *
+ * @param value - Raw publishable key
+ */
+export function validateClerkPublishableKeyPaste(value: string): string | null {
+  const normalized = value.trim();
+  if (normalized.startsWith("sk_")) {
+    return "That looks like a secret key — paste the publishable key (pk_test_… or pk_live_…)";
+  }
+  if (!isClerkPublishableKey(normalized)) {
+    return "Expected a Clerk publishable key (pk_test_… or pk_live_…).";
+  }
+  return null;
+}
+
+/**
+ * Validates a Clerk development publishable key pasted during setup.
+ *
+ * @param value - Raw publishable key
+ */
+export function validateClerkDevelopmentPublishableKeyPaste(
+  value: string,
+): string | null {
+  const base = validateClerkPublishableKeyPaste(value);
+  if (base) {
+    return base;
+  }
+  if (!value.trim().startsWith("pk_test_")) {
+    return "Development setup expects pk_test_… — switch Clerk to Development.";
+  }
+  return null;
+}
+
+/**
+ * Validates a Clerk secret key pasted during setup.
+ *
+ * @param value - Raw secret key
+ */
+export function validateClerkSecretKeyPaste(value: string): string | null {
+  const normalized = value.trim();
+  if (normalized.startsWith("pk_")) {
+    return "That looks like a publishable key — paste the secret key (sk_test_… or sk_live_…)";
+  }
+  if (!isClerkSecretKey(normalized)) {
+    return "Expected a Clerk secret key (sk_test_… or sk_live_…).";
+  }
+  return null;
+}
+
+/**
+ * Validates a Clerk development secret key pasted during setup.
+ *
+ * @param value - Raw secret key
+ */
+export function validateClerkDevelopmentSecretKeyPaste(
+  value: string,
+): string | null {
+  const base = validateClerkSecretKeyPaste(value);
+  if (base) {
+    return base;
+  }
+  if (!value.trim().startsWith("sk_test_")) {
+    return "Development setup expects sk_test_… — switch Clerk to Development.";
+  }
+  return null;
+}
+
+/**
+ * Validates a Clerk production publishable key pasted during setup.
+ *
+ * @param value - Raw publishable key
+ */
+export function validateClerkProductionPublishableKeyPaste(
+  value: string,
+): string | null {
+  const base = validateClerkPublishableKeyPaste(value);
+  if (base) {
+    return base;
+  }
+  if (!value.trim().startsWith("pk_live_")) {
+    return "Production setup expects pk_live_… — switch Clerk to Production.";
+  }
+  return null;
+}
+
+/**
+ * Validates a Clerk production secret key pasted during setup.
+ *
+ * @param value - Raw secret key
+ */
+export function validateClerkProductionSecretKeyPaste(
+  value: string,
+): string | null {
+  const base = validateClerkSecretKeyPaste(value);
+  if (base) {
+    return base;
+  }
+  if (!value.trim().startsWith("sk_live_")) {
+    return "Production setup expects sk_live_… — switch Clerk to Production.";
+  }
+  return null;
+}
+
+/**
+ * Validates a Clerk production publishable + secret key pair.
+ *
+ * @param publishableKey - Clerk production publishable key
+ * @param secretKey - Clerk production secret key
+ */
+export function validateClerkProductionKeys(
+  publishableKey: string,
+  secretKey: string,
+): string | null {
+  return (
+    validateClerkProductionPublishableKeyPaste(publishableKey) ??
+    validateClerkProductionSecretKeyPaste(secretKey) ??
+    validateClerkKeyPair(publishableKey, secretKey)
+  );
+}
+
+/**
+ * Validates a Clerk development publishable + secret key pair.
+ *
+ * @param publishableKey - Clerk development publishable key
+ * @param secretKey - Clerk development secret key
+ */
+export function validateClerkDevelopmentKeys(
+  publishableKey: string,
+  secretKey: string,
+): string | null {
+  return (
+    validateClerkDevelopmentPublishableKeyPaste(publishableKey) ??
+    validateClerkDevelopmentSecretKeyPaste(secretKey) ??
+    validateClerkKeyPair(publishableKey, secretKey)
+  );
+}
+
+/**
+ * Ensures Clerk publishable and secret keys are distinct and from the same instance.
+ *
+ * @param publishableKey - Clerk publishable key
+ * @param secretKey - Clerk secret key
+ */
+export function validateClerkKeyPair(
+  publishableKey: string,
+  secretKey: string,
+): string | null {
+  if (publishableKey.trim() === secretKey.trim()) {
+    return "Publishable key and secret key must be different values";
+  }
+  const pkInstance = clerkKeyInstance(publishableKey);
+  const skInstance = clerkKeyInstance(secretKey);
+  if (pkInstance && skInstance && pkInstance !== skInstance) {
+    return "Publishable and secret keys must be from the same Clerk instance (both test or both live)";
+  }
+  return null;
+}

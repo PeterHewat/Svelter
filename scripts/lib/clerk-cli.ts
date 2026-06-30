@@ -4,6 +4,7 @@ import {
   frontendApiSlugFromPublishableKey,
   isClerkPublishableKey,
   isClerkSecretKey,
+  validateClerkProductionKeys,
 } from "./clerk-instance";
 import {
   CLERK_PRODUCTION_ENV,
@@ -31,6 +32,7 @@ import { resolveCloudflareApiToken } from "./cloudflare-auth";
 import {
   findApexCloudflareZone,
   syncClerkDnsToCloudflare,
+  trySyncClerkBindZoneForApex,
 } from "./sync-clerk-cloudflare-dns";
 
 const WEB_ENV = "apps/web/.env.local";
@@ -575,6 +577,7 @@ export async function deployClerkProduction(
   clerk: CliToolState,
   root: string,
   apexDomain?: string,
+  productName?: string,
 ): Promise<ClerkProductionKeys | null> {
   if (!isInteractivePrompt()) {
     console.log(
@@ -591,11 +594,15 @@ export async function deployClerkProduction(
       `  When Clerk asks for your production domain, enter: ${apexDomain}`,
     );
     console.log(
-      "  Clerk DNS syncs to Cloudflare automatically after deploy (Clerk API, BIND fallback in `.svelter/`)",
+      "  When Clerk shows DNS: export BIND if offered, then choose **Skip DNS verification** — setup syncs CNAMEs to Cloudflare automatically",
     );
+    console.log(
+      "  Stale Clerk CNAMEs from a previous project are corrected in Cloudflare (including email records)",
+    );
+    await trySyncClerkBindZoneForApex(root, apexDomain);
     printManualAction(
       "Google OAuth — create credentials in Google Cloud before clerk deploy asks",
-      clerkDeployGoogleOAuthManualSteps(apexDomain),
+      clerkDeployGoogleOAuthManualSteps(apexDomain, productName),
       { immediate: true },
     );
     const opened = await openUrlInBrowser(GOOGLE_CLOUD_CREDENTIALS);
@@ -678,13 +685,14 @@ export async function pullClerkProductionEnv(
   const env = normalizeClerkProductionEnv(root, relPath);
   const publishableKey = env[PUBLIC_CLERK_PUBLISHABLE_KEY]?.trim() || "";
   const secretKey = env.CLERK_SECRET_KEY?.trim() || "";
-  if (
-    !isClerkPublishableKey(publishableKey) ||
-    !publishableKey.startsWith("pk_live_") ||
-    !isClerkSecretKey(secretKey) ||
-    !secretKey.startsWith("sk_live_")
-  ) {
-    console.log("○ Production Clerk keys missing or invalid after env pull");
+  const productionKeyError = validateClerkProductionKeys(
+    publishableKey,
+    secretKey,
+  );
+  if (productionKeyError) {
+    console.log(
+      `○ Production Clerk keys missing or invalid after env pull — ${productionKeyError}`,
+    );
     return null;
   }
 
@@ -864,11 +872,11 @@ async function ensureClerkAppLinked(
     printManualAction(`Link an existing Clerk app`, [
       `Run: ${[...clerk.command, "link"].join(" ")} and pick from the list`,
       `Or: ${[...clerk.command, "link", "--app", "app_…"].join(" ")}`,
-      `Dashboard: ${CLERK_CREATE_APP}`,
+      `Or create one: ${CLERK_CREATE_APP} → **Create application**`,
     ]);
   } else {
     printManualAction("Create and link a Clerk application", [
-      `Dashboard: ${CLERK_CREATE_APP} → **Create application** (sign in as the same user as \`bunx clerk whoami\`)`,
+      `Open ${CLERK_CREATE_APP} → click **Create application** (same account as \`bunx clerk whoami\`)`,
       `Or CLI: ${[...clerk.command, ...clerkAppsCreateArgs(setup.productName)].join(" ")}`,
       `Then link: ${[...clerk.command, "link", "--app", "app_…"].join(" ")}`,
       `If \`whoami\` shows a link but \`apps list\` is empty, run ${[...clerk.command, "unlink", "--yes"].join(" ")} first`,
@@ -915,8 +923,9 @@ export async function bootstrapClerkEnvViaCli(
       `○ ${WEB_ENV} is missing valid Development Clerk keys after env pull`,
     );
     printManualAction("Paste Clerk Development keys manually", [
-      `API keys (Development): ${CLERK_API_KEYS}`,
-      `Or retry: ${[...clerk.command, "env", "pull", "--file", ".env.local"].join(" ")} (from apps/web)`,
+      `Open ${CLERK_API_KEYS} — stay on **Development**`,
+      "Configure → **API keys** → copy Publishable key and Secret key",
+      `Or retry CLI: ${[...clerk.command, "env", "pull", "--file", ".env.local"].join(" ")} (from apps/web)`,
     ]);
     return false;
   }

@@ -11,6 +11,7 @@ type CloudflareDnsRecord = {
   type: string;
   name: string;
   content: string;
+  proxied?: boolean;
 };
 
 export type EnsureCloudflareDnsRecordOptions = {
@@ -18,8 +19,26 @@ export type EnsureCloudflareDnsRecordOptions = {
   proxied?: boolean;
 };
 
+export type EnsureCloudflareDnsRecordResult =
+  "created" | "exists" | "updated" | "fixed_proxy";
+
+export type ImportClerkDnsRecordsResult = {
+  created: number;
+  updated: number;
+  fixedProxy: number;
+  existing: number;
+};
+
+function normalizeDnsName(name: string): string {
+  return name.trim().toLowerCase().replace(/\.$/, "");
+}
+
+function normalizeDnsContent(content: string): string {
+  return content.trim().toLowerCase().replace(/\.$/, "");
+}
+
 /**
- * Creates a DNS record when no matching record exists in the zone.
+ * Creates or updates a DNS record when name/type match but content or proxy differs.
  *
  * @param token - Cloudflare API token
  * @param zone - Cloudflare zone
@@ -31,20 +50,47 @@ export async function ensureCloudflareDnsRecord(
   zone: CloudflareZone,
   record: BindDnsRecord,
   options?: EnsureCloudflareDnsRecordOptions,
-): Promise<"created" | "exists"> {
+): Promise<EnsureCloudflareDnsRecordResult> {
   const proxied = options?.proxied ?? false;
   const existing = await cloudflareFetch<CloudflareDnsRecord[]>(
     token,
     `/zones/${zone.id}/dns_records?type=${encodeURIComponent(record.type)}&name=${encodeURIComponent(record.name)}`,
   );
-  const match = existing.find(
+
+  const sameName = existing.find(
     (row) =>
-      row.type.toUpperCase() === record.type &&
-      row.name.toLowerCase() === record.name.toLowerCase() &&
-      row.content.toLowerCase() === record.content.toLowerCase(),
+      row.type.toUpperCase() === record.type.toUpperCase() &&
+      normalizeDnsName(row.name) === normalizeDnsName(record.name),
   );
-  if (match) {
-    return "exists";
+
+  if (sameName) {
+    const contentMatch =
+      normalizeDnsContent(sameName.content) ===
+      normalizeDnsContent(record.content);
+    const proxiedMatch = (sameName.proxied ?? false) === proxied;
+
+    if (contentMatch && proxiedMatch) {
+      return "exists";
+    }
+
+    await cloudflareFetch(
+      token,
+      `/zones/${zone.id}/dns_records/${sameName.id}`,
+      {
+        method: "PATCH",
+        body: {
+          type: record.type,
+          name: record.name,
+          content: record.content,
+          proxied,
+        },
+      },
+    );
+
+    if (!contentMatch) {
+      return "updated";
+    }
+    return "fixed_proxy";
   }
 
   try {
@@ -80,16 +126,26 @@ export async function importClerkDnsRecordsToCloudflare(
   token: string,
   zone: CloudflareZone,
   records: BindDnsRecord[],
-): Promise<{ created: number; existing: number }> {
-  let created = 0;
-  let existing = 0;
+): Promise<ImportClerkDnsRecordsResult> {
+  const result: ImportClerkDnsRecordsResult = {
+    created: 0,
+    updated: 0,
+    fixedProxy: 0,
+    existing: 0,
+  };
+
   for (const record of records) {
-    const result = await ensureCloudflareDnsRecord(token, zone, record);
-    if (result === "created") {
-      created += 1;
+    const outcome = await ensureCloudflareDnsRecord(token, zone, record);
+    if (outcome === "created") {
+      result.created += 1;
+    } else if (outcome === "updated") {
+      result.updated += 1;
+    } else if (outcome === "fixed_proxy") {
+      result.fixedProxy += 1;
     } else {
-      existing += 1;
+      result.existing += 1;
     }
   }
-  return { created, existing };
+
+  return result;
 }

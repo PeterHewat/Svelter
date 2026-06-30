@@ -197,4 +197,4 @@ Release notes group **merged PRs** by label ([.github/release.yml](../.github/re
 
 Dependabot applies `dependencies`, `github-actions`, `monorepo`, and `typescript`; bot PRs are excluded from notes by author.
 
-`bun run setup` syncs labels to GitHub once per fork (`github.labelsSynced` in [`.svelter/setup.json`](../.svelter/setup.json)). Definitions live in [`packages/config/github-labels.ts`](../packages/config/github-labels.ts) — keep aligned with [.github/release.yml](../.github/release.yml). Use `chore` for CI and workflow changes.
+`bun run setup` syncs labels to GitHub once per adopted repo (`github.labelsSynced` in [`.svelter/setup.json`](../.svelter/setup.json)). Definitions live in [`packages/config/github-labels.ts`](../packages/config/github-labels.ts) — keep aligned with [.github/release.yml](../.github/release.yml). Use `chore` for CI and workflow changes.

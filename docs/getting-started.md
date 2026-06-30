@@ -18,7 +18,7 @@ bun install && bun run setup
 
 ### 2. Setup wizard (`bun run setup`)
 
-Safe to **re-run anytime** (resume after interruptions). Each run re-asks questions with your previous answers as defaults (press **Enter** to keep).
+Safe to **re-run anytime** (resume after interruptions). Each run re-asks questions with your previous answers as defaults (press **Enter** to keep). On repos created from the GitHub template, setup also enables committing [`.svelter/setup.json`](../.svelter/setup.json) for teammates (see [setup-automation.md](./setup-automation.md#sveltersetupjson-no-secrets)).
 
 | Step           | What it does                                                                                                                                                                 |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

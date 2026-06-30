@@ -186,7 +186,7 @@ export async function ensureConvexLinkedInteractive(
       console.log("  Linking via `convex dev --once --configure new`…");
     } else {
       printManualAction("Create Convex project for this repository", [
-        `Convex dashboard: ${CONVEX_DASHBOARD}`,
+        `Open ${CONVEX_DASHBOARD}`,
         `Setup runs \`convex dev --once --configure new --project ${createName}\` next`,
         "Complete browser login if prompted",
       ]);
@@ -199,8 +199,8 @@ export async function ensureConvexLinkedInteractive(
     }
 
     exitWithManualAction("Complete Convex linking", [
-      `Convex dashboard: ${CONVEX_DASHBOARD}`,
-      `Create or link project "${createName}" manually`,
+      `Open ${CONVEX_DASHBOARD}`,
+      `Create or link project **${createName}** manually`,
       "Resume setup: `bun run setup`",
     ]);
   }
@@ -212,9 +212,9 @@ export async function ensureConvexLinkedInteractive(
     );
   } else {
     printManualAction("Link Convex to this repository", [
-      `Convex dashboard: ${CONVEX_DASHBOARD}`,
+      `Open ${CONVEX_DASHBOARD}`,
       "Setup runs `convex dev --once` next — complete browser login if prompted",
-      "Prefer **choose an existing project** when one matches your product name",
+      "When prompted, choose **Link an existing project** if one matches your product name",
     ]);
   }
 

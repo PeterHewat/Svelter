@@ -74,7 +74,7 @@ apps/marketing/static/init.js
 # Convex local backend (from `convex dev --once` without cloud login)
 .convex/
 
-# Setup-local metadata (keep templates; ignore local env paste files)
+# Setup-local metadata (template repo ignores setup.json; adopted repos un-ignore via setup)
 .svelter/setup.json
 .svelter/*.env
 .svelter/clerk-*.zone

@@ -7,17 +7,46 @@ import {
 import {
   clerkConvexWebhookUrl,
   clerkWebhookManualSteps,
+  validateClerkWebhookSigningSecret,
 } from "./sync-clerk-webhook";
 
+describe("validateClerkWebhookSigningSecret", () => {
+  it("accepts whsec_ values", () => {
+    expect(
+      validateClerkWebhookSigningSecret("whsec_test_secret_value"),
+    ).toBeNull();
+  });
+
+  it("rejects Clerk and Google credential shapes", () => {
+    expect(validateClerkWebhookSigningSecret("pk_test_abc")).toContain(
+      "Clerk API key",
+    );
+    expect(
+      validateClerkWebhookSigningSecret(
+        "66350012067-m4j3ek3or7spfusfj7vep8odtcsivip8.apps.googleusercontent.com",
+      ),
+    ).toContain("Google OAuth");
+    expect(validateClerkWebhookSigningSecret("GOCSPX-abcdef")).toContain(
+      "Google OAuth",
+    );
+  });
+
+  it("rejects empty or malformed values", () => {
+    expect(validateClerkWebhookSigningSecret("")).not.toBeNull();
+    expect(validateClerkWebhookSigningSecret("not-a-secret")).not.toBeNull();
+  });
+});
+
 describe("clerkWebhookManualSteps", () => {
-  it("points to Clerk webhooks with Development, Add endpoint, and signing secret", () => {
+  it("points to Clerk webhooks with Development, Add Endpoint, and signing secret", () => {
     const url = clerkConvexWebhookUrl("https://happy-animal-123.convex.cloud");
     const steps = clerkWebhookManualSteps(url, "user.created, user.updated");
     expect(steps[0]).toContain("Development");
-    expect(steps[1]).toContain("Add endpoint");
-    expect(steps[1]).toContain(url);
-    expect(steps[2]).toContain("user.created");
-    expect(steps[3]).toContain("Signing secret");
+    expect(steps[1]).toContain("Add Endpoint");
+    expect(steps[2]).toContain("Endpoint URL");
+    expect(steps[2]).toContain(url);
+    expect(steps[3]).toContain("user.created");
+    expect(steps[4]).toContain("Signing secret");
   });
 });
 

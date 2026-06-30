@@ -23,12 +23,15 @@ import {
 import { ensureClerkConvexJwtTemplate } from "./clerk-jwt-template";
 import { syncClerkGoogleOAuth } from "./clerk-google-oauth";
 import {
-  isClerkPublishableKey,
   isClerkSecretKey,
   issuerFromPublishableKey,
   mergeClerkAllowedOrigins,
   normalizeClerkIssuerDomain,
   resolveClerkIssuerDomain,
+  validateClerkDevelopmentPublishableKeyPaste,
+  validateClerkDevelopmentSecretKeyPaste,
+  validateClerkDevelopmentKeys,
+  validateClerkKeyPair,
 } from "./clerk-instance";
 import {
   PUBLIC_CLERK_PUBLISHABLE_KEY,
@@ -36,10 +39,9 @@ import {
 } from "./clerk-web-env";
 import { readEnvFile, upsertEnvKeys } from "./env-file";
 import { normalizeEnvPaste } from "./env-paste";
-import { printManualAction } from "./manual-action";
+import { printManualAction, exitWithManualAction } from "./manual-action";
 import {
   CLERK_API_KEYS,
-  CLERK_CREATE_APP,
   CLERK_DASHBOARD,
   CLERK_JWT_TEMPLATES,
 } from "./platform-urls";
@@ -70,8 +72,8 @@ async function reportClerkJwtTemplate(secretKey: string): Promise<void> {
       `○ Could not create Clerk JWT template "convex": ${jwtTemplate.message}`,
     );
     printManualAction('Create Clerk JWT template "convex"', [
-      `JWT templates: ${CLERK_JWT_TEMPLATES}`,
-      "New template → **Convex** preset → Save (name must be `convex`)",
+      `Open ${CLERK_JWT_TEMPLATES} — stay on **Development**`,
+      "Click **New template** → choose **Convex** preset → click **Save** (name must be `convex`)",
       "Then resume `bun run setup` or re-run Playwright E2E",
     ]);
   }
@@ -141,14 +143,15 @@ async function provisionE2eClerkUser(
     console.log(`○ Could not create E2E user: ${result.message}`);
     if (isClerkEmailPasswordDisabledMessage(result.message)) {
       printManualAction("Enable Clerk Email + Password (Development)", [
-        `Clerk dashboard: ${CLERK_DASHBOARD}`,
-        "Configure → User & authentication → enable **Email** and **Password**",
+        `Open ${CLERK_DASHBOARD} — stay on **Development**`,
+        "Configure → **User & authentication** → **Email** → enable Email address",
+        "Enable **Password** for the same connection → click **Save**",
         "Then resume `bun run setup`",
       ]);
     } else {
       printManualAction("Fix Clerk E2E user setup", [
-        `Clerk dashboard: ${CLERK_DASHBOARD}`,
-        "Create the user manually, or use a different E2E_USER_EMAIL",
+        `Open ${CLERK_DASHBOARD} — stay on **Development**`,
+        "Configure → **Users** → **Create user** (or pick a different E2E_USER_EMAIL)",
         "Then resume `bun run setup`",
       ]);
     }
@@ -214,10 +217,12 @@ function readValidClerkKeysFromEnv(root: string): {
   if (
     !publishableKey ||
     isPlaceholderEnvValue(publishableKey) ||
-    isPlaceholderEnvValue(secretKey) ||
-    !isClerkPublishableKey(publishableKey) ||
-    !isClerkSecretKey(secretKey!)
+    isPlaceholderEnvValue(secretKey)
   ) {
+    return null;
+  }
+  const pairError = validateClerkDevelopmentKeys(publishableKey, secretKey!);
+  if (pairError) {
     return null;
   }
   return { publishableKey, secretKey: secretKey! };
@@ -243,43 +248,49 @@ async function promptClerkKeys(
   printManualAction(
     "Clerk development keys",
     [
-      `Create an application if needed: ${CLERK_CREATE_APP}`,
-      `Open ${CLERK_API_KEYS} — stay on **Development**`,
-      "Copy Publishable key (`pk_test_…`) and Secret key (`sk_test_…`)",
+      `Open ${CLERK_API_KEYS} — stay on **Development** (instance switcher, top bar)`,
+      "Configure → **API keys** → copy **Publishable key** (`pk_test_…`)",
+      "On the same page → **Secret keys** → copy **Secret key** (`sk_test_…`)",
     ],
     { immediate: true },
   );
   await openClerkDashboard(CLERK_API_KEYS);
 
-  let publishableKey = "";
-  while (!isClerkPublishableKey(publishableKey)) {
-    const rawPk = await promptSecret(
-      `${PUBLIC_CLERK_PUBLISHABLE_KEY} (pk_test_…)`,
-      {
-        defaultValue: existingPk,
-        displayDefault: existingPk ? maskSecret(existingPk) : undefined,
-        required: !existingPk,
-        hint: existingPk
-          ? "Press Enter to keep the saved key, or paste a new Development publishable key"
-          : "Paste the Development publishable key (input hidden), then press Enter",
-      },
-    );
-    publishableKey = normalizeEnvPaste(PUBLIC_CLERK_PUBLISHABLE_KEY, rawPk);
-    if (!isClerkPublishableKey(publishableKey)) {
-      console.log(
-        "  Expected a Clerk publishable key (pk_test_… or pk_live_…).",
-      );
-      publishableKey = "";
-    }
-  }
+  const rawPk = await promptSecret(
+    `${PUBLIC_CLERK_PUBLISHABLE_KEY} (pk_test_…)`,
+    {
+      defaultValue: existingPk,
+      displayDefault: existingPk ? maskSecret(existingPk) : undefined,
+      required: true,
+      label: PUBLIC_CLERK_PUBLISHABLE_KEY,
+      validate: validateClerkDevelopmentPublishableKeyPaste,
+      hint: existingPk
+        ? "Press Enter to keep the saved key, or paste a new value"
+        : "Configure → API keys → Publishable key",
+    },
+  );
+  const publishableKey = normalizeEnvPaste(PUBLIC_CLERK_PUBLISHABLE_KEY, rawPk);
 
   const rawSk = await promptSecret("CLERK_SECRET_KEY (sk_test_…)", {
     defaultValue: existingSk,
     displayDefault: existingSk ? maskSecret(existingSk) : undefined,
-    hint: "Same page → **Secret keys** — required for E2E and allowed-origin sync",
+    label: "CLERK_SECRET_KEY",
+    required: true,
+    validate: (value) =>
+      validateClerkDevelopmentSecretKeyPaste(value) ??
+      validateClerkKeyPair(publishableKey, value),
+    hint: "Same page → Secret keys (sk_test_… — not the publishable key)",
   });
   const secretKey = normalizeEnvPaste("CLERK_SECRET_KEY", rawSk);
   const resolvedSecret = isClerkSecretKey(secretKey) ? secretKey : "";
+
+  if (!resolvedSecret.startsWith("sk_test_")) {
+    exitWithManualAction("Add Clerk development secret key", [
+      `Open ${CLERK_API_KEYS} — stay on **Development**`,
+      "Copy **Secret key** (`sk_test_…`) → paste when setup prompts",
+      "Re-run `bun run setup`",
+    ]);
+  }
 
   let issuerDomain = await resolveClerkIssuerDomain(
     publishableKey,
@@ -304,29 +315,18 @@ async function promptClerkKeys(
 
   const toWrite: Record<string, string> = {
     [PUBLIC_CLERK_PUBLISHABLE_KEY]: publishableKey,
+    CLERK_SECRET_KEY: resolvedSecret,
   };
-  if (resolvedSecret) {
-    toWrite.CLERK_SECRET_KEY = resolvedSecret;
-  }
   upsertEnvKeys(root, WEB_ENV, toWrite);
   console.log(`✓ Updated ${WEB_ENV} (pk ${maskSecret(publishableKey)})`);
 
-  if (resolvedSecret) {
-    await provisionE2eClerkUser(root, setup, resolvedSecret, {
-      ...webEnv,
-      ...toWrite,
-    });
-  }
+  await provisionE2eClerkUser(root, setup, resolvedSecret, {
+    ...webEnv,
+    ...toWrite,
+  });
 
-  if (resolvedSecret.startsWith("sk_test_")) {
-    await syncClerkDevOrigins(resolvedSecret, setup);
-    await reportClerkJwtTemplate(resolvedSecret);
-  } else {
-    printManualAction("Add CLERK_SECRET_KEY for automation", [
-      "Paste sk_test_… when prompted on a future setup run",
-      "Setup will PATCH allowed origins and create the convex JWT template automatically",
-    ]);
-  }
+  await syncClerkDevOrigins(resolvedSecret, setup);
+  await reportClerkJwtTemplate(resolvedSecret);
 
   return issuerDomain;
 }
@@ -366,10 +366,11 @@ async function syncClerkDevOrigins(
     `○ Could not update Clerk allowed origins via API: ${result.message}`,
   );
   printManualAction("Set Clerk allowed origins via Backend API", [
-    "Allowed origins are not configured on the Clerk Domains dashboard page",
-    `PATCH https://api.clerk.com/v1/instance with Authorization: Bearer <CLERK_SECRET_KEY>`,
+    "Allowed origins are not on the Clerk Domains page — use the Backend API:",
+    "PATCH https://api.clerk.com/v1/instance",
+    "Header: Authorization: Bearer <CLERK_SECRET_KEY (sk_test_…)>",
     `Body: {"allowed_origins":${JSON.stringify(clerkDevOrigins)},"development_origin":"${webDevOrigin}"}`,
-    "Re-run setup after fixing the secret key, or apply the PATCH manually",
+    "Re-run setup after fixing CLERK_SECRET_KEY, or apply the PATCH manually",
   ]);
 }
 
@@ -592,6 +593,14 @@ export async function bootstrapClerk(
   }
 
   const finalKeys = readValidClerkKeysFromEnv(root);
+  if (interactive && !finalKeys) {
+    exitWithManualAction("Complete Clerk development keys", [
+      `Set ${PUBLIC_CLERK_PUBLISHABLE_KEY} (pk_test_…) and CLERK_SECRET_KEY (sk_test_…) in ${WEB_ENV}`,
+      `Open ${CLERK_API_KEYS} — stay on **Development**`,
+      "Re-run `bun run setup`",
+    ]);
+  }
+
   if (
     finalKeys?.secretKey.startsWith("sk_test_") &&
     issuerDomain &&

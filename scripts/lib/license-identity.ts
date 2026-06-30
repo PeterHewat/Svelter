@@ -7,7 +7,7 @@ const MIT_LICENSE_MARKER = "MIT License";
 const PROPRIETARY_TEMPLATE_REL = ".svelter/LICENSE.proprietary.template";
 
 /**
- * Whether setup should offer or apply MIT removal (forks and pre-remote clones).
+ * Whether setup should offer or apply MIT removal (adopted template repos and pre-remote clones).
  *
  * @param github - Parsed GitHub remote, if any
  */

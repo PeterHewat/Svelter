@@ -29,10 +29,10 @@ export function cloudflarePagesCustomDomainManualSteps(
     deriveProductionHostnames(apex);
   return [
     "Only if setup reported an API error above — attachment is normally automatic",
-    `Web — Cloudflare Pages project "${webProject}": ${cloudflarePagesProjectUrl(accountId, webProject)}`,
-    `  → Custom domains → Set up a custom domain → enter ${webProduction} → Continue → Activate`,
-    `Marketing — Cloudflare Pages project "${marketingProject}": ${cloudflarePagesProjectUrl(accountId, marketingProject)}`,
-    `  → Custom domains → Set up a custom domain → enter ${marketingProduction} → Continue → Activate`,
+    `Web — open Pages project "${webProject}": ${cloudflarePagesProjectUrl(accountId, webProject)}`,
+    `  → **Custom domains** → **Set up a custom domain** → enter **${webProduction}** → **Continue** → **Activate**`,
+    `Marketing — open Pages project "${marketingProject}": ${cloudflarePagesProjectUrl(accountId, marketingProject)}`,
+    `  → **Custom domains** → **Set up a custom domain** → enter **${marketingProduction}** → **Continue** → **Activate**`,
     cloudflareDnsAutomationNote(),
     `DNS records live here (not at your registrar): ${cloudflareZoneDnsUrl(apex)}`,
   ];

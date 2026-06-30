@@ -15,8 +15,14 @@ import {
   readClerkPublishableKey,
   readConvexUrlFromWebEnv,
 } from "./clerk-web-env";
+import {
+  validateClerkDevelopmentKeys,
+  validateClerkDevelopmentPublishableKeyPaste,
+  validateClerkDevelopmentSecretKeyPaste,
+} from "./clerk-instance";
 import { isConvexLinked } from "./convex-link";
 import { isConvexNodeModulesHoisted } from "./convex-node-modules";
+import { validateClerkWebhookSigningSecret } from "./sync-clerk-webhook";
 
 type Check = {
   name: string;
@@ -219,18 +225,47 @@ function buildChecks(root: string): Check[] {
   const webEnv = readEnvFile(root, "apps/web/.env.local");
   const convexUrl = readConvexUrlFromWebEnv(webEnv);
   const clerkKey = readClerkPublishableKey(webEnv);
-  const backendConfigured =
-    !isPlaceholderEnvValue(convexUrl) && !isPlaceholderEnvValue(clerkKey);
+  const clerkSecret = webEnv.CLERK_SECRET_KEY?.trim();
+  const clerkPublishableOk =
+    Boolean(clerkKey) &&
+    !isPlaceholderEnvValue(clerkKey) &&
+    validateClerkDevelopmentPublishableKeyPaste(clerkKey!) === null;
+  const clerkSecretOk =
+    Boolean(clerkSecret) &&
+    !isPlaceholderEnvValue(clerkSecret) &&
+    validateClerkDevelopmentSecretKeyPaste(clerkSecret!) === null;
+  const clerkPairOk =
+    clerkPublishableOk &&
+    clerkSecretOk &&
+    validateClerkDevelopmentKeys(clerkKey!, clerkSecret!) === null;
+  const backendConfigured = !isPlaceholderEnvValue(convexUrl) && clerkPairOk;
 
   checks.push({
     name: "Backend (Convex + Clerk env)",
     ok: backendConfigured,
     detail: backendConfigured
-      ? "PUBLIC_CONVEX_URL and PUBLIC_CLERK_PUBLISHABLE_KEY set"
+      ? "PUBLIC_CONVEX_URL, PUBLIC_CLERK_PUBLISHABLE_KEY, and CLERK_SECRET_KEY set"
       : convexLinked
         ? "placeholders or missing in apps/web/.env.local"
         : "PUBLIC_CONVEX_URL pending — resume `bun run setup` to link Convex and sync env",
     remediation: "bun run setup — docs/getting-started.md",
+    deferUntilConvex: true,
+  });
+
+  const webhookSecret = webEnv.CLERK_WEBHOOK_SIGNING_SECRET?.trim();
+  const webhookConfigured =
+    Boolean(webhookSecret) &&
+    !isPlaceholderEnvValue(webhookSecret) &&
+    validateClerkWebhookSigningSecret(webhookSecret) === null;
+
+  checks.push({
+    name: "Clerk webhook (profile sync)",
+    ok: webhookConfigured,
+    detail: webhookConfigured
+      ? "CLERK_WEBHOOK_SIGNING_SECRET set"
+      : "missing — Convex profile sync needs a Clerk webhook",
+    remediation:
+      "bun run setup — create the Clerk webhook endpoint and paste whsec_…",
     deferUntilConvex: true,
   });
 

@@ -1,11 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import { clerkIssuerDomainFromPublishableKey } from "./clerk-publishable-key";
+import {
+  clerkDevPublishableKeyFixture,
+  clerkLivePublishableKeyFixture,
+} from "./test-fixtures";
 
 describe("clerkIssuerDomainFromPublishableKey", () => {
   test("decodes Clerk docs example", () => {
     expect(
       clerkIssuerDomainFromPublishableKey(
-        "pk_test_ZXhhbXBsZS5hY2NvdW50cy5kZXYk",
+        clerkDevPublishableKeyFixture("ZXhhbXBsZS5hY2NvdW50cy5kZXYk"),
       ),
     ).toBe("https://example.accounts.dev");
   });
@@ -13,7 +17,9 @@ describe("clerkIssuerDomainFromPublishableKey", () => {
   test("decodes unpadded production-style key", () => {
     expect(
       clerkIssuerDomainFromPublishableKey(
-        "pk_live_ZmFrZS1jbGVyay10ZXN0LmNsZXJrLmFjY291bnRzLmRldiQ",
+        clerkLivePublishableKeyFixture(
+          "ZmFrZS1jbGVyay10ZXN0LmNsZXJrLmFjY291bnRzLmRldiQ",
+        ),
       ),
     ).toBe("https://fake-clerk-test.clerk.accounts.dev");
   });
@@ -21,7 +27,7 @@ describe("clerkIssuerDomainFromPublishableKey", () => {
   test("decodes production custom Frontend API host", () => {
     expect(
       clerkIssuerDomainFromPublishableKey(
-        "pk_live_Y2xlcmsuZXh0cmFjdG9yYS5jb20k",
+        clerkLivePublishableKeyFixture("Y2xlcmsuZXh0cmFjdG9yYS5jb20k"),
       ),
     ).toBe("https://clerk.extractora.com");
   });
