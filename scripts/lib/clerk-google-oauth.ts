@@ -1,17 +1,19 @@
 /* eslint-disable no-console -- CLI */
 import {
   clerkDevelopmentOrigins,
-  clerkProductionOrigins,
   deriveProductionHostnames,
   pagesProductionHostname,
 } from "../../packages/config/hostnames";
-import { normalizeApexDomainInput } from "../../packages/config/validate-domain";
+import {
+  normalizeApexDomainInput,
+  hasApexDomain,
+} from "../../packages/config/validate-domain";
 import { isPlaceholderEnvValue } from "../../packages/config/env-placeholders";
 import { runClerkConfigPatch } from "./clerk-cli";
 import { isClerkSecretKey, normalizeClerkIssuerDomain } from "./clerk-instance";
 import { readEnvFile, upsertEnvKeys } from "./env-file";
 import { pagesProjectNames } from "./hosting-project-spec";
-import { printManualAction } from "./manual-action";
+import { printManualAction, requireManualAction } from "./manual-action";
 import {
   CLERK_GOOGLE_OAUTH_DOCS,
   CLERK_SSO_CONNECTIONS,
@@ -20,7 +22,7 @@ import {
   GOOGLE_CLOUD_OAUTH_CONSENT,
 } from "./platform-urls";
 import { productNameToSlug } from "./repo-identity";
-import { maskSecret, promptSecret } from "./prompt";
+import { maskSecret, promptConfirm, promptSecret } from "./prompt";
 import { normalizeEnvPaste } from "./env-paste";
 import type { CliToolState } from "./setup-cli";
 import type { SetupConfig } from "./setup-config";
@@ -31,19 +33,98 @@ import {
 
 const WEB_ENV = "apps/web/.env.local";
 
-/** Optional setup env keys — credentials are stored in Clerk, not used by the web app. */
-export const GOOGLE_OAUTH_CLIENT_ID = "GOOGLE_OAUTH_CLIENT_ID";
-export const GOOGLE_OAUTH_CLIENT_SECRET = "GOOGLE_OAUTH_CLIENT_SECRET";
+/** Development Clerk + One Tap — patched to the Clerk Development instance. */
+export const GOOGLE_OAUTH_DEVELOPMENT_CLIENT_ID =
+  "GOOGLE_OAUTH_DEVELOPMENT_CLIENT_ID";
+export const GOOGLE_OAUTH_DEVELOPMENT_CLIENT_SECRET =
+  "GOOGLE_OAUTH_DEVELOPMENT_CLIENT_SECRET";
+/** Production Clerk — separate GCP OAuth client (required when an apex domain is configured). */
+export const GOOGLE_OAUTH_PRODUCTION_CLIENT_ID =
+  "GOOGLE_OAUTH_PRODUCTION_CLIENT_ID";
+export const GOOGLE_OAUTH_PRODUCTION_CLIENT_SECRET =
+  "GOOGLE_OAUTH_PRODUCTION_CLIENT_SECRET";
 
 export type GoogleOAuthCredentials = {
   clientId: string;
   clientSecret: string;
 };
 
+export type GoogleOAuthCredentialsSource = "development" | "production";
+
 export type SyncClerkGoogleOAuthResult = {
   connectionEnabled: boolean;
   credentialsConfigured: boolean;
 };
+
+/** Google OAuth web client ID shape (`{numeric}-{id}.apps.googleusercontent.com`). */
+const GOOGLE_OAUTH_CLIENT_ID_PATTERN =
+  /^\d+-[a-z0-9]+\.apps\.googleusercontent\.com$/i;
+
+/** Google OAuth client secret shape (current GCP console format). */
+const GOOGLE_OAUTH_CLIENT_SECRET_PATTERN = /^GOCSPX-[A-Za-z0-9_-]+$/;
+
+/**
+ * Returns null when credentials are valid; otherwise an error message.
+ *
+ * @param credentials - Google OAuth client credentials
+ */
+export function validateGoogleOAuthCredentials(
+  credentials: GoogleOAuthCredentials,
+): string | null {
+  return (
+    validateGoogleOAuthClientId(credentials.clientId) ??
+    validateGoogleOAuthClientSecret(credentials.clientSecret) ??
+    validateGoogleOAuthCredentialPair(
+      credentials.clientId,
+      credentials.clientSecret,
+    )
+  );
+}
+
+/**
+ * Validates a Google OAuth Client ID pasted during setup.
+ *
+ * @param value - Raw Client ID
+ */
+export function validateGoogleOAuthClientId(value: string): string | null {
+  const normalized = value.trim();
+  if (!GOOGLE_OAUTH_CLIENT_ID_PATTERN.test(normalized)) {
+    return "Expected a Google OAuth Client ID like 123456789-abc….apps.googleusercontent.com";
+  }
+  return null;
+}
+
+/**
+ * Validates a Google OAuth Client secret pasted during setup.
+ *
+ * @param value - Raw Client secret
+ */
+export function validateGoogleOAuthClientSecret(value: string): string | null {
+  const normalized = value.trim();
+  if (/\.apps\.googleusercontent\.com$/i.test(normalized)) {
+    return "That looks like a Client ID — paste the Client secret from the same OAuth client";
+  }
+  if (!GOOGLE_OAUTH_CLIENT_SECRET_PATTERN.test(normalized)) {
+    return "Expected Client secret starting with GOCSPX- (copy from Google Cloud, not the Client ID)";
+  }
+  return null;
+}
+
+/**
+ * Returns whether Client ID and secret are distinct, non-swapped GCP values.
+ *
+ * @param clientId - OAuth client ID
+ * @param clientSecret - OAuth client secret
+ */
+export function validateGoogleOAuthCredentialPair(
+  clientId: string,
+  clientSecret: string,
+): string | null {
+  if (clientId.trim() === clientSecret.trim()) {
+    return "Client ID and Client secret must be different values";
+  }
+  return null;
+}
 
 /**
  * Clerk OAuth redirect URI for the Google social connection.
@@ -56,14 +137,15 @@ export function clerkGoogleOAuthRedirectUri(issuerDomain: string): string {
 }
 
 /**
- * Origins to register as **Authorized JavaScript origins** in Google Cloud Console.
+ * JavaScript origins for the **Development** GCP OAuth client (localhost + staging).
  *
  * @param setup - Persisted setup config
  */
-export function googleOAuthJavaScriptOrigins(setup: SetupConfig): string[] {
+export function googleOAuthDevelopmentJavaScriptOrigins(
+  setup: SetupConfig,
+): string[] {
   const { web } = pagesProjectNames(productNameToSlug(setup.productName));
   const origins = [...clerkDevelopmentOrigins(web)];
-  // Google One Tap status checks require both bare and port origins on localhost.
   if (!origins.includes("http://localhost")) {
     origins.unshift("http://localhost");
   }
@@ -71,14 +153,18 @@ export function googleOAuthJavaScriptOrigins(setup: SetupConfig): string[] {
   if (!origins.includes(prodPages)) {
     origins.push(prodPages);
   }
-  if (setup.apexDomain?.trim()) {
-    for (const origin of clerkProductionOrigins(web, setup.apexDomain)) {
-      if (!origins.includes(origin)) {
-        origins.push(origin);
-      }
-    }
-  }
   return origins;
+}
+
+/**
+ * When true, setup requires distinct Development and Production GCP OAuth clients.
+ *
+ * @param setup - Persisted setup config
+ */
+export function requiresSeparateGoogleOAuthClients(
+  setup: SetupConfig,
+): boolean {
+  return hasApexDomain(setup.apexDomain);
 }
 
 /**
@@ -110,34 +196,69 @@ export function buildGoogleOAuthEnablePatch(): Record<string, unknown> {
 }
 
 /**
- * Reads Google OAuth credentials from web env or process env.
+ * Env keys used for Google OAuth credentials for a Clerk instance.
+ *
+ * @param instance - Clerk Development or Production
+ */
+export function googleOAuthCredentialEnvKeys(
+  instance: "development" | "production",
+): { clientIdKey: string; clientSecretKey: string } {
+  if (instance === "production") {
+    return {
+      clientIdKey: GOOGLE_OAUTH_PRODUCTION_CLIENT_ID,
+      clientSecretKey: GOOGLE_OAUTH_PRODUCTION_CLIENT_SECRET,
+    };
+  }
+  return {
+    clientIdKey: GOOGLE_OAUTH_DEVELOPMENT_CLIENT_ID,
+    clientSecretKey: GOOGLE_OAUTH_DEVELOPMENT_CLIENT_SECRET,
+  };
+}
+
+function readEnvCredential(
+  webEnv: Record<string, string>,
+  key: string,
+): string {
+  const value = (webEnv[key] ?? process.env[key] ?? "").trim();
+  if (!value || isPlaceholderEnvValue(value)) {
+    return "";
+  }
+  return value;
+}
+
+/**
+ * Reads Google OAuth credentials from web env for a Clerk instance.
+ *
+ * Development uses `GOOGLE_OAUTH_DEVELOPMENT_*`; Production uses `GOOGLE_OAUTH_PRODUCTION_*`.
  *
  * @param root - Repository root
+ * @param instance - Clerk Development or Production
  */
 export function readGoogleOAuthCredentials(
   root: string,
-): GoogleOAuthCredentials | null {
+  instance: "development" | "production" = "development",
+): {
+  credentials: GoogleOAuthCredentials;
+  source: GoogleOAuthCredentialsSource;
+} | null {
   const webEnv = readEnvFile(root, WEB_ENV);
-  const clientId = (
-    webEnv[GOOGLE_OAUTH_CLIENT_ID] ??
-    process.env[GOOGLE_OAUTH_CLIENT_ID] ??
-    ""
-  ).trim();
-  const clientSecret = (
-    webEnv[GOOGLE_OAUTH_CLIENT_SECRET] ??
-    process.env[GOOGLE_OAUTH_CLIENT_SECRET] ??
-    ""
-  ).trim();
+  const { clientIdKey, clientSecretKey } =
+    googleOAuthCredentialEnvKeys(instance);
 
-  if (
-    !clientId ||
-    isPlaceholderEnvValue(clientId) ||
-    !clientSecret ||
-    isPlaceholderEnvValue(clientSecret)
-  ) {
+  const clientId = readEnvCredential(webEnv, clientIdKey);
+  const clientSecret = readEnvCredential(webEnv, clientSecretKey);
+
+  if (!clientId || !clientSecret) {
     return null;
   }
-  return { clientId, clientSecret };
+  const credentials = { clientId, clientSecret };
+  if (validateGoogleOAuthCredentials(credentials)) {
+    return null;
+  }
+  return {
+    credentials,
+    source: instance === "production" ? "production" : "development",
+  };
 }
 
 /**
@@ -166,17 +287,22 @@ export function clerkProductionGoogleOAuthRedirectUri(apex: string): string {
  *
  * @param apex - Production apex domain
  */
-export function clerkDeployGoogleOAuthManualSteps(apex: string): string[] {
+export function clerkDeployGoogleOAuthManualSteps(
+  apex: string,
+  productName?: string,
+): string[] {
   const origins = googleOAuthProductionJavaScriptOrigins(apex);
   const redirectUri = clerkProductionGoogleOAuthRedirectUri(apex);
+  const label = productName?.trim() || "My App";
   return [
-    `Google Cloud Console (select your project in the top bar): ${GOOGLE_CLOUD_CONSOLE}`,
-    `OAuth consent screen — before go-live set Publishing status to In production: ${GOOGLE_CLOUD_OAUTH_CONSENT}`,
-    `Create OAuth client: ${GOOGLE_CLOUD_CREDENTIALS} → Create Credentials → OAuth client ID → Web application`,
-    `Authorized JavaScript origins: ${origins.join(", ")}`,
-    `Authorized redirect URI: ${redirectUri}`,
-    `In the clerk deploy prompt → Google OAuth → "I already have my Client ID and Client Secret" → paste both`,
-    `Or paste later in Clerk (Production): ${CLERK_SSO_CONNECTIONS} → Google → Use custom credentials`,
+    `Open Google Cloud Console → select your project (top bar): ${GOOGLE_CLOUD_CONSOLE}`,
+    `Set OAuth consent screen Publishing status to **In production**: ${GOOGLE_CLOUD_OAUTH_CONSENT}`,
+    `Create a **${label} (Production)** OAuth client — separate from Development (required when an apex domain is configured)`,
+    `Open ${GOOGLE_CLOUD_CREDENTIALS} → **Create Credentials** → **OAuth client ID**`,
+    `Application type: **Web application**`,
+    `Set Authorized JavaScript origins: ${origins.join(", ")}`,
+    `Set Authorized redirect URI: ${redirectUri}`,
+    `Paste at the \`clerk deploy\` Google OAuth prompt, then save in setup as GOOGLE_OAUTH_PRODUCTION_CLIENT_ID / GOOGLE_OAUTH_PRODUCTION_CLIENT_SECRET`,
     `Clerk Google OAuth guide: ${CLERK_GOOGLE_OAUTH_DOCS}`,
   ];
 }
@@ -191,9 +317,9 @@ export function clerkGoogleManualSteps(stack?: SetupStack): string[] {
     stack
       ? clerkDashboardInstanceStep(stack)
       : `Open Clerk SSO connections: ${CLERK_SSO_CONNECTIONS}`,
-    `Google connection: ${CLERK_SSO_CONNECTIONS} → add or open **Google** → For all users`,
+    "Configure → **User & authentication** → **Social connections** → open **Google**",
     "Enable for sign-up and sign-in → turn on **Use custom credentials**",
-    `Paste Client ID and Client Secret from ${GOOGLE_CLOUD_CREDENTIALS} → Save`,
+    `Set Client ID and Client Secret from ${GOOGLE_CLOUD_CREDENTIALS} → click **Save**`,
   ];
 }
 
@@ -206,25 +332,48 @@ export function printGoogleOAuthGcpChecklist(options: {
   origins: string[];
   redirectUri: string;
   instanceLabel: string;
+  /** Suggested OAuth client name in Google Cloud Console. */
+  clientNameHint?: string;
+  /** Env keys written when setup prompts for credentials. */
+  credentialEnvKeys?: { clientIdKey: string; clientSecretKey: string };
   /** When true, setup prompts next and applies credentials via `clerk config patch`. */
   setupAppliesCredentials?: boolean;
   immediate?: boolean;
 }): void {
   const originList = options.origins.map((origin) => origin).join(", ");
   const steps = [
-    `Sign in at ${GOOGLE_CLOUD_CONSOLE} — create or select a project (top bar) if you do not have one yet`,
-    `Configure OAuth consent screen: ${GOOGLE_CLOUD_OAUTH_CONSENT} — required on new projects (Credentials shows a yellow banner until this is done)`,
+    `Sign in at ${GOOGLE_CLOUD_CONSOLE} — create or select a project (top bar) if needed`,
+    `Open ${GOOGLE_CLOUD_OAUTH_CONSENT} → configure OAuth consent screen (required on new projects)`,
     options.instanceLabel === "Production"
-      ? "Consent screen: set Publishing status to **In production** before go-live (Testing mode caps at 100 users)"
-      : "Consent screen: User type **External** → app name + support email → Save (defaults are fine for development)",
-    `Open ${GOOGLE_CLOUD_CREDENTIALS} → Create Credentials → OAuth client ID → Web application`,
-    `Authorized JavaScript origins: ${originList}`,
-    `Authorized redirect URI: ${options.redirectUri}`,
-    "Create → copy Client ID and Client Secret",
+      ? "Set Publishing status to **In production** before go-live (Testing mode caps at 100 users)"
+      : "Set User type to **External** → enter app name + support email → click **Save**",
+    options.clientNameHint
+      ? `Open ${GOOGLE_CLOUD_CREDENTIALS} → **Create Credentials** → **OAuth client ID**`
+      : `Open ${GOOGLE_CLOUD_CREDENTIALS} → **Create Credentials** → **OAuth client ID**`,
+    options.clientNameHint
+      ? `Name it **${options.clientNameHint}** → Application type: **Web application**`
+      : `Application type: **Web application**`,
+    `Set Authorized JavaScript origins: ${originList}`,
+    `Set Authorized redirect URI: ${options.redirectUri}`,
+    "Click **Create** → copy **Client ID** and **Client secret**",
   ];
-  if (options.setupAppliesCredentials) {
+  if (options.setupAppliesCredentials && options.credentialEnvKeys) {
     steps.push(
-      "Paste Client ID and Client Secret at the prompts below — setup applies them to Clerk (no dashboard paste needed)",
+      `Paste both values at the prompts below — saved as ${options.credentialEnvKeys.clientIdKey} / ${options.credentialEnvKeys.clientSecretKey}`,
+    );
+  } else if (options.setupAppliesCredentials) {
+    steps.push(
+      "Paste both values at the prompts below — setup applies them to Clerk",
+    );
+  }
+  if (options.instanceLabel === "Development" && options.credentialEnvKeys) {
+    steps.push(
+      "A separate Production OAuth client is required later — setup prompts for GOOGLE_OAUTH_PRODUCTION_* during Production bootstrap when an apex domain is configured",
+    );
+  }
+  if (options.instanceLabel === "Production") {
+    steps.push(
+      "Do not reuse the Development client — Production must use GOOGLE_OAUTH_PRODUCTION_* only",
     );
   }
 
@@ -268,6 +417,8 @@ export async function syncClerkGoogleOAuth(
     interactive: boolean;
     clerkCli?: CliToolState;
     instance?: "development" | "production";
+    /** When true, missing Production credentials log a follow-up instead of exiting setup. */
+    autoConfirm?: boolean;
   },
 ): Promise<SyncClerkGoogleOAuthResult> {
   const unchanged: SyncClerkGoogleOAuthResult = {
@@ -293,8 +444,14 @@ export async function syncClerkGoogleOAuth(
     return unchanged;
   }
 
-  const origins = googleOAuthJavaScriptOrigins(setup);
+  const origins =
+    instance === "production" && setup.apexDomain?.trim()
+      ? googleOAuthProductionJavaScriptOrigins(setup.apexDomain)
+      : googleOAuthDevelopmentJavaScriptOrigins(setup);
   const redirectUri = clerkGoogleOAuthRedirectUri(options.issuerDomain);
+  const envKeys = googleOAuthCredentialEnvKeys(instance);
+  const productionCredentialsRequired =
+    instance === "production" && requiresSeparateGoogleOAuthClients(setup);
 
   console.log(`\nClerk Google OAuth + One Tap (${instanceLabel})`);
 
@@ -325,48 +482,92 @@ export async function syncClerkGoogleOAuth(
     ]);
   }
 
-  let credentials = readGoogleOAuthCredentials(root);
+  const resolved = readGoogleOAuthCredentials(root, instance);
+  let credentials = resolved?.credentials ?? null;
+
+  if (!credentials) {
+    const webEnv = readEnvFile(root, WEB_ENV);
+    const storedId = readEnvCredential(webEnv, envKeys.clientIdKey);
+    const storedSecret = readEnvCredential(webEnv, envKeys.clientSecretKey);
+    if (storedId || storedSecret) {
+      console.log(
+        `○ Invalid or incomplete ${envKeys.clientIdKey} / ${envKeys.clientSecretKey} in ${WEB_ENV} — re-enter below`,
+      );
+    }
+  }
 
   if (!credentials && options.interactive) {
+    const oneTapQuestion = productionCredentialsRequired
+      ? "Set up Google One Tap for Production? (required with a custom apex domain)"
+      : "Set up Google One Tap?";
+    const setupOneTap = await promptConfirm(oneTapQuestion, {
+      defaultYes: true,
+    });
+
+    if (!setupOneTap) {
+      if (productionCredentialsRequired) {
+        requireManualAction(
+          "Add Production Google OAuth credentials",
+          [
+            `Create **${setup.productName} (Production)** in ${GOOGLE_CLOUD_CREDENTIALS}`,
+            `Set origins: ${origins.join(", ")}`,
+            `Set redirect URI: ${redirectUri}`,
+            `Save as ${envKeys.clientIdKey} and ${envKeys.clientSecretKey} in ${WEB_ENV}`,
+            "Re-run `bun run setup`",
+          ],
+          { autoConfirm: options.autoConfirm },
+        );
+      }
+      console.log(
+        `○ Skipped Google One Tap — add ${envKeys.clientIdKey} and ${envKeys.clientSecretKey} to ${WEB_ENV} to enable later`,
+      );
+      return { connectionEnabled, credentialsConfigured: false };
+    }
+
     printGoogleOAuthGcpChecklist({
       origins,
       redirectUri,
       instanceLabel,
+      clientNameHint:
+        instance === "production"
+          ? `${setup.productName} (Production)`
+          : `${setup.productName} (Development)`,
+      credentialEnvKeys: envKeys,
       setupAppliesCredentials: Boolean(options.clerkCli),
       immediate: true,
     });
 
     const existing = readEnvFile(root, WEB_ENV);
-    const existingId = isPlaceholderEnvValue(existing[GOOGLE_OAUTH_CLIENT_ID])
-      ? undefined
-      : existing[GOOGLE_OAUTH_CLIENT_ID];
-    const existingSecret = isPlaceholderEnvValue(
-      existing[GOOGLE_OAUTH_CLIENT_SECRET],
-    )
-      ? undefined
-      : existing[GOOGLE_OAUTH_CLIENT_SECRET];
+    const existingId =
+      readEnvCredential(existing, envKeys.clientIdKey) || undefined;
+    const existingSecret =
+      readEnvCredential(existing, envKeys.clientSecretKey) || undefined;
 
-    const rawId = await promptSecret(`${GOOGLE_OAUTH_CLIENT_ID}`, {
+    const rawId = await promptSecret(envKeys.clientIdKey, {
       defaultValue: existingId,
       displayDefault: existingId ? maskSecret(existingId) : undefined,
-      hint: "Paste Client ID from Google Cloud (Enter to skip One Tap for now)",
+      label: envKeys.clientIdKey,
+      required: true,
+      hint: "Paste Client ID from the OAuth client you created above",
+      validate: validateGoogleOAuthClientId,
     });
-    const clientId = normalizeEnvPaste(GOOGLE_OAUTH_CLIENT_ID, rawId).trim();
+    const clientId = normalizeEnvPaste(envKeys.clientIdKey, rawId).trim();
 
-    if (clientId) {
-      const rawSecret = await promptSecret(`${GOOGLE_OAUTH_CLIENT_SECRET}`, {
-        defaultValue: existingSecret,
-        displayDefault: existingSecret ? maskSecret(existingSecret) : undefined,
-        hint: "Google Cloud Console → OAuth client → Client secret",
-      });
-      const clientSecret = normalizeEnvPaste(
-        GOOGLE_OAUTH_CLIENT_SECRET,
-        rawSecret,
-      ).trim();
-      if (clientSecret) {
-        credentials = { clientId, clientSecret };
-      }
-    }
+    const rawSecret = await promptSecret(envKeys.clientSecretKey, {
+      defaultValue: existingSecret,
+      displayDefault: existingSecret ? maskSecret(existingSecret) : undefined,
+      label: envKeys.clientSecretKey,
+      hint: "Paste Client secret (GOCSPX-…) from the same OAuth client — not the Client ID",
+      required: true,
+      validate: (value) =>
+        validateGoogleOAuthClientSecret(value) ??
+        validateGoogleOAuthCredentialPair(clientId, value),
+    });
+    const clientSecret = normalizeEnvPaste(
+      envKeys.clientSecretKey,
+      rawSecret,
+    ).trim();
+    credentials = { clientId, clientSecret };
   }
 
   if (!credentials) {
@@ -375,20 +576,37 @@ export async function syncClerkGoogleOAuth(
         origins,
         redirectUri,
         instanceLabel,
+        clientNameHint:
+          instance === "production"
+            ? `${setup.productName} (Production)`
+            : `${setup.productName} (Development)`,
+        credentialEnvKeys: envKeys,
         setupAppliesCredentials: Boolean(options.clerkCli),
       });
     }
-    console.log(
-      "○ Skipped Google credentials — One Tap needs a GCP OAuth client; re-run setup after adding GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET to apps/web/.env.local",
-    );
+    const skipMessage = `○ Skipped Google One Tap — add ${envKeys.clientIdKey} and ${envKeys.clientSecretKey} to ${WEB_ENV}, then re-run setup`;
+    if (productionCredentialsRequired) {
+      requireManualAction(
+        "Add Production Google OAuth credentials",
+        [
+          `Create **${setup.productName} (Production)** in ${GOOGLE_CLOUD_CREDENTIALS}`,
+          `Set origins: ${origins.join(", ")}`,
+          `Set redirect URI: ${redirectUri}`,
+          `Save as ${envKeys.clientIdKey} and ${envKeys.clientSecretKey} in ${WEB_ENV}`,
+          "Re-run `bun run setup`",
+        ],
+        { autoConfirm: options.autoConfirm },
+      );
+    }
+    console.log(skipMessage);
     return { connectionEnabled, credentialsConfigured: false };
   }
 
   upsertEnvKeys(root, WEB_ENV, {
-    [GOOGLE_OAUTH_CLIENT_ID]: credentials.clientId,
-    [GOOGLE_OAUTH_CLIENT_SECRET]: credentials.clientSecret,
+    [envKeys.clientIdKey]: credentials.clientId,
+    [envKeys.clientSecretKey]: credentials.clientSecret,
   });
-  console.log(`✓ Saved ${GOOGLE_OAUTH_CLIENT_ID} → ${WEB_ENV}`);
+  console.log(`✓ Saved ${envKeys.clientIdKey} → ${WEB_ENV}`);
 
   if (options.clerkCli) {
     const patched = await patchGoogleViaClerkCli(

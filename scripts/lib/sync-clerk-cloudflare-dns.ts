@@ -13,7 +13,7 @@ import {
 } from "./cloudflare-api";
 import { resolveCloudflareApiToken } from "./cloudflare-auth";
 import { importClerkDnsRecordsToCloudflare } from "./cloudflare-dns";
-import { cloudflareZoneDnsUrl } from "./platform-urls";
+import { CLOUDFLARE_DASHBOARD, cloudflareZoneDnsUrl } from "./platform-urls";
 import { printManualAction, requireManualAction } from "./manual-action";
 
 export type ResolveClerkDnsRecordsResult = {
@@ -88,20 +88,27 @@ export async function syncClerkDnsRecordsToCloudflare(
     return;
   }
 
-  const { created, existing } = await importClerkDnsRecordsToCloudflare(
-    token,
-    zone,
-    records,
-  );
+  const { created, updated, fixedProxy, existing } =
+    await importClerkDnsRecordsToCloudflare(token, zone, records);
   const sourceLabel =
     source === "clerk_api" ? "Clerk API" : "clerk BIND zone file";
+  if (updated > 0) {
+    console.log(
+      `✓ Updated ${updated} stale Clerk DNS record(s) in Cloudflare (${sourceLabel})`,
+    );
+  }
+  if (fixedProxy > 0) {
+    console.log(
+      `✓ Set ${fixedProxy} Clerk CNAME(s) to DNS-only (grey cloud) in Cloudflare`,
+    );
+  }
   if (created > 0) {
     console.log(
-      `✓ Imported ${created} Clerk DNS record(s) into Cloudflare (${existing} already present; ${sourceLabel})`,
+      `✓ Imported ${created} Clerk DNS record(s) into Cloudflare (${existing} already correct; ${sourceLabel})`,
     );
-  } else if (existing > 0) {
+  } else if (existing > 0 && updated === 0 && fixedProxy === 0) {
     console.log(
-      `✓ Clerk DNS records already present in Cloudflare (${existing}; ${sourceLabel})`,
+      `✓ Clerk DNS records already correct in Cloudflare (${existing}; ${sourceLabel})`,
     );
   }
 
@@ -208,9 +215,10 @@ export async function trySyncClerkBindZoneForApex(
 export function printClerkDnsImportFallback(root: string, apex: string): void {
   const zoneFile = clerkBindZonePath(root, apex);
   printManualAction("Import Clerk DNS records into Cloudflare", [
-    cloudflareZoneDnsUrl(apex),
-    `DNS → Import → upload or paste ${zoneFile}`,
-    "Or add each CNAME from Clerk Dashboard → Domains (DNS-only / grey cloud)",
+    `Open ${cloudflareZoneDnsUrl(apex)}`,
+    "Go to **DNS** → **Import** → upload or paste the BIND zone file",
+    `Zone file path: ${zoneFile}`,
+    "Or add each CNAME from Clerk Dashboard → Configure → **Domains** (grey cloud / DNS only)",
   ]);
 }
 
@@ -227,10 +235,11 @@ export function requireCloudflareZoneForClerkProduction(
   requireManualAction(
     "Create the Cloudflare zone before Clerk production deploy",
     [
-      `Dashboard → Domains → Add a domain → ${apex} (Free plan)`,
+      `Open ${CLOUDFLARE_DASHBOARD}`,
+      `Go to **Domains** → **Add a domain** → enter **${apex}** → choose **Free** plan`,
       "Clerk DNS records belong in Cloudflare DNS — not as individual CNAMEs at your registrar",
       "After `clerk deploy`, setup syncs Clerk DNS from the Backend API (BIND file fallback in `.svelter/`)",
-      "Then point registrar nameservers at Cloudflare — setup prints generic registrar steps",
+      "Then point registrar nameservers at Cloudflare — setup prints registrar steps when prompted",
       "Re-run `bun run setup` when the zone exists",
     ],
     options,

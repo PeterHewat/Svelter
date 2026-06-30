@@ -96,7 +96,11 @@ export async function syncPagesHostingDnsRecords(
       { name, type: "CNAME", content: target },
       { proxied: true },
     );
-    if (result === "created") {
+    if (
+      result === "created" ||
+      result === "updated" ||
+      result === "fixed_proxy"
+    ) {
       created += 1;
     } else {
       existing += 1;

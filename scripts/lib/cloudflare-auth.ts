@@ -7,6 +7,46 @@ import { promptSecret } from "./prompt";
 import { readSetupConfig } from "./setup-config";
 import { readSpawnPipe } from "./spawn-io";
 
+/** Minimum length for a Cloudflare User API token (dashboard tokens are ~40 chars). */
+const CLOUDFLARE_API_TOKEN_MIN_LENGTH = 37;
+
+/** Maximum plausible length for a Cloudflare User API token. */
+const CLOUDFLARE_API_TOKEN_MAX_LENGTH = 256;
+
+/**
+ * Validates a Cloudflare User API token pasted or read from the environment.
+ *
+ * @param value - Raw API token
+ */
+export function validateCloudflareApiToken(value: string): string | null {
+  const normalized = value.trim();
+  if (!normalized) {
+    return "Cloudflare API token is required";
+  }
+  if (normalized.length < CLOUDFLARE_API_TOKEN_MIN_LENGTH) {
+    return "Token looks too short — copy the full API token from Cloudflare";
+  }
+  if (normalized.length > CLOUDFLARE_API_TOKEN_MAX_LENGTH) {
+    return "Token looks too long for a Cloudflare API token";
+  }
+  if (normalized.startsWith("pk_") || normalized.startsWith("sk_")) {
+    return "That looks like a Clerk key — paste your Cloudflare API token";
+  }
+  if (normalized.startsWith("whsec_")) {
+    return "That looks like a Clerk webhook signing secret — paste your Cloudflare API token";
+  }
+  if (normalized.startsWith("GOCSPX-")) {
+    return "That looks like a Google OAuth client secret — paste your Cloudflare API token";
+  }
+  if (normalized.includes(".apps.googleusercontent.com")) {
+    return "That looks like a Google OAuth client ID — paste your Cloudflare API token";
+  }
+  if (!/^[A-Za-z0-9._-]+$/.test(normalized)) {
+    return "Cloudflare API tokens use letters, numbers, dashes, underscores, and dots";
+  }
+  return null;
+}
+
 export type WranglerWhoami = {
   accountId?: string;
 };
@@ -67,17 +107,18 @@ export function cloudflareApiTokenManualSteps(productName?: string): string[] {
   const name = productName?.trim() || "My App";
   return [
     `Open ${CLOUDFLARE_API_TOKENS}`,
-    "Create Token → Create Custom Token",
-    `Token name: e.g. "${name} GitHub Actions" (any descriptive label)`,
-    "Permissions — Account → Cloudflare Pages → Edit",
-    "Permissions — Account → Account Settings → Edit",
-    "Permissions — Zone → Zone → Edit",
-    "Permissions — Zone → DNS → Edit",
-    "Account Resources — Include → select your Cloudflare account",
-    "Zone Resources — Include → All zones (required before the zone exists)",
-    "Create Token → copy the value (shown once)",
-    "Return here and paste the token at the prompt below (input is hidden)",
-    "Or skip the token: use Dashboard → Add a domain (same as creating a zone in the UI)",
+    "Click **Create Token** → **Create Custom Token**",
+    `Set Token name: e.g. "${name} GitHub Actions"`,
+    "Under **Permissions**, add each row:",
+    "  • Account → Cloudflare Pages → **Edit**",
+    "  • Account → Account Settings → **Edit**",
+    "  • Zone → Zone → **Edit**",
+    "  • Zone → DNS → **Edit**",
+    "Under **Account Resources** → Include → select your Cloudflare account",
+    "Under **Zone Resources** → Include → **All zones** (required before the zone exists)",
+    "Click **Continue to summary** → **Create Token** → copy the token (shown once)",
+    "Paste the token at the prompt below (input is hidden)",
+    "Or skip the token: Dashboard → **Domains** → **Add a domain** (same as creating a zone in the UI)",
   ];
 }
 
@@ -94,14 +135,16 @@ export function registrarNameserverManualSteps(
 ): string[] {
   const joined = nameservers.join(", ");
   return [
-    "Log in where you registered the domain (your registrar — e.g. OVH, Namecheap, Gandi)",
-    "Open the domain management page for your apex domain",
-    'Find "Nameservers", "DNS servers", or "Delegation" (labels differ by registrar)',
-    'Switch from the registrar\'s default DNS to "Custom nameservers" (or equivalent)',
-    `Enter Cloudflare's nameservers exactly: ${joined}`,
-    "Save — do not change individual DNS records at the registrar after this; manage DNS in Cloudflare",
-    "Copy any email MX/TXT records into Cloudflare DNS before switching if you use email on this domain",
-    "Propagation can take minutes to 48 hours; re-run `bun run setup` when Cloudflare shows the zone Active",
+    "Log in at your domain registrar (where you bought the domain — e.g. OVH, Namecheap, Gandi)",
+    "Open your apex domain's management page",
+    "Go to **Nameservers**, **DNS servers**, or **Delegation** (label varies by registrar)",
+    "Switch from the registrar's default nameservers to **Custom nameservers** (or equivalent)",
+    "If **DNSSEC** is enabled at your registrar (common on OVH), disable it before changing nameservers — otherwise delegation can fail or stay stuck on pending",
+    `Set nameservers to Cloudflare's values exactly: ${joined}`,
+    "Click **Save** — after this, manage DNS only in Cloudflare (not at the registrar)",
+    "After Cloudflare shows the zone **Active**, optionally enable DNSSEC in Cloudflare → **DNS** → **Settings** (not at the registrar)",
+    "Before switching: copy any email MX/TXT records into Cloudflare DNS if you use email on this domain",
+    "Wait for propagation (minutes to 48 hours) — re-run `bun run setup` when Cloudflare shows the zone **Active**",
   ];
 }
 
@@ -164,7 +207,8 @@ export function parseWranglerWhoamiJson(stdout: string): {
  * @param root - Repository root
  */
 export async function isWranglerAuthenticated(root: string): Promise<boolean> {
-  if (process.env.CLOUDFLARE_API_TOKEN?.trim()) {
+  const fromEnv = process.env.CLOUDFLARE_API_TOKEN?.trim();
+  if (fromEnv && !validateCloudflareApiToken(fromEnv)) {
     return true;
   }
   const result = await runWrangler(root, ["whoami", "--json"]);
@@ -231,7 +275,8 @@ export function parseWranglerAuthTokenJson(stdout: string): string | undefined {
  * @param root - Repository root
  */
 export async function ensureWranglerLogin(root: string): Promise<boolean> {
-  if (process.env.CLOUDFLARE_API_TOKEN?.trim()) {
+  const fromEnv = process.env.CLOUDFLARE_API_TOKEN?.trim();
+  if (fromEnv && !validateCloudflareApiToken(fromEnv)) {
     return true;
   }
   if (await isWranglerAuthenticated(root)) {
@@ -263,7 +308,9 @@ async function promptForDurableCloudflareApiToken(
   await openUrlInBrowser(CLOUDFLARE_API_TOKENS);
   const pasted = await promptSecret("Paste your Cloudflare API token here", {
     required: true,
+    label: "CLOUDFLARE_API_TOKEN",
     hint: "Copy from the Cloudflare dashboard after Create Token — then paste below.",
+    validate: validateCloudflareApiToken,
   });
   const trimmed = pasted.trim();
   if (trimmed) {
@@ -287,7 +334,13 @@ export async function resolveCloudflareApiToken(
 ): Promise<ResolvedCloudflareToken | null> {
   const fromEnv = process.env.CLOUDFLARE_API_TOKEN?.trim();
   if (fromEnv) {
-    return { token: fromEnv, source: "env" };
+    const tokenError = validateCloudflareApiToken(fromEnv);
+    if (!tokenError) {
+      return { token: fromEnv, source: "env" };
+    }
+    console.log(
+      `○ Invalid CLOUDFLARE_API_TOKEN in environment — ${tokenError}`,
+    );
   }
 
   if (options?.durableOnly) {

@@ -5,6 +5,7 @@ import {
   parseWranglerWhoami,
   parseWranglerWhoamiJson,
   registrarNameserverManualSteps,
+  validateCloudflareApiToken,
 } from "./cloudflare-auth";
 
 describe("cloudflareApiTokenManualSteps", () => {
@@ -20,13 +21,11 @@ describe("cloudflareApiTokenManualSteps", () => {
     expect(steps[0]).toContain("api-tokens");
     expect(steps.some((step) => step.includes("Token name"))).toBe(true);
     expect(steps.some((step) => step.includes("Cloudflare Pages"))).toBe(true);
-    expect(steps.some((step) => step.includes("Account Settings → Edit"))).toBe(
-      true,
-    );
+    expect(steps.some((step) => step.includes("Account Settings"))).toBe(true);
     expect(steps.some((step) => step.includes("Zone → Zone"))).toBe(true);
     expect(steps.some((step) => step.includes("All zones"))).toBe(true);
     expect(
-      steps.some((step) => step.includes("paste the token at the prompt")),
+      steps.some((step) => step.includes("Paste the token at the prompt")),
     ).toBe(true);
   });
 });
@@ -44,6 +43,7 @@ describe("registrarNameserverManualSteps", () => {
     expect(steps.some((step) => step.includes("Custom nameservers"))).toBe(
       true,
     );
+    expect(steps.some((step) => step.includes("DNSSEC"))).toBe(true);
   });
 });
 
@@ -94,5 +94,30 @@ describe("parseWranglerAuthTokenJson", () => {
     expect(
       parseWranglerAuthTokenJson(JSON.stringify({ apiToken: "cf_token_def" })),
     ).toBe("cf_token_def");
+  });
+});
+
+describe("validateCloudflareApiToken", () => {
+  const validToken = "a".repeat(40);
+
+  test("accepts a long alphanumeric token", () => {
+    expect(validateCloudflareApiToken(validToken)).toBeNull();
+  });
+
+  test("rejects short values", () => {
+    expect(validateCloudflareApiToken("short")).not.toBeNull();
+  });
+
+  test("rejects Clerk and Google credential shapes", () => {
+    const padded = "x".repeat(31);
+    expect(validateCloudflareApiToken(`pk_test_${padded}`)).toContain("Clerk");
+    expect(validateCloudflareApiToken(`sk_test_${padded}`)).toContain("Clerk");
+    expect(validateCloudflareApiToken(`whsec_${padded}`)).toContain("webhook");
+    expect(validateCloudflareApiToken(`GOCSPX-${padded}`)).toContain("Google");
+    expect(
+      validateCloudflareApiToken(
+        `${"1".repeat(30)}.apps.googleusercontent.com`,
+      ),
+    ).toContain("Google");
   });
 });

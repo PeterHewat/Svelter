@@ -90,18 +90,75 @@ export async function promptConfirm(
  * @param question - Prompt label (without trailing colon)
  * @param options - Default value and whether empty input is allowed
  */
+export type PromptSecretOptions = {
+  defaultValue?: string;
+  displayDefault?: string;
+  required?: boolean;
+  /** One-line context printed above the prompt (where to find the value). */
+  hint?: string;
+  /** Return null when valid, or a short error shown before re-prompting. */
+  validate?: (value: string) => string | null;
+  /** Print masked confirmation or skip notice after input. Default true. */
+  acknowledge?: boolean;
+  /** Short label in confirmation lines; defaults to `question`. */
+  label?: string;
+};
+
+function resolveSecretInput(
+  trimmed: string,
+  options: PromptSecretOptions | undefined,
+  label: string,
+): string | "retry" {
+  if (!trimmed) {
+    if (options?.defaultValue !== undefined) {
+      if (options.acknowledge !== false) {
+        console.log(
+          `✓ ${label} unchanged (${maskSecret(options.defaultValue)})`,
+        );
+      }
+      return options.defaultValue;
+    }
+    if (options?.required) {
+      console.log("  Required — enter a value (or paste from clipboard).");
+      return "retry";
+    }
+    if (options?.acknowledge !== false) {
+      console.log(`○ ${label} skipped`);
+    }
+    return "";
+  }
+
+  if (options?.validate) {
+    const error = options.validate(trimmed);
+    if (error) {
+      console.log(`  ${error}`);
+      return "retry";
+    }
+  }
+
+  if (options?.acknowledge !== false) {
+    console.log(`✓ ${label} received (${maskSecret(trimmed)})`);
+  }
+  return trimmed;
+}
+
+/**
+ * Prompts for a secret on stdin without echoing input or leaving the value on screen.
+ * Falls back to {@link promptLine} when stdin/stdout are not a TTY (CI, pipes).
+ *
+ * @param question - Prompt label (without trailing colon)
+ * @param options - Default value, validation, and acknowledgment
+ */
 export async function promptSecret(
   question: string,
-  options?: {
-    defaultValue?: string;
-    displayDefault?: string;
-    required?: boolean;
-    /** One-line context printed above the prompt (where to find the value). */
-    hint?: string;
-  },
+  options?: PromptSecretOptions,
 ): Promise<string> {
+  const label = options?.label ?? question;
+
   if (!isInteractivePrompt()) {
-    return promptLine(question, options);
+    const answer = await promptLine(question, options);
+    const resolved = resolveSecretInput(answer.trim(), options, label);
+    return resolved === "retry" ? "" : resolved;
   }
 
   const rl = readline.createInterface({ input, output, terminal: true });
@@ -127,15 +184,10 @@ export async function promptSecret(
         rl.question("", resolve);
       });
       erasePreviousPromptLine();
-      const trimmed = answer.trim();
-      if (!trimmed && options?.defaultValue !== undefined) {
-        return options.defaultValue;
+      const resolved = resolveSecretInput(answer.trim(), options, label);
+      if (resolved !== "retry") {
+        return resolved;
       }
-      if (!trimmed && options?.required) {
-        console.log("  Required — enter a value.");
-        continue;
-      }
-      return trimmed;
     }
   } finally {
     rl.close();

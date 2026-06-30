@@ -34,7 +34,11 @@ import {
   type SetupCliContext,
 } from "./setup-cli";
 import { printManualAction, requireManualAction } from "./manual-action";
-import { CONVEX_DASHBOARD, githubEnvironmentsUrl } from "./platform-urls";
+import {
+  CONVEX_DASHBOARD,
+  CLERK_API_KEYS,
+  githubEnvironmentsUrl,
+} from "./platform-urls";
 import { maskSecret, promptConfirm, promptLine } from "./prompt";
 import { trySyncApexDnsToCloudflare } from "./cloudflare-apex-dns";
 import { findApexCloudflareZone } from "./sync-clerk-cloudflare-dns";
@@ -123,6 +127,7 @@ async function resolveClerkProductionKeys(
       options!.cliContext!.clerk,
       root,
       apexDomain,
+      setup.productName,
     );
     if (pulled) {
       console.log(
@@ -187,9 +192,48 @@ async function syncClerkProductionAllowedOrigins(
     `○ Could not update Clerk allowed origins via API: ${result.message}`,
   );
   printManualAction("Set Clerk production allowed origins via Backend API", [
-    "Use your **Production** instance secret key (sk_live_…)",
-    `PATCH https://api.clerk.com/v1/instance with allowed_origins including ${origins.join(", ")}`,
+    "Use your **Production** instance secret key (`sk_live_…`)",
+    "PATCH https://api.clerk.com/v1/instance",
+    "Header: Authorization: Bearer <CLERK_SECRET_KEY (sk_live_…)>",
+    `Body: include allowed_origins: ${origins.join(", ")}`,
   ]);
+}
+
+/**
+ * Best-effort Production Google OAuth sync when production bootstrap is skipped on resume.
+ */
+async function trySyncClerkGoogleOAuthOnResume(
+  root: string,
+  setup: SetupConfig,
+  options?: BootstrapProductionOptions,
+): Promise<void> {
+  if (!hasApexDomain(setup.apexDomain)) {
+    return;
+  }
+  let clerkSk = "";
+  let clerkPk = "";
+  if (options?.cliContext && canAutomateClerk(options.cliContext)) {
+    const pulled = await pullClerkProductionEnv(options.cliContext.clerk, root);
+    clerkSk = pulled?.secretKey ?? "";
+    clerkPk = pulled?.publishableKey ?? "";
+  }
+  if (!clerkSk.startsWith("sk_live_")) {
+    return;
+  }
+  const productionIssuer =
+    (await resolveClerkIssuerDomain(clerkPk, clerkSk)) ??
+    issuerFromPublishableKey(clerkPk);
+  await syncClerkGoogleOAuth(root, setup, {
+    issuerDomain: productionIssuer,
+    secretKey: clerkSk,
+    interactive: !options?.autoConfirm,
+    autoConfirm: options?.autoConfirm,
+    clerkCli:
+      options?.cliContext && canAutomateClerk(options.cliContext)
+        ? options.cliContext.clerk
+        : undefined,
+    instance: "production",
+  });
 }
 
 /**
@@ -218,8 +262,9 @@ async function trySyncClerkProductionOriginsOnResume(
       hasApexDomain(setup.apexDomain) ? setup.apexDomain : undefined,
     );
     printManualAction("Ensure Clerk Production allowed origins include", [
-      ...origins,
-      "Clerk dashboard → your app → Production instance → allowed origins",
+      `Open Clerk Dashboard → switch to **Production** (instance switcher, top bar)`,
+      "Configure → **Domains** → **Allowed origins** → add each:",
+      ...origins.map((origin) => `  • ${origin}`),
     ]);
     return;
   }
@@ -262,6 +307,7 @@ export async function bootstrapProduction(
       );
     }
     await trySyncClerkProductionOriginsOnResume(root, setup, options);
+    await trySyncClerkGoogleOAuthOnResume(root, setup, options);
     if (hasApex) {
       await trySyncApexDnsToCloudflare(root, setup);
     }
@@ -413,8 +459,8 @@ export async function bootstrapProduction(
       printManualAction(
         "Clerk Production Frontend API URL",
         [
-          "Clerk Dashboard → API keys → switch to **Production**",
-          "Copy the Frontend API URL (e.g. https://clerk.example.com for a custom domain)",
+          `Open ${CLERK_API_KEYS} — switch to **Production** (instance switcher, top bar)`,
+          "Copy **Frontend API URL** (e.g. `https://clerk.example.com` for a custom domain)",
           apexHint ? `Expected for your apex: ${apexHint}` : "",
         ].filter(Boolean),
       );
@@ -483,8 +529,9 @@ export async function bootstrapProduction(
 
   if (!convexUrl) {
     printManualAction("Copy Convex Production deployment URL", [
-      `Convex dashboard: ${CONVEX_DASHBOARD}`,
-      "Switch to **Production** → copy https://….convex.cloud",
+      `Open ${CONVEX_DASHBOARD}`,
+      "Switch deployment to **Production** (top bar)",
+      "Go to **Settings** → copy the deployment URL (`https://….convex.cloud`)",
     ]);
     while (
       !convexUrl.startsWith("https://") ||
@@ -524,6 +571,7 @@ export async function bootstrapProduction(
       issuerDomain: productionIssuer,
       secretKey: clerkSk,
       interactive: !options?.autoConfirm,
+      autoConfirm: options?.autoConfirm,
       clerkCli:
         options?.cliContext && canAutomateClerk(options.cliContext)
           ? options.cliContext.clerk
@@ -532,7 +580,7 @@ export async function bootstrapProduction(
     });
   } else if (webProject && !clerkDeferred) {
     printManualAction("Set Clerk production allowed origins via Backend API", [
-      "Provide sk_live_… when prompted so setup can PATCH allowed_origins automatically",
+      "Paste `sk_live_…` when prompted so setup can PATCH allowed_origins automatically",
       `Required origins: ${clerkProductionOrigins(webProject, hasApex ? setup.apexDomain : undefined).join(", ")}`,
     ]);
   }
