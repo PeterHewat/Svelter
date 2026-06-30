@@ -4,15 +4,36 @@ What `bun run setup` automates, what stays manual, and dashboard URLs for fallba
 
 **Related:** [getting-started.md](./getting-started.md), [environments.md](./environments.md), [ci-cd.md](./ci-cd.md)
 
+## Development vs Production during setup
+
+Setup configures **two stacks**. Staging (`staging.*.pages.dev` on merge to `main`) uses the **Development** stack — not a third Clerk/Convex deployment.
+
+| Setup step                        | Stack                  | What it configures                                                                                              |
+| --------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Convex + Clerk (first half)       | **Development**        | Clerk Development (`pk_test_…`), Convex **dev** deployment, `apps/web/.env.local`, dev webhook                  |
+| GitHub Actions repository secrets | **Development**        | PR CI, Playwright, staging deploys on `main`                                                                    |
+| Cloudflare Pages                  | **Production hosting** | Pages projects, apex DNS, deploy tokens (used by **both** staging branch deploys and release deploys)           |
+| Production (release-* tags)       | **Production**         | Clerk Production (`pk_live_…` via `clerk deploy`), Convex **prod**, GitHub **`production`** environment secrets |
+
+**Is Production fully set up?**
+
+| Path                                            | Development                      | Production                                                                                                                                                                       |
+| ----------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Happy path + apex**                           | Complete                         | Complete when setup exits 0 and summary shows `pk_live_` synced — release sign-in works on `*.pages.dev` and apex                                                                |
+| **Happy path, no apex**                         | Complete                         | **Partial** — Convex prod + Pages may sync; Clerk Production **deferred** (no domain for `clerk deploy`); release **web sign-in will not work** until you add an apex and re-run |
+| **Troublesome path** (ACTION REQUIRED / exit 1) | Usually complete up to the pause | **Incomplete** — fix the blocking step and re-run; nothing after the pause runs in that session                                                                                  |
+
+Production is **not** always fully set up: only when `github.syncedSecrets.production` is true (needs `PUBLIC_CLERK_PUBLISHABLE_KEY` = `pk_live_…` plus Convex prod URL and deploy key) and, with an apex, `cloudflare.dnsConfigured` is true.
+
 ## Wizard behavior
 
 - **Idempotent** (safe to re-run anytime): should not duplicate Clerk apps, corrupt [`.svelter/setup.json`](../.svelter/setup.json), or worsen secret placement. Interrupted runs resume; create-or-skip steps skip when already done. Prompts still run (with saved defaults); optional sync steps (GitHub secrets, Cloudflare) run again only when you confirm them.
 - **Interactive** (local TTY): prompts run each time; previous answers from `.svelter/setup.json` are defaults (Enter keeps them).
 - **Non-TTY** (CI, piped stdin): skip prompts; use existing `.svelter/setup.json` and env only. GitHub Actions secret sync, Cloudflare bootstrap, and production bootstrap require an interactive TTY — or pass `--sync-secrets` when `gh` / `CLOUDFLARE_API_TOKEN` are already set.
-- Dashboard URLs appear as clickable links in setup output. Three manual tiers:
-  - **ACTION REQUIRED** — setup **exits**; finish the step, then re-run `bun run setup` (e.g. Convex not linked, apex DNS nameservers not delegated).
-  - **→** (immediate) — do this **now** before the next prompt in the same run (e.g. create GCP OAuth client, then paste credentials).
-  - **→ Follow up:** — deferred checklist; setup **continues** (e.g. Clerk webhook endpoint, skipped optional steps).
+- Dashboard URLs appear as clickable links in setup output. Manual tiers:
+  - **ACTION REQUIRED** — setup **exits**; finish the step, then re-run `bun run setup` (Convex not linked, Cloudflare zone missing, Clerk Production incomplete, registrar nameservers not delegated, etc.).
+  - **→** (immediate) — do this **now** before the next prompt in the same run (e.g. create GCP OAuth client, then paste credentials; create Cloudflare zone in dashboard, then confirm lookup).
+  - **→ Follow up:** — optional or informational only; setup continues (skipped optional steps, agent skills install warnings).
 
 Step-by-step summary: [getting-started.md](./getting-started.md#2-setup-wizard-bun-run-setup).
 
@@ -140,7 +161,7 @@ When `CLERK_SECRET_KEY` is set and the Clerk issuer is known, setup:
 
 **Google Cloud:** standard Sign-in OAuth clients are created in the [console](https://console.cloud.google.com/apis/credentials) only (no `gcloud` automation) — see feasibility table below.
 
-**Production:** the Production setup step repeats for the Production Clerk instance (`sk_live_…`) with production web origins.
+**Production:** before interactive `clerk deploy`, setup prints a **linked checklist** (Google Cloud Console, OAuth consent, Credentials, Clerk SSO connections) with the exact JavaScript origins and redirect URI (`https://accounts.{apex}/v1/oauth_callback`), opens [Credentials](https://console.cloud.google.com/apis/credentials) in the browser, then runs the Clerk deploy wizard. At the Google OAuth prompt, choose **I already have my Client ID and Client Secret** and paste values from Google Cloud. Setup also repeats Google OAuth patching after deploy when `sk_live_…` keys are available.
 
 Without custom credentials, Google One Tap will not render; the sign-in modal’s Google button may still work in Development.
 
@@ -222,12 +243,14 @@ Setup probes these at the start of each interactive run. Missing tools print mac
 
 ## Apex domain and DNS (Cloudflare-first)
 
-When you set an apex domain in the identity wizard, setup assumes **DNS is hosted on Cloudflare**, not at your registrar:
+When you set an apex domain in the identity wizard, setup assumes **DNS is hosted on Cloudflare**, not at your registrar. **You do not add CNAMEs by hand** — setup creates Pages and Clerk DNS records via the Cloudflare API. Your only manual DNS step is pointing **registrar nameservers** at Cloudflare when prompted.
 
 1. **Cloudflare zone** — setup tries the API; fallback is Dashboard → **Domains → Add a domain** (not Workers & Pages). `wrangler login` can create Pages projects but **cannot** create DNS zones.
-2. **Clerk production** — runs only after the Cloudflare zone exists. `clerk deploy` uses the **same** apex domain you entered earlier; Clerk CNAMEs belong in **Cloudflare DNS**, not as individual records at your registrar.
-3. **Clerk DNS sync** — after `clerk deploy`, setup fetches CNAME targets from `GET /v1/domains` (`sk_live_…`) and creates DNS-only records in Cloudflare. `clerk deploy` may write a BIND file at repo root; setup relocates it to `.svelter/clerk-{apex}.zone` as a fallback.
-4. **Registrar** — setup prints **generic** nameserver steps (wording varies by OVH, Namecheap, etc.): switch to custom nameservers using the two values Cloudflare assigns **your** zone (copy from the zone Overview — do not use example hostnames from docs).
+2. **Cloudflare Pages custom domains** — setup attaches `example.com` → web project and `www.example.com` → marketing project via API. Dashboard fallback (Custom domains tab on each Pages project) appears only if the API step fails.
+3. **Pages DNS records** — proxied CNAMEs in Cloudflare DNS (`example.com` → `{web}.pages.dev`, `www` → `{marketing}.pages.dev`) are created automatically when the API token has Zone → DNS → Edit.
+4. **Clerk production** — runs only after the Cloudflare zone exists. `clerk deploy` uses the **same** apex domain you entered earlier; Clerk CNAMEs are imported into **Cloudflare DNS** automatically (DNS-only / grey cloud).
+5. **Clerk DNS sync** — after `clerk deploy`, setup fetches CNAME targets from `GET /v1/domains` (`sk_live_…`) and creates DNS-only records in Cloudflare. `clerk deploy` may write a BIND file at repo root; setup relocates it to `.svelter/clerk-{apex}.zone` as a fallback.
+6. **Registrar** — setup prints **generic** nameserver steps (wording varies by OVH, Namecheap, etc.): switch to custom nameservers using the two values Cloudflare assigns **your** zone (copy from the zone Overview — do not use example hostnames from docs).
 
 Re-run `bun run setup` after the zone exists and after registrar nameservers propagate.
 

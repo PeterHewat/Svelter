@@ -14,6 +14,7 @@ import {
   type ResolvedCloudflareToken,
 } from "./cloudflare-auth";
 import { ensureCloudflareDnsRecord } from "./cloudflare-dns";
+import { cloudflareApexDnsAutomationFailedSteps } from "./cloudflare-manual-steps";
 import { cloudflareZoneDnsUrl } from "./platform-urls";
 import { printManualAction } from "./manual-action";
 import { clerkBindZonePath, readClerkBindZoneRecords } from "./clerk-dns-zone";
@@ -149,17 +150,32 @@ export async function syncApexDnsRecords(
   await syncClerkDnsToCloudflare(root, token, zone, apex, clerkSecretKey);
 }
 
-function printApexDnsImportFallback(root: string, apex: string): void {
+function printApexDnsImportFallback(
+  root: string,
+  apex: string,
+  accountId?: string,
+  webProject?: string,
+  marketingProject?: string,
+): void {
   const zoneFile = clerkBindZonePath(root, apex);
   const hasClerkZone = Boolean(readClerkBindZoneRecords(root, apex)?.length);
-  printManualAction("Finish DNS in Cloudflare", [
-    cloudflareZoneDnsUrl(apex),
-    "Pages: proxied CNAME apex → `{web-project}.pages.dev`, www → `{marketing-project}.pages.dev`",
-    hasClerkZone
-      ? `Clerk: DNS → Import → ${zoneFile} (or paste BIND contents; CNAMEs must stay DNS-only / grey cloud)`
-      : "Clerk: finish `bunx clerk deploy` or add CNAMEs from Clerk Dashboard → Domains",
-    "Use a long-lived API token with Zone → DNS → Edit, or paste at the setup prompt",
-  ]);
+  const steps =
+    accountId && webProject && marketingProject
+      ? cloudflareApexDnsAutomationFailedSteps(
+          apex,
+          accountId,
+          webProject,
+          marketingProject,
+        )
+      : [
+          cloudflareZoneDnsUrl(apex),
+          "Re-run `bun run setup` and paste a Cloudflare API token with Zone → DNS → Edit when prompted",
+          "Setup creates Pages CNAMEs and Clerk CNAMEs automatically — no manual records unless API sync fails",
+          hasClerkZone
+            ? `Clerk BIND fallback: ${zoneFile}`
+            : "Clerk CNAMEs appear after `clerk deploy` — setup imports them via API",
+        ];
+  printManualAction("Automated DNS sync failed", steps);
 }
 
 type ApexDnsSyncAttempt =
@@ -263,10 +279,16 @@ export async function syncApexDnsForHosting(
   console.log(`○ Apex DNS sync via API failed — ${result.detail}`);
   if (resolved.source === "wrangler_oauth") {
     console.log(
-      "  `wrangler login` usually cannot edit DNS — use a long-lived API token or Import in the dashboard",
+      "  `wrangler login` usually cannot edit DNS — paste a long-lived API token when setup prompts",
     );
   }
-  printApexDnsImportFallback(root, apex);
+  printApexDnsImportFallback(
+    root,
+    apex,
+    accountId,
+    webProject,
+    marketingProject,
+  );
   return false;
 }
 

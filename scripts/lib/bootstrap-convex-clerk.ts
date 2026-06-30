@@ -5,8 +5,9 @@ import {
   ensureConvexLinkedInteractive,
   pushConvexDevOnce,
 } from "./link-convex";
-import { printManualAction } from "./manual-action";
+import { requireManualAction } from "./manual-action";
 import { CONVEX_DASHBOARD } from "./platform-urls";
+import { logSetupStackSection } from "./setup-stack-labels";
 import { productNameToSlug } from "./repo-identity";
 import { syncClerkConvexFromWebEnv } from "./sync-clerk-convex";
 import { syncAnonymousAuthEnv } from "./sync-anon-auth";
@@ -32,7 +33,11 @@ export async function bootstrapConvexClerk(
   interactive: boolean,
   cliContext?: SetupCliContext,
 ): Promise<void> {
-  console.log("\nConvex + Clerk");
+  logSetupStackSection(
+    "development",
+    "Convex + Clerk",
+    "Clerk Development instance (pk_test_…) · Convex dev deployment · apps/web/.env.local",
+  );
 
   const issuerDomain = await bootstrapClerk(
     root,
@@ -48,17 +53,19 @@ export async function bootstrapConvexClerk(
   });
 
   if (!linked) {
-    printManualAction("Link Convex", [
+    requireManualAction("Link Convex", [
       "Run: bun run dev:convex",
       `Dashboard: ${CONVEX_DASHBOARD}`,
+      "Re-run `bun run setup` after Convex is linked",
     ]);
     return;
   }
 
   if (!(await ensureConvexNodeModulesHoisted(root))) {
-    printManualAction("Re-hoist convex/node_modules", [
+    requireManualAction("Re-hoist convex/node_modules", [
       "Run from repo root: rm -rf convex/node_modules && bun install",
       "Then: bun run dev:convex",
+      "Re-run `bun run setup`",
     ]);
     return;
   }

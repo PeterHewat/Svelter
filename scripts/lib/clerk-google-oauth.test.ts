@@ -2,9 +2,12 @@ import { describe, expect, it } from "bun:test";
 import {
   buildGoogleOAuthConfigPatch,
   buildGoogleOAuthEnablePatch,
+  clerkDeployGoogleOAuthManualSteps,
   clerkGoogleManualSteps,
   clerkGoogleOAuthRedirectUri,
+  clerkProductionGoogleOAuthRedirectUri,
   googleOAuthJavaScriptOrigins,
+  googleOAuthProductionJavaScriptOrigins,
 } from "./clerk-google-oauth";
 
 describe("clerkGoogleOAuthRedirectUri", () => {
@@ -62,11 +65,43 @@ describe("buildGoogleOAuthConfigPatch", () => {
   });
 });
 
+describe("clerkProductionGoogleOAuthRedirectUri", () => {
+  it("uses accounts subdomain on the apex", () => {
+    expect(clerkProductionGoogleOAuthRedirectUri("example.com")).toBe(
+      "https://accounts.example.com/v1/oauth_callback",
+    );
+  });
+});
+
+describe("clerkDeployGoogleOAuthManualSteps", () => {
+  it("includes Google Cloud and Clerk dashboard links", () => {
+    const steps = clerkDeployGoogleOAuthManualSteps("example.com");
+    const joined = steps.join("\n");
+    expect(joined).toContain("console.cloud.google.com");
+    expect(joined).toContain("https://example.com");
+    expect(joined).toContain("https://www.example.com");
+    expect(joined).toContain("accounts.example.com/v1/oauth_callback");
+    expect(joined).toContain("dashboard.clerk.com");
+    expect(joined).toContain("clerk.com/docs");
+  });
+});
+
+describe("googleOAuthProductionJavaScriptOrigins", () => {
+  it("includes apex and www", () => {
+    expect(googleOAuthProductionJavaScriptOrigins("example.com")).toEqual([
+      "https://example.com",
+      "https://www.example.com",
+    ]);
+  });
+});
+
 describe("clerkGoogleManualSteps", () => {
-  it("includes Configure and SSO connections path", () => {
-    const steps = clerkGoogleManualSteps();
-    expect(steps[0]).toContain("Configure");
-    expect(steps[0]).toContain("SSO connections");
+  it("includes linked Clerk and Google Cloud paths", () => {
+    const steps = clerkGoogleManualSteps("development");
+    expect(steps[0]).toContain("**Development**");
+    expect(
+      steps.some((step) => step.includes("console.cloud.google.com")),
+    ).toBe(true);
     expect(steps.some((step) => step.includes("Use custom credentials"))).toBe(
       true,
     );

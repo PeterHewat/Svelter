@@ -33,18 +33,18 @@ import {
   canAutomateGh,
   type SetupCliContext,
 } from "./setup-cli";
-import { printManualAction } from "./manual-action";
+import { printManualAction, requireManualAction } from "./manual-action";
 import { CONVEX_DASHBOARD, githubEnvironmentsUrl } from "./platform-urls";
 import { maskSecret, promptConfirm, promptLine } from "./prompt";
 import { trySyncApexDnsToCloudflare } from "./cloudflare-apex-dns";
-import {
-  findApexCloudflareZone,
-  printClerkDeferredUntilCloudflareZone,
-} from "./sync-clerk-cloudflare-dns";
+import { findApexCloudflareZone } from "./sync-clerk-cloudflare-dns";
 import {
   markProductionGithubSecretsSynced,
+  readSetupConfig,
   type SetupConfig,
 } from "./setup-config";
+import { cloudflareProductionBlockedDnsSteps } from "./cloudflare-manual-steps";
+import { logSetupStackSection } from "./setup-stack-labels";
 export type BootstrapProductionOptions = {
   cliContext?: SetupCliContext;
   /** Skip confirmation prompts; proceed when prerequisites are met. */
@@ -104,11 +104,17 @@ async function resolveClerkProductionKeys(
   if (apexDomain) {
     const zone = await findApexCloudflareZone(root, apexDomain);
     if (!zone) {
-      console.log(
-        `○ Clerk Production deferred — no Cloudflare zone for ${apexDomain}`,
+      requireManualAction(
+        `Create the Cloudflare zone before Clerk production deploy`,
+        [
+          `Dashboard → Domains → Add a domain → ${apexDomain} (Free plan)`,
+          "Clerk DNS records belong in Cloudflare DNS — not as individual CNAMEs at your registrar",
+          "After `clerk deploy`, setup syncs Clerk DNS from the Backend API (BIND file fallback in `.svelter/`)",
+          "Then point registrar nameservers at Cloudflare — setup prints generic registrar steps",
+          "Re-run `bun run setup` when the zone exists",
+        ],
+        options,
       );
-      printClerkDeferredUntilCloudflareZone(apexDomain);
-      return { kind: "deferred" };
     }
   }
 
@@ -127,14 +133,27 @@ async function resolveClerkProductionKeys(
     console.log(
       "○ Clerk Production incomplete — finish `clerk deploy` or the dashboard, then re-run setup",
     );
-    return { kind: "deferred" };
+    requireManualAction(
+      "Complete Clerk Production deploy",
+      [
+        apexDomain
+          ? `Run \`bunx clerk deploy\` — use ${apexDomain} as the production domain`
+          : "Run `bunx clerk deploy` or use Clerk dashboard → Deploy to production",
+        "Re-run `bun run setup` when Production keys (pk_live_ / sk_live_) are available",
+      ],
+      options,
+    );
   }
 
-  printManualAction("Deploy Clerk Production for your apex domain", [
-    `Run \`bunx clerk auth login\` and \`bunx clerk deploy\` — use ${apexDomain} as the production domain`,
-    "Or use the Clerk dashboard **Deploy** action on your application",
-    "Re-run `bun run setup` when the API keys page shows a Production instance",
-  ]);
+  requireManualAction(
+    "Deploy Clerk Production for your apex domain",
+    [
+      `Run \`bunx clerk auth login\` and \`bunx clerk deploy\` — use ${apexDomain} as the production domain`,
+      "Or use the Clerk dashboard **Deploy** action on your application",
+      "Re-run `bun run setup` when the API keys page shows a Production instance",
+    ],
+    options,
+  );
   return { kind: "deferred" };
 }
 
@@ -219,13 +238,18 @@ export async function bootstrapProduction(
   setup: SetupConfig,
   options?: BootstrapProductionOptions,
 ): Promise<BootstrapProductionResult> {
+  setup = readSetupConfig(root) ?? setup;
   const github = resolveGitHubRepo(root);
   const hasApex = hasApexDomain(setup.apexDomain);
   const firstSync = !setup.github?.syncedSecrets?.production;
   const webProject = setup.cloudflare?.projectNameWeb;
 
   if (!firstSync) {
-    console.log("\nProduction (release-* tags)");
+    logSetupStackSection(
+      "production",
+      "Production (release-* tags)",
+      "Skip — GitHub production environment secrets already synced",
+    );
     console.log("✓ Production GitHub secrets already synced — skip");
     const prodAnonIssuer = await getConvexEnvVar(
       root,
@@ -244,13 +268,14 @@ export async function bootstrapProduction(
     return "skipped";
   }
 
-  console.log("\nProduction (release-* tags)");
-  console.log(
-    "→ Configuring GitHub **production** environment (Convex, Clerk, Cloudflare).",
+  logSetupStackSection(
+    "production",
+    "Production (release-* tags)",
+    "GitHub `production` environment — Convex prod · Clerk Production (pk_live_) · release Pages deploy",
   );
   if (hasApex) {
     console.log(
-      `  Apex: ${setup.apexDomain} — Clerk deploy runs automatically.`,
+      `  Apex: ${setup.apexDomain} — Clerk Production deploy runs in this step (not Development).`,
     );
   } else {
     console.log(
@@ -263,9 +288,11 @@ export async function bootstrapProduction(
   }
 
   if (!github) {
-    printManualAction("Add a GitHub remote", [
-      "Re-run setup after adding `origin`",
-    ]);
+    requireManualAction(
+      "Add a GitHub remote",
+      ["Re-run setup after adding `origin`"],
+      options,
+    );
     return "failed";
   }
 
@@ -273,14 +300,20 @@ export async function bootstrapProduction(
     ? canAutomateGh(options.cliContext)
     : await isGhAuthenticated();
   if (!ghReady) {
-    printManualAction("Authenticate GitHub CLI", ["Run `gh auth login`"]);
+    requireManualAction(
+      "Authenticate GitHub CLI",
+      ["Run `gh auth login`"],
+      options,
+    );
     return "failed";
   }
 
   if (!isConvexLinked(root)) {
-    printManualAction("Link Convex first", [
-      `Convex dashboard: ${CONVEX_DASHBOARD}`,
-    ]);
+    requireManualAction(
+      "Link Convex first",
+      [`Convex dashboard: ${CONVEX_DASHBOARD}`],
+      options,
+    );
     return "failed";
   }
 
@@ -316,13 +349,36 @@ export async function bootstrapProduction(
   }
 
   if (!productionEnv.ok) {
-    printManualAction("Create the GitHub production environment", [
-      productionEnv.message,
-      `GitHub → Settings → Environments: ${githubEnvironmentsUrl(github)}`,
-    ]);
+    requireManualAction(
+      "Create the GitHub production environment",
+      [
+        productionEnv.message,
+        `GitHub → Settings → Environments: ${githubEnvironmentsUrl(github)}`,
+      ],
+      options,
+    );
     return "failed";
   }
   console.log("✓ GitHub production environment ready");
+
+  if (hasApex && !setup.cloudflare?.synced) {
+    requireManualAction(
+      "Complete Cloudflare Pages setup first",
+      [
+        "Finish the Cloudflare Pages step (projects, zone, DNS) before production secrets",
+        "Re-run `bun run setup` and confirm Cloudflare setup",
+      ],
+      options,
+    );
+  }
+
+  if (hasApex && setup.cloudflare?.synced && !setup.cloudflare.dnsConfigured) {
+    requireManualAction(
+      "Finish the Cloudflare Pages step before production",
+      cloudflareProductionBlockedDnsSteps(setup.apexDomain!),
+      options,
+    );
+  }
 
   const clerkResolve = await resolveClerkProductionKeys(
     root,
@@ -398,11 +454,15 @@ export async function bootstrapProduction(
     "prod",
   );
   if (!deployKeyResult) {
-    printManualAction("Create a Convex Production deploy key", [
-      `Convex dashboard: ${CONVEX_DASHBOARD}`,
-      "Production → Settings → Deploy keys",
-      "Or ensure `bunx convex login` is active (dev CONVEX_DEPLOY_KEY in `.env.local` blocks minting via CLI)",
-    ]);
+    requireManualAction(
+      "Create a Convex Production deploy key",
+      [
+        `Convex dashboard: ${CONVEX_DASHBOARD}`,
+        "Production → Settings → Deploy keys",
+        "Or ensure `bunx convex login` is active (dev CONVEX_DEPLOY_KEY in `.env.local` blocks minting via CLI)",
+      ],
+      options,
+    );
     return "failed";
   }
 
@@ -442,7 +502,7 @@ export async function bootstrapProduction(
   }
 
   const cloudflare = setup.cloudflare;
-  if (!cloudflare?.synced) {
+  if (!cloudflare?.synced && !hasApex) {
     console.log(
       "○ Cloudflare Pages secrets sync in the Cloudflare step — complete that first",
     );
@@ -501,8 +561,20 @@ export async function bootstrapProduction(
   }
 
   if (clerkDeferred) {
+    if (hasApex) {
+      requireManualAction(
+        "Complete Clerk Production before release deploys",
+        [
+          setup.apexDomain
+            ? `Deploy Clerk Production for ${setup.apexDomain} (\`bunx clerk deploy\` or dashboard)`
+            : "Deploy Clerk Production via `bunx clerk deploy` or the Clerk dashboard",
+          "Re-run `bun run setup` when pk_live_ / sk_live_ keys are available",
+        ],
+        options,
+      );
+    }
     console.log(
-      "○ Production partially synced — re-run `bun run setup` with an apex domain to finish Clerk and release sign-in",
+      "○ Production partially synced — no apex domain; Clerk deferred until you add one",
     );
     return okCount >= 2 ? "partial" : "failed";
   }

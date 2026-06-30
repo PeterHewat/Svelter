@@ -26,11 +26,13 @@ import { bootstrapGithubLabels } from "./lib/bootstrap-github-labels";
 import { bootstrapConvexClerk } from "./lib/bootstrap-convex-clerk";
 import { bootstrapProduction } from "./lib/bootstrap-production";
 import { bootstrapCloudflare } from "./lib/bootstrap-cloudflare";
+import { hasApexDomain } from "../packages/config/validate-domain";
 import { isConvexLinked } from "./lib/convex-link";
 import { runIdentityWizard } from "./lib/prompt-identity";
 import { runReadiness } from "./lib/readiness";
 import { parseSetupFlags } from "./lib/setup-args";
 import { readSetupConfig } from "./lib/setup-config";
+import { printSetupStackSummary } from "./lib/setup-stack-labels";
 import {
   runSetupCliPrerequisites,
   type SetupCliContext,
@@ -186,17 +188,24 @@ async function main(): Promise<void> {
     };
     await bootstrapCiSecrets(root, setupConfig, cliContext, bootstrapOptions);
     await bootstrapGithubLabels(root, setupConfig, cliContext);
-    await bootstrapCloudflare(
+    const cloudflareResult = await bootstrapCloudflare(
       root,
       setupConfig,
       github,
       cliContext,
       bootstrapOptions,
     );
-    const prodResult = await bootstrapProduction(root, setupConfig, {
-      cliContext,
-      autoConfirm: flags.syncSecrets,
-    });
+    if (cloudflareResult === "blocked") {
+      process.exit(1);
+    }
+    const setupForProduction = readSetupConfig(root) ?? setupConfig;
+    const prodResult =
+      cloudflareResult === "complete" || cloudflareResult === "skipped"
+        ? await bootstrapProduction(root, setupForProduction, {
+            cliContext,
+            autoConfirm: flags.syncSecrets,
+          })
+        : "skipped";
     if (prodResult === "failed") {
       console.log(
         "\n○ Setup incomplete — production secrets not fully synced. Re-run `bun run setup` after fixing items above.",
@@ -204,11 +213,35 @@ async function main(): Promise<void> {
       process.exit(1);
     }
     if (prodResult === "partial") {
+      if (hasApexDomain(setupConfig.apexDomain)) {
+        process.exit(1);
+      }
+      const finalConfig = readSetupConfig(root) ?? setupConfig;
+      printSetupStackSummary({
+        hasApex: hasApexDomain(finalConfig.apexDomain),
+        productionSecretsSynced: Boolean(
+          finalConfig.github?.syncedSecrets?.production,
+        ),
+        cloudflareDnsConfigured: Boolean(finalConfig.cloudflare?.dnsConfigured),
+        cloudflareSynced: Boolean(finalConfig.cloudflare?.synced),
+      });
       console.log(
-        "\n✓ Setup complete — production partially synced (re-run with an apex domain for Clerk)",
+        "\n✓ Setup complete — production partially synced (add an apex domain for Clerk when ready)",
       );
       return;
     }
+  }
+
+  if (setupConfig) {
+    const finalConfig = readSetupConfig(root) ?? setupConfig;
+    printSetupStackSummary({
+      hasApex: hasApexDomain(finalConfig.apexDomain),
+      productionSecretsSynced: Boolean(
+        finalConfig.github?.syncedSecrets?.production,
+      ),
+      cloudflareDnsConfigured: Boolean(finalConfig.cloudflare?.dnsConfigured),
+      cloudflareSynced: Boolean(finalConfig.cloudflare?.synced),
+    });
   }
 
   console.log("\n✓ Setup complete — continue with docs/getting-started.md");

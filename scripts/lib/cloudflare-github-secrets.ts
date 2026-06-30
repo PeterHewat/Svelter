@@ -15,7 +15,7 @@ import {
   ghSecretSetEnv,
   isGhAuthenticated,
 } from "./gh-secrets";
-import { printManualAction } from "./manual-action";
+import { requireManualAction } from "./manual-action";
 import type { SetupBootstrapOptions } from "./setup-args";
 import { canAutomateGh, type SetupCliContext } from "./setup-cli";
 import {
@@ -140,10 +140,14 @@ export async function ensureCloudflareGithubSecretsSynced(
     ? canAutomateGh(cliContext)
     : await isGhAuthenticated();
   if (!ghReady) {
-    printManualAction("Authenticate GitHub CLI", [
-      "Run `gh auth login -s repo,workflow` in a terminal",
-      "Re-run `bun run setup` to sync Cloudflare deploy secrets",
-    ]);
+    requireManualAction(
+      "Authenticate GitHub CLI",
+      [
+        "Run `gh auth login -s repo,workflow` in a terminal",
+        "Re-run `bun run setup` to sync Cloudflare deploy secrets",
+      ],
+      options,
+    );
     return;
   }
 
@@ -161,7 +165,18 @@ export async function ensureCloudflareGithubSecretsSynced(
     interactive: !options?.autoConfirm,
   });
   if (!resolved) {
-    console.log("○ CLOUDFLARE_API_TOKEN required for Pages deploy workflows");
+    if (hasApexDomain(setup.apexDomain)) {
+      requireManualAction(
+        "Provide a Cloudflare API token for CI deploys",
+        [
+          ...cloudflareApiTokenManualSteps(setup.productName),
+          "Re-run `bun run setup` after pasting the token",
+        ],
+        options,
+      );
+    } else {
+      console.log("○ CLOUDFLARE_API_TOKEN required for Pages deploy workflows");
+    }
     return;
   }
   if (resolved.source === "env") {
@@ -177,13 +192,18 @@ export async function ensureCloudflareGithubSecretsSynced(
   );
   if (!verified.ok) {
     console.log(`○ Cloudflare token verification failed: ${verified.message}`);
-    printManualAction("Fix Cloudflare API token permissions", [
-      ...cloudflareApiTokenManualSteps(setup.productName).filter((step) =>
-        step.startsWith("Permissions"),
-      ),
-      `Account scope must include ${meta.accountId}`,
-      `Pages project must exist: ${meta.projectNameWeb}`,
-    ]);
+    requireManualAction(
+      "Fix Cloudflare API token permissions",
+      [
+        ...cloudflareApiTokenManualSteps(setup.productName).filter((step) =>
+          step.startsWith("Permissions"),
+        ),
+        `Account scope must include ${meta.accountId}`,
+        `Pages project must exist: ${meta.projectNameWeb}`,
+        "Re-run `bun run setup` after updating the token",
+      ],
+      options,
+    );
     return;
   }
   console.log(
@@ -218,8 +238,16 @@ export async function ensureCloudflareGithubSecretsSynced(
       `✓ Cloudflare deploy secrets synced (${CLOUDFLARE_DEPLOY_SECRETS.join(", ")})`,
     );
   } else {
-    console.log(
-      "○ Cloudflare deploy secrets not fully synced — fix failures above and re-run setup",
-    );
+    if (hasApexDomain(setup.apexDomain)) {
+      requireManualAction(
+        "Sync Cloudflare deploy secrets to GitHub",
+        ["Fix GitHub secret sync failures above", "Re-run `bun run setup`"],
+        options,
+      );
+    } else {
+      console.log(
+        "○ Cloudflare deploy secrets not fully synced — fix failures above and re-run setup",
+      );
+    }
   }
 }

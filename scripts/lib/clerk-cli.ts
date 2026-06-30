@@ -12,13 +12,16 @@ import {
   PUBLIC_CLERK_PUBLISHABLE_KEY,
   readClerkPublishableKey,
 } from "./clerk-web-env";
+import { clerkDeployGoogleOAuthManualSteps } from "./clerk-google-oauth";
 import { relocateClerkBindZoneToSvelter } from "./clerk-dns-zone";
+import { openUrlInBrowser } from "./open-url";
 import { readEnvFile } from "./env-file";
-import { printManualAction } from "./manual-action";
+import { printManualAction, requireManualAction } from "./manual-action";
 import {
   CLERK_API_KEYS,
   CLERK_CREATE_APP,
   clerkAppDashboardUrl,
+  GOOGLE_CLOUD_CREDENTIALS,
 } from "./platform-urls";
 import { isInteractivePrompt, promptConfirm } from "./prompt";
 import { readSpawnPipe } from "./spawn-io";
@@ -590,6 +593,17 @@ export async function deployClerkProduction(
     console.log(
       "  Clerk DNS syncs to Cloudflare automatically after deploy (Clerk API, BIND fallback in `.svelter/`)",
     );
+    printManualAction(
+      "Google OAuth — create credentials in Google Cloud before clerk deploy asks",
+      clerkDeployGoogleOAuthManualSteps(apexDomain),
+      { immediate: true },
+    );
+    const opened = await openUrlInBrowser(GOOGLE_CLOUD_CREDENTIALS);
+    if (opened) {
+      console.log("✓ Opened Google Cloud Credentials in browser");
+    } else {
+      console.log(`  Open manually: ${GOOGLE_CLOUD_CREDENTIALS}`);
+    }
   }
 
   if (!(await runClerkDeployInteractive(clerk, root))) {
@@ -775,7 +789,7 @@ async function ensureClerkAppLinked(
     if (await unlinkClerkProject(clerk, root)) {
       console.log("✓ Cleared stale Clerk link — will create or link a new app");
     } else {
-      printManualAction("Clear the stale Clerk link", [
+      requireManualAction("Clear the stale Clerk link", [
         `Run: ${[...clerk.command, "unlink", "--yes"].join(" ")}`,
         `Then create an app: ${CLERK_CREATE_APP} or \`${[...clerk.command, ...clerkAppsCreateArgs(setup.productName)].join(" ")}\``,
         `Link it: ${[...clerk.command, "link", "--app", "app_…"].join(" ")}`,

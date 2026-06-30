@@ -20,6 +20,8 @@ export const GOOGLE_CLOUD_OAUTH_CONSENT =
   "https://console.cloud.google.com/apis/credentials/consent";
 export const GOOGLE_CLOUD_CREDENTIALS =
   "https://console.cloud.google.com/apis/credentials";
+export const CLERK_GOOGLE_OAUTH_DOCS =
+  "https://clerk.com/docs/authentication/social-connections/google";
 
 /**
  * Clerk application dashboard URL when an app id is known.
