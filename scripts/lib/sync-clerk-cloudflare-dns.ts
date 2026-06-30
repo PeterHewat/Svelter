@@ -1,7 +1,10 @@
 /* eslint-disable no-console -- CLI wizard */
+import { existsSync } from "node:fs";
 import {
   clerkBindZonePath,
+  legacyClerkBindZonePath,
   readClerkBindZoneRecords,
+  relocateClerkBindZoneToSvelter,
   type BindDnsRecord,
 } from "./clerk-dns-zone";
 import { fetchClerkDomainDnsRecords } from "./clerk-domain-dns";
@@ -204,6 +207,44 @@ export async function trySyncClerkBindZoneForApex(
     }
     printClerkDnsImportFallback(root, apex);
   }
+}
+
+/**
+ * Polls for a Clerk BIND zone export during `clerk deploy` and syncs records to Cloudflare.
+ *
+ * @param root - Repository root
+ * @param apex - Apex domain
+ * @param signal - When aborted, stops polling (e.g. when deploy exits)
+ * @returns Whether DNS records were synced during the poll
+ */
+export async function pollSyncClerkBindZoneDuringDeploy(
+  root: string,
+  apex: string,
+  signal?: AbortSignal,
+): Promise<boolean> {
+  const intervalMs = 2000;
+  const timeoutMs = 30 * 60 * 1000;
+  const started = Date.now();
+
+  while (!signal?.aborted && Date.now() - started < timeoutMs) {
+    if (
+      existsSync(legacyClerkBindZonePath(root, apex)) ||
+      existsSync(clerkBindZonePath(root, apex))
+    ) {
+      relocateClerkBindZoneToSvelter(root, apex);
+      const records = readClerkBindZoneRecords(root, apex);
+      if (records?.length) {
+        await trySyncClerkBindZoneForApex(root, apex);
+        console.log(
+          "✓ Clerk production DNS synced to Cloudflare (from BIND export during deploy)",
+        );
+        return true;
+      }
+    }
+    await Bun.sleep(intervalMs);
+  }
+
+  return false;
 }
 
 /**

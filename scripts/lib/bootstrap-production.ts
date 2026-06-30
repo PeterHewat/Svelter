@@ -2,7 +2,11 @@
 import { clerkProductionOrigins } from "../../packages/config/hostnames";
 import { hasApexDomain } from "../../packages/config/validate-domain";
 import { resolveGitHubRepo } from "./apply-identity";
-import { deployClerkProduction, pullClerkProductionEnv } from "./clerk-cli";
+import {
+  deployClerkProduction,
+  finishClerkProductionDeployViaAgentStatus,
+  pullClerkProductionEnv,
+} from "./clerk-cli";
 import { syncClerkGoogleOAuth } from "./clerk-google-oauth";
 import {
   issuerFromPublishableKey,
@@ -72,12 +76,14 @@ export type BootstrapProductionResult =
  * @param root - Repository root
  * @param hasApex - Whether setup has a Cloudflare hosting apex
  * @param apexDomain - Apex domain for Clerk Production when set
+ * @param productName - Product name from setup config
  * @param options - Setup options including Clerk CLI context
  */
 async function resolveClerkProductionKeys(
   root: string,
   hasApex: boolean,
   apexDomain: string | undefined,
+  productName: string,
   options?: BootstrapProductionOptions,
 ): Promise<ClerkProductionResolve> {
   console.log("\nClerk production keys");
@@ -122,12 +128,33 @@ async function resolveClerkProductionKeys(
     }
   }
 
+  if (clerkCliReady && apexDomain) {
+    const resumed = await finishClerkProductionDeployViaAgentStatus(
+      options!.cliContext!.clerk,
+      root,
+      apexDomain,
+      { wait: true },
+    );
+    if (resumed) {
+      const pulledAfterResume = await pullClerkProductionEnv(
+        options!.cliContext!.clerk,
+        root,
+      );
+      if (pulledAfterResume) {
+        console.log(
+          `✓ Using Clerk production keys (pk ${maskSecret(pulledAfterResume.publishableKey)})`,
+        );
+        return { kind: "ready", keys: pulledAfterResume };
+      }
+    }
+  }
+
   if (clerkCliReady) {
     const pulled = await deployClerkProduction(
       options!.cliContext!.clerk,
       root,
       apexDomain,
-      setup.productName,
+      productName,
     );
     if (pulled) {
       console.log(
@@ -430,6 +457,7 @@ export async function bootstrapProduction(
     root,
     hasApex,
     setup.apexDomain,
+    setup.productName,
     options,
   );
   const clerkDeferred = clerkResolve.kind === "deferred";

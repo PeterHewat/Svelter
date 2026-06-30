@@ -1,5 +1,8 @@
 /* eslint-disable no-console -- CLI wizard */
+import { mkdirSync } from "node:fs";
+import { resolve } from "node:path";
 import { resolveCloudflareAccountId } from "./cloudflare-api";
+import { readEnvFile, upsertEnvKeys } from "./env-file";
 import { printManualAction } from "./manual-action";
 import { openUrlInBrowser } from "./open-url";
 import { CLOUDFLARE_API_TOKENS } from "./platform-urls";
@@ -53,8 +56,11 @@ export type WranglerWhoami = {
 
 export type ResolvedCloudflareToken = {
   token: string;
-  source: "env" | "wrangler_oauth" | "prompt";
+  source: "env" | "local" | "wrangler_oauth" | "prompt";
 };
+
+/** Gitignored local store for a long-lived Cloudflare API token (setup + DNS sync). */
+export const CLOUDFLARE_LOCAL_ENV = ".svelter/cloudflare.env";
 
 export type ResolveCloudflareApiTokenOptions = {
   /** Require env or pasted long-lived token — skip `wrangler login` OAuth (CI secrets). */
@@ -93,6 +99,52 @@ export function getSessionCloudflareApiToken(): ResolvedCloudflareToken | null {
  */
 export function clearSessionCloudflareApiToken(): void {
   sessionCloudflareApiToken = undefined;
+}
+
+/**
+ * Reads a long-lived Cloudflare API token saved by a prior interactive setup run.
+ *
+ * @param root - Repository root
+ */
+export function readPersistedCloudflareApiToken(
+  root: string,
+): ResolvedCloudflareToken | null {
+  const token = readEnvFile(
+    root,
+    CLOUDFLARE_LOCAL_ENV,
+  ).CLOUDFLARE_API_TOKEN?.trim();
+  if (!token || validateCloudflareApiToken(token)) {
+    return null;
+  }
+  return { token, source: "local" };
+}
+
+/**
+ * Saves a long-lived Cloudflare API token for reuse across setup runs.
+ *
+ * @param root - Repository root
+ * @param token - Long-lived User API token
+ */
+export function persistCloudflareApiToken(root: string, token: string): void {
+  const trimmed = token.trim();
+  if (!trimmed || validateCloudflareApiToken(trimmed)) {
+    return;
+  }
+  mkdirSync(resolve(root, ".svelter"), { recursive: true });
+  upsertEnvKeys(root, CLOUDFLARE_LOCAL_ENV, {
+    CLOUDFLARE_API_TOKEN: trimmed,
+  });
+}
+
+/**
+ * Remembers a pasted token for this process and persists it locally.
+ *
+ * @param root - Repository root
+ * @param token - Long-lived User API token
+ */
+export function storeCloudflareApiToken(root: string, token: string): void {
+  rememberCloudflareApiTokenForSession(token);
+  persistCloudflareApiToken(root, token);
 }
 
 /**
@@ -314,7 +366,8 @@ async function promptForDurableCloudflareApiToken(
   });
   const trimmed = pasted.trim();
   if (trimmed) {
-    rememberCloudflareApiTokenForSession(trimmed);
+    storeCloudflareApiToken(root, trimmed);
+    console.log(`✓ Saved CLOUDFLARE_API_TOKEN → ${CLOUDFLARE_LOCAL_ENV}`);
     return { token: trimmed, source: "prompt" };
   }
   return null;
@@ -323,7 +376,8 @@ async function promptForDurableCloudflareApiToken(
 /**
  * Resolves a Cloudflare API token for setup and GitHub Actions secrets.
  *
- * Order: `CLOUDFLARE_API_TOKEN` env → (`wrangler login` OAuth when allowed) → paste.
+ * Order: `CLOUDFLARE_API_TOKEN` env → session paste → `.svelter/cloudflare.env` →
+ * (`wrangler login` OAuth when allowed) → interactive paste.
  *
  * @param root - Repository root
  * @param options - `durableOnly` for CI secret sync (skips short-lived OAuth tokens)
@@ -343,18 +397,17 @@ export async function resolveCloudflareApiToken(
     );
   }
 
-  if (options?.durableOnly) {
-    const session = getSessionCloudflareApiToken();
-    if (session) {
-      return session;
-    }
+  const session = getSessionCloudflareApiToken();
+  if (session) {
+    return session;
+  }
+
+  const persisted = readPersistedCloudflareApiToken(root);
+  if (persisted) {
+    return persisted;
   }
 
   if (!options?.durableOnly) {
-    const session = getSessionCloudflareApiToken();
-    if (session) {
-      return session;
-    }
     const loggedIn = await ensureWranglerLogin(root);
     if (loggedIn) {
       const authToken = await runWrangler(root, ["auth", "token", "--json"]);

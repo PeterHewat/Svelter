@@ -13,24 +13,32 @@ import {
   PUBLIC_CLERK_PUBLISHABLE_KEY,
   readClerkPublishableKey,
 } from "./clerk-web-env";
-import { clerkDeployGoogleOAuthManualSteps } from "./clerk-google-oauth";
+import {
+  buildGoogleOAuthConfigPatch,
+  ensureGoogleOAuthCredentialsInWebEnv,
+  readGoogleOAuthCredentials,
+} from "./clerk-google-oauth";
 import { relocateClerkBindZoneToSvelter } from "./clerk-dns-zone";
-import { openUrlInBrowser } from "./open-url";
 import { readEnvFile } from "./env-file";
 import { printManualAction, requireManualAction } from "./manual-action";
 import {
   CLERK_API_KEYS,
   CLERK_CREATE_APP,
   clerkAppDashboardUrl,
-  GOOGLE_CLOUD_CREDENTIALS,
 } from "./platform-urls";
 import { isInteractivePrompt, promptConfirm } from "./prompt";
 import { readSpawnPipe } from "./spawn-io";
-import type { SetupConfig } from "./setup-config";
+import { readSetupConfig, type SetupConfig } from "./setup-config";
 import type { CliToolState } from "./setup-cli";
 import { resolveCloudflareApiToken } from "./cloudflare-auth";
 import {
+  parseClerkDeployStatusReport,
+  syncPendingClerkDnsRecordsToCloudflare,
+  type ClerkDeployStatusReport,
+} from "./clerk-deploy-status";
+import {
   findApexCloudflareZone,
+  pollSyncClerkBindZoneDuringDeploy,
   syncClerkDnsToCloudflare,
   trySyncClerkBindZoneForApex,
 } from "./sync-clerk-cloudflare-dns";
@@ -545,6 +553,176 @@ export function isClerkProductionMissingError(detail: string): boolean {
 }
 
 /**
+ * Runs `clerk deploy status --mode agent` and parses the JSON report.
+ *
+ * @param clerk - Clerk CLI state
+ * @param root - Repository root
+ * @param options - When `wait` is true, passes `--wait` until deploy is complete
+ */
+export async function runClerkDeployStatusAgent(
+  clerk: CliToolState,
+  root: string,
+  options?: { wait?: boolean },
+): Promise<{
+  ok: boolean;
+  report: ClerkDeployStatusReport | null;
+  stderr: string;
+}> {
+  const args = ["deploy", "status", "--mode", "agent"];
+  if (options?.wait) {
+    args.push("--wait");
+  }
+  const result = await runClerkCli(clerk.command, args, { cwd: root });
+  const report = parseClerkDeployStatusReport(result.stdout);
+  return { ok: result.ok, report, stderr: result.stderr };
+}
+
+/**
+ * Syncs DNS and OAuth from a deploy-status snapshot when automation can help.
+ *
+ * @param clerk - Clerk CLI state
+ * @param root - Repository root
+ * @param apexDomain - Production apex domain
+ * @param report - Current deploy status report
+ * @param setup - Optional setup config (read from disk when omitted)
+ */
+async function reconcileClerkDeployStatus(
+  clerk: CliToolState,
+  root: string,
+  apexDomain: string,
+  report: ClerkDeployStatusReport,
+  setup?: SetupConfig,
+): Promise<void> {
+  if (report.pendingDnsRecords.length > 0) {
+    await syncPendingClerkDnsRecordsToCloudflare(
+      root,
+      apexDomain,
+      report.pendingDnsRecords,
+    );
+  } else if (
+    report.state === "domain_pending" ||
+    report.state === "domain_provisioning"
+  ) {
+    await trySyncClerkBindZoneForApex(root, apexDomain);
+  }
+
+  if (report.oauth.complete) {
+    return;
+  }
+
+  const hasGooglePending = report.oauth.pending.some(
+    (provider) => provider.toLowerCase() === "google",
+  );
+  if (!hasGooglePending) {
+    return;
+  }
+
+  const config = setup ?? readSetupConfig(root);
+  if (config) {
+    await ensureGoogleOAuthCredentialsInWebEnv(root, config, {
+      instance: "production",
+      interactive: false,
+      apexDomain,
+    });
+  }
+  const oauth = readGoogleOAuthCredentials(root, "production");
+  if (!oauth) {
+    return;
+  }
+  const patched = await runClerkConfigPatch(
+    clerk,
+    root,
+    buildGoogleOAuthConfigPatch(oauth.credentials),
+    { instance: "prod", yes: true },
+  );
+  if (patched.ok) {
+    console.log(
+      "✓ Google OAuth credentials applied to Clerk Production via API",
+    );
+  }
+}
+
+/**
+ * Finishes or verifies Clerk Production deploy using `deploy status --mode agent`.
+ *
+ * @param clerk - Clerk CLI state
+ * @param root - Repository root
+ * @param apexDomain - Production apex domain
+ * @param options - When `wait` is true, polls with `--wait` after reconciling DNS/OAuth
+ * @returns Whether deploy status reports `complete: true`
+ */
+export async function finishClerkProductionDeployViaAgentStatus(
+  clerk: CliToolState,
+  root: string,
+  apexDomain: string,
+  options?: { wait?: boolean; setup?: SetupConfig },
+): Promise<boolean> {
+  const initial = await runClerkDeployStatusAgent(clerk, root);
+  if (!initial.report) {
+    const detail =
+      initial.stderr.trim() ||
+      (initial.ok ? "no JSON in stdout" : "command failed");
+    console.log(
+      `○ clerk deploy status unavailable${detail ? ` — ${detail.slice(0, 160)}` : ""}`,
+    );
+    return false;
+  }
+
+  if (initial.report.state === "not_started") {
+    return false;
+  }
+
+  console.log(
+    `→ Clerk production deploy status: ${initial.report.state}${initial.report.domain ? ` (${initial.report.domain})` : ""}`,
+  );
+  if (initial.report.nextAction) {
+    console.log(`  ${initial.report.nextAction}`);
+  }
+
+  await reconcileClerkDeployStatus(
+    clerk,
+    root,
+    apexDomain,
+    initial.report,
+    options?.setup,
+  );
+
+  if (initial.report.complete) {
+    console.log("✓ Clerk production deploy complete (agent status)");
+    return true;
+  }
+
+  if (!options?.wait) {
+    return false;
+  }
+
+  console.log(
+    `\n→ ${[...clerk.command, "deploy", "status", "--mode", "agent", "--wait"].join(" ")}`,
+  );
+  console.log(
+    "  Waiting for Clerk DNS verification and OAuth (setup syncs Cloudflare DNS in the background)",
+  );
+  const waited = await runClerkDeployStatusAgent(clerk, root, { wait: true });
+  if (waited.report && !waited.report.complete) {
+    await reconcileClerkDeployStatus(
+      clerk,
+      root,
+      apexDomain,
+      waited.report,
+      options?.setup,
+    );
+  }
+  if (waited.ok && waited.report?.complete) {
+    console.log("✓ Clerk production deploy complete (agent status --wait)");
+    return true;
+  }
+  if (waited.report?.nextAction) {
+    console.log(`○ ${waited.report.nextAction}`);
+  }
+  return false;
+}
+
+/**
  * Runs `clerk deploy` in the foreground so the interactive production wizard can run.
  *
  * @param clerk - Clerk CLI state
@@ -577,43 +755,100 @@ export async function deployClerkProduction(
   clerk: CliToolState,
   root: string,
   apexDomain?: string,
-  productName?: string,
+  _productName?: string,
 ): Promise<ClerkProductionKeys | null> {
-  if (!isInteractivePrompt()) {
-    console.log(
-      "○ `clerk deploy` needs an interactive terminal — run `bunx clerk deploy` manually",
-    );
-    return null;
-  }
+  const setup = apexDomain ? readSetupConfig(root) : null;
 
-  if (apexDomain) {
+  if (!isInteractivePrompt()) {
+    if (apexDomain) {
+      console.log("→ Checking Clerk production deploy status (agent mode)…");
+      const finished = await finishClerkProductionDeployViaAgentStatus(
+        clerk,
+        root,
+        apexDomain,
+        { wait: true, setup: setup ?? undefined },
+      );
+      if (!finished) {
+        console.log(
+          "○ `clerk deploy` needs an interactive terminal — run `bunx clerk deploy` manually",
+        );
+        return null;
+      }
+    } else {
+      console.log(
+        "○ `clerk deploy` needs an interactive terminal — run `bunx clerk deploy` manually",
+      );
+      return null;
+    }
+  } else if (apexDomain) {
     console.log(
-      `→ Provisioning Clerk Production for ${apexDomain} (complete DNS/OAuth in the wizard)`,
+      `→ Provisioning Clerk Production for ${apexDomain} (setup automates DNS + OAuth where possible)`,
     );
     console.log(
       `  When Clerk asks for your production domain, enter: ${apexDomain}`,
     );
     console.log(
-      "  When Clerk shows DNS: export BIND if offered, then choose **Skip DNS verification** — setup syncs CNAMEs to Cloudflare automatically",
+      "  Export BIND when offered — setup syncs Clerk CNAMEs to Cloudflare as soon as the file appears",
     );
     console.log(
-      "  Stale Clerk CNAMEs from a previous project are corrected in Cloudflare (including email records)",
+      "  At DNS verification, choose **Skip for now** unless records have propagated (setup already created them in Cloudflare)",
     );
-    await trySyncClerkBindZoneForApex(root, apexDomain);
-    printManualAction(
-      "Google OAuth — create credentials in Google Cloud before clerk deploy asks",
-      clerkDeployGoogleOAuthManualSteps(apexDomain, productName),
-      { immediate: true },
-    );
-    const opened = await openUrlInBrowser(GOOGLE_CLOUD_CREDENTIALS);
-    if (opened) {
-      console.log("✓ Opened Google Cloud Credentials in browser");
-    } else {
-      console.log(`  Open manually: ${GOOGLE_CLOUD_CREDENTIALS}`);
+    if (setup) {
+      await ensureGoogleOAuthCredentialsInWebEnv(root, setup, {
+        instance: "production",
+        interactive: true,
+        apexDomain,
+      });
     }
-  }
+    await trySyncClerkBindZoneForApex(root, apexDomain);
 
-  if (!(await runClerkDeployInteractive(clerk, root))) {
+    const deployAbort = new AbortController();
+    const pollTask = (async () => {
+      const synced = await pollSyncClerkBindZoneDuringDeploy(
+        root,
+        apexDomain,
+        deployAbort.signal,
+      );
+      if (!synced) {
+        return;
+      }
+      const oauth = readGoogleOAuthCredentials(root, "production");
+      if (!oauth) {
+        return;
+      }
+      const patched = await runClerkConfigPatch(
+        clerk,
+        root,
+        buildGoogleOAuthConfigPatch(oauth.credentials),
+        { instance: "prod", yes: true },
+      );
+      if (patched.ok) {
+        console.log(
+          "✓ Google OAuth credentials applied to Clerk Production via API",
+        );
+      }
+    })();
+
+    const deployOk = await runClerkDeployInteractive(clerk, root);
+    deployAbort.abort();
+    await pollTask.catch(() => {
+      // poll aborted when deploy finished
+    });
+    if (!deployOk) {
+      console.log(
+        "○ clerk deploy wizard exited — finishing via deploy status (agent mode)…",
+      );
+      await finishClerkProductionDeployViaAgentStatus(clerk, root, apexDomain, {
+        wait: true,
+        setup: setup ?? undefined,
+      });
+    } else {
+      await finishClerkProductionDeployViaAgentStatus(clerk, root, apexDomain, {
+        wait: true,
+        setup: setup ?? undefined,
+      });
+    }
+  } else if (!(await runClerkDeployInteractive(clerk, root))) {
     console.log("○ clerk deploy did not finish successfully");
     return null;
   }

@@ -24,6 +24,7 @@ import { openUrlInBrowser } from "./open-url";
 import {
   registrarNameserverManualSteps,
   resolveCloudflareApiToken,
+  CLOUDFLARE_LOCAL_ENV,
   resolveWranglerAccountId,
   type ResolvedCloudflareToken,
 } from "./cloudflare-auth";
@@ -420,6 +421,8 @@ export async function bootstrapCloudflare(
   const token = resolved.token;
   if (resolved.source === "env") {
     console.log("✓ Cloudflare API token — CLOUDFLARE_API_TOKEN env");
+  } else if (resolved.source === "local") {
+    console.log(`✓ Cloudflare API token — ${CLOUDFLARE_LOCAL_ENV}`);
   }
   if (hasApex && resolved.source === "wrangler_oauth") {
     console.log(

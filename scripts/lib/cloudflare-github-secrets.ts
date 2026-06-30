@@ -7,6 +7,7 @@ import {
 } from "./cloudflare-api";
 import {
   cloudflareApiTokenManualSteps,
+  CLOUDFLARE_LOCAL_ENV,
   resolveCloudflareApiToken,
 } from "./cloudflare-auth";
 import {
@@ -181,6 +182,8 @@ export async function ensureCloudflareGithubSecretsSynced(
   }
   if (resolved.source === "env") {
     console.log("✓ Cloudflare API token — CLOUDFLARE_API_TOKEN env");
+  } else if (resolved.source === "local") {
+    console.log(`✓ Cloudflare API token — ${CLOUDFLARE_LOCAL_ENV}`);
   } else {
     console.log("✓ Cloudflare API token — pasted for CI");
   }
