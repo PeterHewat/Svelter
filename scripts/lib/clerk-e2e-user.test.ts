@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import {
-  isClerkEmailPasswordDisabledMessage,
   isClerkE2eUserAlreadyExistsMessage,
+  isClerkEmailPasswordDisabledMessage,
 } from "./clerk-e2e-user";
 
 describe("isClerkE2eUserAlreadyExistsMessage", () => {

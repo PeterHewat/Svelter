@@ -1,5 +1,5 @@
-import { cn, type ClassValue } from "./index";
 import { focusRing } from "./focus";
+import { cn, type ClassValue } from "./index";
 
 /** Fixed site header shell (web + marketing). */
 export const siteHeaderClass =

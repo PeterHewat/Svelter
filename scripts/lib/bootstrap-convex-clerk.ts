@@ -5,15 +5,15 @@ import {
   ensureConvexLinkedInteractive,
   pushConvexDevOnce,
 } from "./link-convex";
-import { requireManualAction, exitWithManualAction } from "./manual-action";
+import { exitWithManualAction, requireManualAction } from "./manual-action";
 import { CONVEX_DASHBOARD } from "./platform-urls";
-import { logSetupStackSection } from "./setup-stack-labels";
 import { productNameToSlug } from "./repo-identity";
-import { syncClerkConvexFromWebEnv } from "./sync-clerk-convex";
-import { syncAnonymousAuthEnv } from "./sync-anon-auth";
-import { syncClerkWebhookEnv } from "./sync-clerk-webhook";
 import type { SetupCliContext } from "./setup-cli";
 import type { SetupConfig } from "./setup-config";
+import { logSetupStackSection } from "./setup-stack-labels";
+import { syncAnonymousAuthEnv } from "./sync-anon-auth";
+import { syncClerkConvexFromWebEnv } from "./sync-clerk-convex";
+import { syncClerkWebhookEnv } from "./sync-clerk-webhook";
 
 /**
  * Links Convex, configures Clerk, and syncs env between Convex and the web app.

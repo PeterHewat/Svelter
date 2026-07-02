@@ -1,12 +1,12 @@
-import { readdir } from "node:fs/promises";
-import { join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import {
   flattenTranslations,
   SUPPORTED_LOCALES,
   type Locale,
   type TranslationDictionary,
 } from "@repo/utils/i18n";
+import { readdir } from "node:fs/promises";
+import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 export const CANONICAL_LOCALE: Locale = "en";
 export const WEB_LOCALES_DIR = "apps/web/src/lib/locales";

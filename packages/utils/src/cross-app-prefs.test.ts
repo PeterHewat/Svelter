@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   appendCrossAppPrefs,
   applyCrossAppPrefsFromUrl,
-  readStoredLocale,
   readResolvedCrossAppTheme,
+  readStoredLocale,
   readStoredThemeMode,
   stripCrossAppPrefsFromSearchParams,
   urlWithoutCrossAppPrefs,

@@ -1,7 +1,3 @@
-import { wireDetailsMenus } from "./locale-links";
-import { createSectionHashSync, wireHomepageScrollSpy } from "./nav-scroll-spy";
-import { HEADER_OFFSET } from "./constants";
-import { markHashIntent } from "./hash-intent";
 import {
   NAV_HOME_HIGHLIGHT,
   createNavHighlightPersistence,
@@ -13,6 +9,10 @@ import {
   positionNavIndicator,
   subscribeNavIndicator,
 } from "@repo/utils/nav-indicator";
+import { HEADER_OFFSET } from "./constants";
+import { markHashIntent } from "./hash-intent";
+import { wireDetailsMenus } from "./locale-links";
+import { createSectionHashSync, wireHomepageScrollSpy } from "./nav-scroll-spy";
 
 const NAV_HIGHLIGHT_KEY = "marketing-nav-highlight";
 const highlight = createNavHighlightPersistence(NAV_HIGHLIGHT_KEY);

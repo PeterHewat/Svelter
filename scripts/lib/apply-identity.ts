@@ -1,6 +1,9 @@
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { applyLicenseFromConfig } from "./license-identity";
+import { formatProductTs } from "./prettier-file";
+import { applyReadmeIdentity } from "./readme-identity";
 import {
   parseGitHubRemote,
   productNameFromRepo,
@@ -8,9 +11,6 @@ import {
   TEMPLATE_PRODUCT_NAME,
   type GitHubRepo,
 } from "./repo-identity";
-import { applyLicenseFromConfig } from "./license-identity";
-import { formatProductTs } from "./prettier-file";
-import { applyReadmeIdentity } from "./readme-identity";
 import { readSetupConfig } from "./setup-config";
 
 export type IdentityResult = {

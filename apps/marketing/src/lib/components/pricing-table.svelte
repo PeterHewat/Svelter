@@ -2,8 +2,8 @@
   import PricingTierCard from "$lib/components/pricing-tier-card.svelte";
   import Reveal from "$lib/components/reveal.svelte";
   import Section from "$lib/components/section.svelte";
-  import { useMarketingT } from "$lib/marketing-context";
   import { marketingContent } from "$lib/marketing-content";
+  import { useMarketingT } from "$lib/marketing-context";
 
   const t = useMarketingT();
 
@@ -36,41 +36,43 @@
     <div
       class="pricing-cards-stack mb-10 flex w-full flex-col items-center gap-8"
     >
-      <div
-        class="bg-background/90 flex w-auto flex-col items-center gap-2 rounded-lg max-md:sticky max-md:top-20 max-md:z-10 max-md:px-4 max-md:py-3 max-md:backdrop-blur-sm"
-        role="group"
-        aria-label={t("pricing.billingToggle")}
-      >
+      <Reveal delay={120} fade>
         <div
-          class="billing-toggle border-border bg-muted/40 focus-within:ring-ring relative inline-grid grid-cols-2 rounded-lg border p-1 focus-within:ring-2"
+          class="bg-background/90 flex w-auto flex-col items-center gap-2 rounded-lg max-md:sticky max-md:top-20 max-md:z-10 max-md:px-4 max-md:py-3 max-md:backdrop-blur-sm"
+          role="group"
+          aria-label={t("pricing.billingToggle")}
         >
-          <span class="billing-toggle-thumb" aria-hidden="true"></span>
-          <label
-            class="billing-label billing-label-monthly cursor-pointer rounded-md px-4 py-2 text-center text-sm font-medium"
+          <div
+            class="billing-toggle border-border bg-muted/40 focus-within:ring-ring relative inline-grid grid-cols-2 rounded-lg border p-1 focus-within:ring-2"
           >
-            <input
-              type="radio"
-              id={monthlyId}
-              name="pricing-billing"
-              checked
-              class="billing-monthly billing-input"
-            />
-            {t("pricing.billingMonthly")}
-          </label>
-          <label
-            class="billing-label billing-label-annual cursor-pointer rounded-md px-4 py-2 text-center text-sm font-medium"
-          >
-            <input
-              type="radio"
-              id={annualId}
-              name="pricing-billing"
-              class="billing-annual billing-input"
-            />
-            {t("pricing.billingAnnual")}
-          </label>
+            <span class="billing-toggle-thumb" aria-hidden="true"></span>
+            <label
+              class="billing-label billing-label-monthly cursor-pointer rounded-md px-4 py-2 text-center text-sm font-medium"
+            >
+              <input
+                type="radio"
+                id={monthlyId}
+                name="pricing-billing"
+                checked
+                class="billing-monthly billing-input"
+              />
+              {t("pricing.billingMonthly")}
+            </label>
+            <label
+              class="billing-label billing-label-annual cursor-pointer rounded-md px-4 py-2 text-center text-sm font-medium"
+            >
+              <input
+                type="radio"
+                id={annualId}
+                name="pricing-billing"
+                class="billing-annual billing-input"
+              />
+              {t("pricing.billingAnnual")}
+            </label>
+          </div>
+          <p class="text-muted-foreground text-sm">{t("pricing.annualSave")}</p>
         </div>
-        <p class="text-muted-foreground text-sm">{t("pricing.annualSave")}</p>
-      </div>
+      </Reveal>
 
       <div class="pricing-cards mx-auto w-full max-w-5xl gap-6 md:grid-cols-3">
         {#each tiers as tier, index (tier.id)}

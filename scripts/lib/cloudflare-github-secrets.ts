@@ -1,4 +1,5 @@
 /* eslint-disable no-console -- CLI wizard */
+import { hasApexDomain } from "../../packages/config/validate-domain";
 import { resolveGitHubRepo } from "./apply-identity";
 import {
   CloudflareApiError,
@@ -6,8 +7,8 @@ import {
   formatCloudflareApiError,
 } from "./cloudflare-api";
 import {
-  cloudflareApiTokenManualSteps,
   CLOUDFLARE_LOCAL_ENV,
+  cloudflareApiTokenManualSteps,
   resolveCloudflareApiToken,
 } from "./cloudflare-auth";
 import {
@@ -25,7 +26,6 @@ import {
   type CloudflareSetupMeta,
   type SetupConfig,
 } from "./setup-config";
-import { hasApexDomain } from "../../packages/config/validate-domain";
 
 const CLOUDFLARE_DEPLOY_SECRETS = [
   "CLOUDFLARE_API_TOKEN",

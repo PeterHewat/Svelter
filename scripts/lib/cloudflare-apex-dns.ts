@@ -1,5 +1,8 @@
 /* eslint-disable no-console -- CLI wizard */
 import { deriveProductionHostnames } from "../../packages/config/hostnames";
+import { hasApexDomain } from "../../packages/config/validate-domain";
+import { clerkBindZonePath, readClerkBindZoneRecords } from "./clerk-dns-zone";
+import { readClerkProductionSecretKey } from "./clerk-web-env";
 import {
   CloudflareApiError,
   findPagesProjectByName,
@@ -15,13 +18,10 @@ import {
 } from "./cloudflare-auth";
 import { ensureCloudflareDnsRecord } from "./cloudflare-dns";
 import { cloudflareApexDnsAutomationFailedSteps } from "./cloudflare-manual-steps";
-import { cloudflareZoneDnsUrl } from "./platform-urls";
 import { printManualAction } from "./manual-action";
-import { clerkBindZonePath, readClerkBindZoneRecords } from "./clerk-dns-zone";
-import { syncClerkDnsToCloudflare } from "./sync-clerk-cloudflare-dns";
-import { readClerkProductionSecretKey } from "./clerk-web-env";
+import { cloudflareZoneDnsUrl } from "./platform-urls";
 import type { SetupConfig } from "./setup-config";
-import { hasApexDomain } from "../../packages/config/validate-domain";
+import { syncClerkDnsToCloudflare } from "./sync-clerk-cloudflare-dns";
 
 let apexDnsSyncedThisSetupRun = false;
 

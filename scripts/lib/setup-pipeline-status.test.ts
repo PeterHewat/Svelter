@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { assessSetupPipelineStatus } from "./setup-pipeline-status";
+import {
+  assessSetupFollowUps,
+  assessSetupPipelineStatus,
+} from "./setup-pipeline-status";
 
 const baseConfig = {
   productName: "My App",
@@ -7,7 +10,7 @@ const baseConfig = {
   github: {
     org: "acme",
     repo: "my-app",
-    labelsSynced: true,
+    syncedLabels: true,
     syncedSecrets: {
       repo: true,
       cloudflare: true,
@@ -39,7 +42,7 @@ describe("assessSetupPipelineStatus", () => {
       github: {
         ...baseConfig.github,
         syncedSecrets: { cloudflare: true },
-        labelsSynced: true,
+        syncedLabels: true,
       },
       cloudflare: undefined,
     });
@@ -67,5 +70,33 @@ describe("assessSetupPipelineStatus", () => {
     expect(status.developmentReady).toBe(true);
     expect(status.productionReady).toBe(false);
     expect(status.productionMissing[0]).toContain("re-run `bun run setup`");
+  });
+});
+
+describe("assessSetupFollowUps", () => {
+  it("lists branch ruleset when merge settings synced but rules were not", () => {
+    const followUps = assessSetupFollowUps({
+      ...baseConfig,
+      github: {
+        ...baseConfig.github,
+        syncedMergeSettings: true,
+        syncedBranchRules: false,
+      },
+    });
+    expect(followUps).toHaveLength(1);
+    expect(followUps[0]?.summary).toContain("branch ruleset");
+    expect(followUps[0]?.steps[0]).toContain("settings/rules");
+  });
+
+  it("omits branch ruleset follow-up when rules are synced", () => {
+    const followUps = assessSetupFollowUps({
+      ...baseConfig,
+      github: {
+        ...baseConfig.github,
+        syncedMergeSettings: true,
+        syncedBranchRules: true,
+      },
+    });
+    expect(followUps).toHaveLength(0);
   });
 });

@@ -1,25 +1,25 @@
 /* eslint-disable no-console -- CLI output via setup */
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { isPlaceholderE2eEmail } from "../../packages/config/e2e-auth";
 import {
   isPlaceholderEnvValue,
   isRealConvexDeployment,
   parseDotenvAssignmentValue,
 } from "../../packages/config/env-placeholders";
-import { isPlaceholderE2eEmail } from "../../packages/config/e2e-auth";
 import {
   areClerkAgentSkillsInstalled,
   areCloudflareAgentSkillsInstalled,
 } from "./agent-skills";
 import {
-  readClerkPublishableKey,
-  readConvexUrlFromWebEnv,
-} from "./clerk-web-env";
-import {
   validateClerkDevelopmentKeys,
   validateClerkDevelopmentPublishableKeyPaste,
   validateClerkDevelopmentSecretKeyPaste,
 } from "./clerk-instance";
+import {
+  readClerkPublishableKey,
+  readConvexUrlFromWebEnv,
+} from "./clerk-web-env";
 import { isConvexLinked } from "./convex-link";
 import { isConvexNodeModulesHoisted } from "./convex-node-modules";
 import { validateClerkWebhookSigningSecret } from "./sync-clerk-webhook";

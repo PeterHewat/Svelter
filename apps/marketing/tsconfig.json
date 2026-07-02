@@ -22,6 +22,7 @@
     "tests/**/*.ts",
     "tests/**/*.svelte"
   ],
+  "files": ["src/init/constants.ts"],
   "exclude": ["src/init/**/*.ts"],
   "references": [{ "path": "../../packages/config" }]
 }

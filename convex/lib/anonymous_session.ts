@@ -1,14 +1,14 @@
 import { ConvexError } from "convex/values";
 import { SignJWT, importPKCS8 } from "jose";
-import type { ActionCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
-import { CONVEX_JWT_AUDIENCE } from "./constants";
+import type { ActionCtx } from "../_generated/server";
+import { createAnonymousUserId } from "../model/users";
 import {
   getAnonAuthIssuer,
   getAnonPrivateKeyPem,
   isAnonymousSubject,
 } from "./anon_auth";
-import { createAnonymousUserId } from "../model/users";
+import { CONVEX_JWT_AUDIENCE } from "./constants";
 
 const ANON_TOKEN_TTL_SECONDS = 60 * 60 * 24;
 

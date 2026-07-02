@@ -1,9 +1,9 @@
+import type { UserIdentity } from "convex/server";
 import { ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { isAnonymousSubject } from "../lib/anon_auth";
 import { ANON_USER_ID_PREFIX } from "../lib/constants";
-import type { UserIdentity } from "convex/server";
 
 type UsersCtx = Pick<QueryCtx | MutationCtx, "db">;
 

@@ -61,19 +61,17 @@ Committed symlinks: `.claude` → `.agents`, `CLAUDE.md` → `AGENTS.md`. Setup 
 
 ## Verify gate
 
-Before ending a turn, run what applies to your edits:
+Before ending a turn, run what applies to your edits.
 
-| Change                           | Command                                                              |
-| -------------------------------- | -------------------------------------------------------------------- |
-| `apps/marketing/src/content/**`  | Prettier on touched paths + `bun run --filter @repo/marketing build` |
-| Docs / Markdown only (elsewhere) | `bunx prettier --write <touched paths>`                              |
-| `scripts/**` only                | Prettier on touched paths + `bun run lint`                           |
-| Any `.ts` / `.js` / `.svelte`    | Prettier + `bun run check`                                           |
-| Task complete or broad changes   | `bun run verify`                                                     |
+On touched `.ts` / `.js` / `.svelte` paths: `bunx organize-imports-cli`, `bunx eslint --fix`, then `bunx prettier --write` (not `bun run format`, which is check-only).
 
-Marketing content is prerendered at build time — SvelteKit crawls every `<a href>` and fails on 404s or missing fragment IDs. `bun run verify` does not run the marketing build; CI does.
-
-Use `bunx prettier --write` (not `bun run format`, which is check-only).
+| Change                           | Command                                          |
+| -------------------------------- | ------------------------------------------------ |
+| `apps/marketing/src/content/**`  | above + `bun run --filter @repo/marketing build` |
+| Docs / Markdown only (elsewhere) | `bunx prettier --write <touched paths>`          |
+| `scripts/**` only                | above + `bun run lint`                           |
+| Any `.ts` / `.js` / `.svelte`    | above + `bun run check`                          |
+| Task complete or broad changes   | `bun run verify`                                 |
 
 ## Error handling
 

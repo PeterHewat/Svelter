@@ -14,16 +14,17 @@ import {
   normalizeClerkIssuerDomain,
   resolveClerkIssuerDomain,
 } from "./clerk-instance";
+import { trySyncApexDnsToCloudflare } from "./cloudflare-apex-dns";
+import { cloudflareProductionBlockedDnsSteps } from "./cloudflare-manual-steps";
 import { mintConvexDeployKey } from "./convex-deploy-key";
 import { getConvexEnvVar, setConvexEnvVar } from "./convex-env";
-import { syncAnonymousAuthEnv } from "./sync-anon-auth";
+import { isConvexLinked } from "./convex-link";
 import {
   convexUrlFromDeploymentSlug,
   readConvexUrlFromRootEnv,
   resolveProdConvexUrl,
 } from "./convex-url";
 import { normalizeEnvPaste } from "./env-paste";
-import { isConvexLinked } from "./convex-link";
 import {
   ensureGhProductionEnvironment,
   getGhTokenScopes,
@@ -32,27 +33,26 @@ import {
   isGhAuthenticated,
   refreshGhActionsScopes,
 } from "./gh-secrets";
+import { printManualAction, requireManualAction } from "./manual-action";
+import {
+  CLERK_API_KEYS,
+  CONVEX_DASHBOARD,
+  githubEnvironmentsUrl,
+} from "./platform-urls";
+import { maskSecret, promptConfirm, promptLine } from "./prompt";
 import {
   canAutomateClerk,
   canAutomateGh,
   type SetupCliContext,
 } from "./setup-cli";
-import { printManualAction, requireManualAction } from "./manual-action";
-import {
-  CONVEX_DASHBOARD,
-  CLERK_API_KEYS,
-  githubEnvironmentsUrl,
-} from "./platform-urls";
-import { maskSecret, promptConfirm, promptLine } from "./prompt";
-import { trySyncApexDnsToCloudflare } from "./cloudflare-apex-dns";
-import { findApexCloudflareZone } from "./sync-clerk-cloudflare-dns";
 import {
   markProductionGithubSecretsSynced,
   readSetupConfig,
   type SetupConfig,
 } from "./setup-config";
-import { cloudflareProductionBlockedDnsSteps } from "./cloudflare-manual-steps";
 import { logSetupStackSection } from "./setup-stack-labels";
+import { syncAnonymousAuthEnv } from "./sync-anon-auth";
+import { findApexCloudflareZone } from "./sync-clerk-cloudflare-dns";
 export type BootstrapProductionOptions = {
   cliContext?: SetupCliContext;
   /** Skip confirmation prompts; proceed when prerequisites are met. */

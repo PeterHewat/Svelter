@@ -1,20 +1,21 @@
 /* eslint-disable no-console -- CLI */
+import { isPlaceholderEnvValue } from "../../packages/config/env-placeholders";
 import {
   clerkDevelopmentOrigins,
   deriveProductionHostnames,
   pagesProductionHostname,
 } from "../../packages/config/hostnames";
 import {
-  normalizeApexDomainInput,
   hasApexDomain,
+  normalizeApexDomainInput,
 } from "../../packages/config/validate-domain";
-import { isPlaceholderEnvValue } from "../../packages/config/env-placeholders";
 import { runClerkConfigPatch } from "./clerk-cli";
 import { isClerkSecretKey, normalizeClerkIssuerDomain } from "./clerk-instance";
 import { readEnvFile, upsertEnvKeys } from "./env-file";
-import { openUrlInBrowser } from "./open-url";
+import { normalizeEnvPaste } from "./env-paste";
 import { pagesProjectNames } from "./hosting-project-spec";
 import { printManualAction, requireManualAction } from "./manual-action";
+import { openUrlInBrowser } from "./open-url";
 import {
   CLERK_GOOGLE_OAUTH_DOCS,
   CLERK_SSO_CONNECTIONS,
@@ -22,9 +23,8 @@ import {
   GOOGLE_CLOUD_CREDENTIALS,
   GOOGLE_CLOUD_OAUTH_CONSENT,
 } from "./platform-urls";
-import { productNameToSlug } from "./repo-identity";
 import { maskSecret, promptConfirm, promptSecret } from "./prompt";
-import { normalizeEnvPaste } from "./env-paste";
+import { productNameToSlug } from "./repo-identity";
 import type { CliToolState } from "./setup-cli";
 import type { SetupConfig } from "./setup-config";
 import {

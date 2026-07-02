@@ -87,7 +87,11 @@ export function wirePricingBilling() {
   }
 
   if (storedMode === "annual" || storedMode === "monthly") {
+    root.classList.add("billing-restoring");
     applyBillingMode(storedMode, { animate: false });
+    requestAnimationFrame(function () {
+      root.classList.remove("billing-restoring");
+    });
   }
 
   root.querySelectorAll(".billing-input").forEach(function (input) {

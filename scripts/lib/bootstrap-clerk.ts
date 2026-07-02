@@ -1,15 +1,13 @@
 /* eslint-disable no-console -- CLI wizard */
+import { webDevOrigin } from "../../packages/config/dev-ports";
 import { defaultE2eEmail } from "../../packages/config/e2e-auth";
 import { isPlaceholderEnvValue } from "../../packages/config/env-placeholders";
 import { clerkDevelopmentOrigins } from "../../packages/config/hostnames";
-import { webDevOrigin } from "../../packages/config/dev-ports";
-import { pagesProjectNames } from "./hosting-project-spec";
-import { productNameToSlug } from "./repo-identity";
 import {
   bootstrapClerkEnvViaCli,
   clerkAppMatchesProductName,
-  createAndLinkClerkApp,
   clerkAppsCreateArgs,
+  createAndLinkClerkApp,
   findClerkAppByName,
   findClerkAppByPublishableKey,
   linkClerkApp,
@@ -20,7 +18,6 @@ import {
   ensureClerkE2eUser,
   isClerkEmailPasswordDisabledMessage,
 } from "./clerk-e2e-user";
-import { ensureClerkConvexJwtTemplate } from "./clerk-jwt-template";
 import { syncClerkGoogleOAuth } from "./clerk-google-oauth";
 import {
   isClerkSecretKey,
@@ -28,27 +25,30 @@ import {
   mergeClerkAllowedOrigins,
   normalizeClerkIssuerDomain,
   resolveClerkIssuerDomain,
+  validateClerkDevelopmentKeys,
   validateClerkDevelopmentPublishableKeyPaste,
   validateClerkDevelopmentSecretKeyPaste,
-  validateClerkDevelopmentKeys,
   validateClerkKeyPair,
 } from "./clerk-instance";
+import { ensureClerkConvexJwtTemplate } from "./clerk-jwt-template";
 import {
   PUBLIC_CLERK_PUBLISHABLE_KEY,
   readClerkPublishableKey,
 } from "./clerk-web-env";
 import { readEnvFile, upsertEnvKeys } from "./env-file";
 import { normalizeEnvPaste } from "./env-paste";
-import { printManualAction, exitWithManualAction } from "./manual-action";
+import { pagesProjectNames } from "./hosting-project-spec";
+import { exitWithManualAction, printManualAction } from "./manual-action";
+import { openUrlInBrowser } from "./open-url";
 import {
   CLERK_API_KEYS,
   CLERK_DASHBOARD,
   CLERK_JWT_TEMPLATES,
 } from "./platform-urls";
 import { maskSecret, promptLine, promptSecret } from "./prompt";
+import { productNameToSlug } from "./repo-identity";
 import { canAutomateClerk, type SetupCliContext } from "./setup-cli";
 import type { SetupConfig } from "./setup-config";
-import { openUrlInBrowser } from "./open-url";
 
 const WEB_ENV = "apps/web/.env.local";
 

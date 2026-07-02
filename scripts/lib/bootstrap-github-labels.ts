@@ -5,10 +5,10 @@ import {
 } from "../../packages/config/github-labels";
 import { isGhAuthenticated } from "./gh-secrets";
 import { requireManualAction } from "./manual-action";
-import { canAutomateGh, type SetupCliContext } from "./setup-cli";
-import type { SetupBootstrapOptions } from "./setup-args";
-import { markGithubLabelsSynced, type SetupConfig } from "./setup-config";
 import type { GitHubRepo } from "./repo-identity";
+import type { SetupBootstrapOptions } from "./setup-args";
+import { canAutomateGh, type SetupCliContext } from "./setup-cli";
+import { markGithubLabelsSynced, type SetupConfig } from "./setup-config";
 
 /**
  * Creates or updates GitHub issue/PR labels via `gh label create --force`.
@@ -43,7 +43,7 @@ export async function syncGithubLabels(
 }
 
 /**
- * Syncs GitHub labels once per fork (`github.labelsSynced` in setup config).
+ * Syncs GitHub labels once per fork (`github.syncedLabels` in setup config).
  *
  * @param root - Repository root
  * @param setup - Setup config
@@ -69,7 +69,7 @@ export async function bootstrapGithubLabels(
   }
 
   console.log("\nGitHub labels");
-  if (github.labelsSynced) {
+  if (github.syncedLabels) {
     console.log("✓ Already synced — skip");
     return;
   }

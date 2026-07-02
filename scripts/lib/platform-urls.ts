@@ -75,3 +75,21 @@ export function githubSecretsUrl(github: GitHubRepo): string {
 export function githubEnvironmentsUrl(github: GitHubRepo): string {
   return `https://github.com/${github.org}/${github.repo}/settings/environments`;
 }
+
+/**
+ * GitHub branch protection / rulesets settings URL for a repository.
+ *
+ * @param github - Parsed GitHub repository
+ */
+export function githubBranchProtectionUrl(github: GitHubRepo): string {
+  return `https://github.com/${github.org}/${github.repo}/settings/branches`;
+}
+
+/**
+ * GitHub repository rulesets settings URL.
+ *
+ * @param github - Parsed GitHub repository
+ */
+export function githubRulesetsUrl(github: GitHubRepo): string {
+  return `https://github.com/${github.org}/${github.repo}/settings/rules`;
+}

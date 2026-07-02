@@ -34,7 +34,7 @@ export function assessSetupPipelineStatus(
         "Cloudflare deploy secrets on GitHub — re-run `bun run setup`",
       );
     }
-    if (!config.github.labelsSynced) {
+    if (!config.github.syncedLabels) {
       developmentMissing.push(
         "GitHub issue/PR labels — re-run `bun run setup`",
       );

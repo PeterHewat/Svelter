@@ -1,7 +1,7 @@
 import type { FlattenKeys } from "@repo/utils";
 import { initializeI18n, t as translate, useI18nStore } from "@repo/utils/i18n";
-import en from "./locales/en";
 import "./locale-loader";
+import en from "./locales/en";
 
 export type TranslationKey = FlattenKeys<typeof en>;
 

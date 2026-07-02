@@ -20,15 +20,15 @@ bun install && bun run setup
 
 Safe to **re-run anytime** (resume after interruptions). Each run re-asks questions with your previous answers as defaults (press **Enter** to keep). On repos created from the GitHub template, setup also enables committing [`.svelter/setup.json`](../.svelter/setup.json) for teammates (see [setup-automation.md](./setup-automation.md#sveltersetupjson-no-secrets)).
 
-| Step           | What it does                                                                                                                                                                 |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **CLI check**  | `gh` (global) + `bunx convex` / `bunx wrangler` (devDependencies); runs login commands when needed — continue manually if tools are missing                                  |
-| **Identity**   | Product name + tagline + optional apex domain (Enter to skip) + optional MIT LICENSE removal → [`.svelter/setup.json`](../.svelter/setup.json), `packages/config/product.ts` |
-| **Convex**     | Runs `convex dev --once` (browser login if needed) → syncs `PUBLIC_CONVEX_URL` to `apps/web/.env.local`. Daily dev: `bun run dev:convex`                                     |
-| **Codegen**    | Convex `_generated/` + optional Convex agent skills + readiness report (**exit 0** = ready for PRs)                                                                          |
-| **GitHub**     | Sync dev CI secrets via `gh` (default **yes** first time) — `PUBLIC_CONVEX_URL`, E2E vars, `CONVEX_DEPLOY_KEY`; one-time issue/PR labels (`github.labelsSynced`)             |
-| **Cloudflare** | Pages projects, zone, production custom domains, `CLOUDFLARE_*` → `gh`; **registrar nameserver pause** (explicit confirm). Staging on `staging.*.pages.dev` via CI only.     |
-| **Production** | GitHub **`production`** environment — prod Convex + Cloudflare (`release-*`); Clerk Production needs a domain you own (defer in setup if needed).                            |
+| Step           | What it does                                                                                                                                                                                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **CLI check**  | `gh` (global) + `bunx convex` / `bunx wrangler` (devDependencies); runs login commands when needed — continue manually if tools are missing                                                                                                                              |
+| **Identity**   | Product name + tagline + optional apex domain (Enter to skip) + optional MIT LICENSE removal → [`.svelter/setup.json`](../.svelter/setup.json), `packages/config/product.ts`                                                                                             |
+| **Convex**     | Runs `convex dev --once` (browser login if needed) → syncs `PUBLIC_CONVEX_URL` to `apps/web/.env.local`. Daily dev: `bun run dev:convex`                                                                                                                                 |
+| **Codegen**    | Convex `_generated/` + optional Convex agent skills + readiness report (**exit 0** = ready for PRs)                                                                                                                                                                      |
+| **GitHub**     | Sync dev CI secrets via `gh` (default **yes** first time) — `PUBLIC_CONVEX_URL`, E2E vars, `CONVEX_DEPLOY_KEY`; one-time labels (`github.syncedLabels`), merge settings (`github.syncedMergeSettings`), and branch ruleset (`github.syncedBranchRules`) on adopted repos |
+| **Cloudflare** | Pages projects, zone, production custom domains, `CLOUDFLARE_*` → `gh`; **registrar nameserver pause** (explicit confirm). Staging on `staging.*.pages.dev` via CI only.                                                                                                 |
+| **Production** | GitHub **`production`** environment — prod Convex + Cloudflare (`release-*`); Clerk Production needs a domain you own (defer in setup if needed).                                                                                                                        |
 
 Dashboard URLs are printed as clickable links in setup steps — open them directly in your terminal or browser.
 

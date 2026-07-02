@@ -1,6 +1,17 @@
 /* eslint-disable no-console -- CLI wizard */
 import { resolve } from "node:path";
 import {
+  parseClerkDeployStatusReport,
+  syncPendingClerkDnsRecordsToCloudflare,
+  type ClerkDeployStatusReport,
+} from "./clerk-deploy-status";
+import { relocateClerkBindZoneToSvelter } from "./clerk-dns-zone";
+import {
+  buildGoogleOAuthConfigPatch,
+  ensureGoogleOAuthCredentialsInWebEnv,
+  readGoogleOAuthCredentials,
+} from "./clerk-google-oauth";
+import {
   frontendApiSlugFromPublishableKey,
   isClerkPublishableKey,
   isClerkSecretKey,
@@ -8,17 +19,12 @@ import {
 } from "./clerk-instance";
 import {
   CLERK_PRODUCTION_ENV,
-  normalizeClerkPulledWebEnv,
   normalizeClerkProductionEnv,
+  normalizeClerkPulledWebEnv,
   PUBLIC_CLERK_PUBLISHABLE_KEY,
   readClerkPublishableKey,
 } from "./clerk-web-env";
-import {
-  buildGoogleOAuthConfigPatch,
-  ensureGoogleOAuthCredentialsInWebEnv,
-  readGoogleOAuthCredentials,
-} from "./clerk-google-oauth";
-import { relocateClerkBindZoneToSvelter } from "./clerk-dns-zone";
+import { resolveCloudflareApiToken } from "./cloudflare-auth";
 import { readEnvFile } from "./env-file";
 import { printManualAction, requireManualAction } from "./manual-action";
 import {
@@ -27,15 +33,9 @@ import {
   clerkAppDashboardUrl,
 } from "./platform-urls";
 import { isInteractivePrompt, promptConfirm } from "./prompt";
-import { readSpawnPipe } from "./spawn-io";
-import { readSetupConfig, type SetupConfig } from "./setup-config";
 import type { CliToolState } from "./setup-cli";
-import { resolveCloudflareApiToken } from "./cloudflare-auth";
-import {
-  parseClerkDeployStatusReport,
-  syncPendingClerkDnsRecordsToCloudflare,
-  type ClerkDeployStatusReport,
-} from "./clerk-deploy-status";
+import { readSetupConfig, type SetupConfig } from "./setup-config";
+import { readSpawnPipe } from "./spawn-io";
 import {
   findApexCloudflareZone,
   pollSyncClerkBindZoneDuringDeploy,

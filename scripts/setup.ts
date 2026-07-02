@@ -9,6 +9,7 @@
  */
 import { copyFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { hasApexDomain } from "../packages/config/validate-domain";
 import { ensureAgentLinks } from "./lib/agent-links";
 import {
   clerkSkillsInstallCommand,
@@ -18,27 +19,30 @@ import {
   runConvexAgentSkillsIfNeeded,
 } from "./lib/agent-skills";
 import { applyIdentity, resolveGitHubRepo } from "./lib/apply-identity";
-import { applyLicenseFromConfig } from "./lib/license-identity";
-import { applyReadmeIdentity } from "./lib/readme-identity";
-import { TEMPLATE_PRODUCT_NAME } from "./lib/repo-identity";
 import { bootstrapCiSecrets } from "./lib/bootstrap-ci";
-import { bootstrapGithubLabels } from "./lib/bootstrap-github-labels";
-import { bootstrapConvexClerk } from "./lib/bootstrap-convex-clerk";
-import { bootstrapProduction } from "./lib/bootstrap-production";
 import { bootstrapCloudflare } from "./lib/bootstrap-cloudflare";
-import { hasApexDomain } from "../packages/config/validate-domain";
+import { bootstrapConvexClerk } from "./lib/bootstrap-convex-clerk";
+import { bootstrapGithubLabels } from "./lib/bootstrap-github-labels";
+import { bootstrapGithubRepoPolicy } from "./lib/bootstrap-github-repo-policy";
+import { bootstrapProduction } from "./lib/bootstrap-production";
 import { isConvexLinked } from "./lib/convex-link";
+import { applyLicenseFromConfig } from "./lib/license-identity";
 import { runIdentityWizard } from "./lib/prompt-identity";
 import { runReadiness } from "./lib/readiness";
+import { applyReadmeIdentity } from "./lib/readme-identity";
+import { TEMPLATE_PRODUCT_NAME } from "./lib/repo-identity";
 import { parseSetupFlags } from "./lib/setup-args";
-import { ensureSetupJsonCommittable } from "./lib/setup-gitignore";
-import { readSetupConfig } from "./lib/setup-config";
-import { printSetupStackSummary } from "./lib/setup-stack-labels";
-import { assessSetupPipelineStatus } from "./lib/setup-pipeline-status";
 import {
   runSetupCliPrerequisites,
   type SetupCliContext,
 } from "./lib/setup-cli";
+import { readSetupConfig } from "./lib/setup-config";
+import { ensureSetupJsonCommittable } from "./lib/setup-gitignore";
+import { assessSetupPipelineStatus } from "./lib/setup-pipeline-status";
+import {
+  printSetupFollowUps,
+  printSetupStackSummary,
+} from "./lib/setup-stack-labels";
 
 const root = resolve(import.meta.dir, "..");
 
@@ -97,6 +101,7 @@ function finishSetup(root: string, ranPipelineBootstrap: boolean): void {
   }
 
   if (!ranPipelineBootstrap || !finalConfig) {
+    printSetupFollowUps(finalConfig);
     console.log("\n✓ Setup complete — continue with docs/getting-started.md");
     return;
   }
@@ -108,6 +113,7 @@ function finishSetup(root: string, ranPipelineBootstrap: boolean): void {
     for (const item of status.developmentMissing) {
       console.error(`  ○ ${item}`);
     }
+    printSetupFollowUps(finalConfig);
     console.error("\nRe-run `bun run setup` after fixing the items above.");
     process.exit(1);
   }
@@ -120,6 +126,7 @@ function finishSetup(root: string, ranPipelineBootstrap: boolean): void {
     for (const item of status.productionMissing) {
       console.log(`  • ${item}`);
     }
+    printSetupFollowUps(finalConfig);
     console.log(
       "\n✓ Setup complete (development only) — re-run `bun run setup` when production is ready.",
     );
@@ -130,6 +137,7 @@ function finishSetup(root: string, ranPipelineBootstrap: boolean): void {
   console.log(
     "✓ Production — `release-*` tags can deploy to your apex and Pages.",
   );
+  printSetupFollowUps(finalConfig);
   console.log(
     "\n✓ Setup complete — development and production pipelines are ready.",
   );
@@ -263,6 +271,12 @@ async function main(): Promise<void> {
     };
     await bootstrapCiSecrets(root, setupConfig, cliContext, bootstrapOptions);
     await bootstrapGithubLabels(
+      root,
+      setupConfig,
+      cliContext,
+      bootstrapOptions,
+    );
+    await bootstrapGithubRepoPolicy(
       root,
       setupConfig,
       cliContext,

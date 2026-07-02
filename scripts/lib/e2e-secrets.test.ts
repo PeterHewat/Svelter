@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, mock } from "bun:test";
-import { verifyClerkE2ESecrets } from "./e2e-secrets";
 import { CLERK_CONVEX_JWT_CLAIMS } from "./clerk-jwt-template";
+import { verifyClerkE2ESecrets } from "./e2e-secrets";
 
 const fixturePublishable = "unit-test-clerk-pub-fixture-01";
 const fixtureSecret = "unit-test-clerk-sec-fixture-01";

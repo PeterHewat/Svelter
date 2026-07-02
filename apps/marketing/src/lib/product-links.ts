@@ -1,8 +1,8 @@
-import type { Locale } from "@repo/utils/i18n";
 import {
   appendCrossAppPrefs,
   readResolvedCrossAppTheme,
 } from "@repo/utils/cross-app-prefs";
+import type { Locale } from "@repo/utils/i18n";
 
 export type ProductAppHrefOptions = {
   /** Marketing page locale — forwarded to the product app when origins differ. */

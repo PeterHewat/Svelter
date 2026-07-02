@@ -1,6 +1,6 @@
-import { setupConvex } from "convex-svelte";
 import { isBackendEnabled } from "$lib/backend";
 import { loadWebEnv } from "$lib/web-env";
+import { setupConvex } from "convex-svelte";
 
 /**
  * Configure Convex during component initialization.

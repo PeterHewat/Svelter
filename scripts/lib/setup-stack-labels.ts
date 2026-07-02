@@ -1,5 +1,7 @@
 /* eslint-disable no-console -- CLI output */
 import { CLERK_DASHBOARD } from "./platform-urls";
+import type { SetupConfig } from "./setup-config";
+import { assessSetupFollowUps } from "./setup-pipeline-status";
 
 export type SetupStack = "development" | "production";
 
@@ -91,6 +93,26 @@ export function printSetupStackSummary(input: SetupStackSummaryInput): void {
   console.log(
     "  Add an apex domain in setup for pk_live_ and custom production sign-in",
   );
+}
+
+/**
+ * Prints optional follow-ups that were skipped or deferred during setup.
+ *
+ * @param config - Persisted setup config (`.svelter/setup.json`)
+ */
+export function printSetupFollowUps(config: SetupConfig | null): void {
+  const followUps = assessSetupFollowUps(config);
+  if (followUps.length === 0) {
+    return;
+  }
+
+  console.log("\n── Follow-ups ──");
+  for (const followUp of followUps) {
+    console.log(`○ ${followUp.summary}`);
+    for (const step of followUp.steps) {
+      console.log(`  • ${step}`);
+    }
+  }
 }
 
 /**

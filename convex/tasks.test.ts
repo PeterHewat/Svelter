@@ -1,9 +1,9 @@
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import { api } from "./_generated/api";
-import schema from "./schema";
 import { modules } from "./_test.setup";
 import { TASK_DESCRIPTION_MAX, TASK_TITLE_MAX } from "./lib/validation";
+import schema from "./schema";
 
 const userA = { subject: "user_a", name: "User A", email: "a@example.com" };
 const userB = { subject: "user_b", name: "User B", email: "b@example.com" };

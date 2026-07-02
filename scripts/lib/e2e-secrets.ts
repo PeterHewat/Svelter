@@ -1,6 +1,6 @@
 import {
-  frontendApiSlugFromPublishableKey,
   fetchClerkInstance,
+  frontendApiSlugFromPublishableKey,
 } from "./clerk-instance";
 import { ensureClerkConvexJwtTemplate } from "./clerk-jwt-template";
 

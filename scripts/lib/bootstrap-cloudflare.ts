@@ -1,6 +1,11 @@
 /* eslint-disable no-console -- CLI wizard */
 import { deriveProductionHostnames } from "../../packages/config/hostnames";
 import { hasApexDomain } from "../../packages/config/validate-domain";
+import { readClerkProductionSecretKey } from "./clerk-web-env";
+import {
+  syncApexDnsForHosting,
+  trySyncApexDnsToCloudflare,
+} from "./cloudflare-apex-dns";
 import {
   CloudflareApiError,
   ensurePagesProject,
@@ -11,30 +16,26 @@ import {
   type CloudflareZone,
 } from "./cloudflare-api";
 import {
-  cloudflareApexDnsAutomationFailedSteps,
-  cloudflarePagesCustomDomainManualSteps,
-} from "./cloudflare-manual-steps";
-import {
-  printManualAction,
-  requireManualAction,
-  exitWithManualAction,
-} from "./manual-action";
-import { CLOUDFLARE_DASHBOARD, cloudflareZoneDnsUrl } from "./platform-urls";
-import { openUrlInBrowser } from "./open-url";
-import {
+  CLOUDFLARE_LOCAL_ENV,
   registrarNameserverManualSteps,
   resolveCloudflareApiToken,
-  CLOUDFLARE_LOCAL_ENV,
   resolveWranglerAccountId,
   type ResolvedCloudflareToken,
 } from "./cloudflare-auth";
-import {
-  syncApexDnsForHosting,
-  trySyncApexDnsToCloudflare,
-} from "./cloudflare-apex-dns";
-import { readClerkProductionSecretKey } from "./clerk-web-env";
 import { ensureCloudflareGithubSecretsSynced } from "./cloudflare-github-secrets";
+import {
+  cloudflareApexDnsAutomationFailedSteps,
+  cloudflarePagesCustomDomainManualSteps,
+} from "./cloudflare-manual-steps";
 import { pagesProjectNames } from "./hosting-project-spec";
+import {
+  exitWithManualAction,
+  printManualAction,
+  requireManualAction,
+} from "./manual-action";
+import { openUrlInBrowser } from "./open-url";
+import { CLOUDFLARE_DASHBOARD, cloudflareZoneDnsUrl } from "./platform-urls";
+import { promptConfirm, promptLine } from "./prompt";
 import { productNameToSlug, type GitHubRepo } from "./repo-identity";
 import type { SetupBootstrapOptions } from "./setup-args";
 import type { SetupCliContext } from "./setup-cli";
@@ -44,7 +45,6 @@ import {
   type CloudflareSetupMeta,
   type SetupConfig,
 } from "./setup-config";
-import { promptConfirm, promptLine } from "./prompt";
 import { logSetupStackSection } from "./setup-stack-labels";
 
 export type BootstrapCloudflareResult = "complete" | "skipped" | "blocked";
