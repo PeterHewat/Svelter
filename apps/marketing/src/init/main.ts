@@ -10,8 +10,8 @@ import {
   applyCrossAppPrefsFromUrl,
   stripCrossAppPrefsFromUrl,
 } from "./cross-app";
-import { persistLocaleFromPath, redirectUnlocalizedPaths } from "./locale";
 import { markHashIntent } from "./hash-intent";
+import { persistLocaleFromPath, redirectUnlocalizedPaths } from "./locale";
 import {
   persistScrollPosition,
   restoreLocaleNavState,

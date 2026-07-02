@@ -1,5 +1,5 @@
-import { scrollToHashTarget } from "./scroll";
 import { markHashIntent } from "./hash-intent";
+import { scrollToHashTarget } from "./scroll";
 
 function normalizeMarketingPath(path) {
   const normalized = path || "/";

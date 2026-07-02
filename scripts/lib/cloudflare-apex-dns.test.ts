@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import {
-  resolvePagesSubdomain,
   resetApexDnsSyncSession,
+  resolvePagesSubdomain,
 } from "./cloudflare-apex-dns";
 
 afterEach(() => {

@@ -1,5 +1,5 @@
-import { webDevOrigin } from "@repo/config/dev-ports";
 import { defineConfig, devices } from "@playwright/test";
+import { webDevOrigin } from "@repo/config/dev-ports";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {

@@ -1,7 +1,7 @@
-import { useClerkContext } from "svelte-clerk/client";
+import { isAuthEnabled } from "$lib/backend";
 import { clearCachedAvatarUrl } from "$lib/clerk-avatar-cache";
 import { clearGoogleOneTapTried } from "$lib/google-one-tap-auth";
-import { isAuthEnabled } from "$lib/backend";
+import { useClerkContext } from "svelte-clerk/client";
 
 const disabledAuth = {
   isLoading: false,

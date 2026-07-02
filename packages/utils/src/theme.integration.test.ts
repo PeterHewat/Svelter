@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { clearPersistedStorage, getLocalStorageOrMemory } from "./storage";
 import {
   applyThemeToDOM,
   getSystemTheme,
@@ -6,7 +7,6 @@ import {
   resolveTheme,
   useThemeStore,
 } from "./theme";
-import { clearPersistedStorage, getLocalStorageOrMemory } from "./storage";
 
 describe("Theme Integration", () => {
   let originalMatchMedia: typeof window.matchMedia;

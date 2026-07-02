@@ -7,7 +7,7 @@ const baseConfig = {
   github: {
     org: "acme",
     repo: "my-app",
-    labelsSynced: true,
+    syncedLabels: true,
     syncedSecrets: {
       repo: true,
       cloudflare: true,
@@ -39,7 +39,7 @@ describe("assessSetupPipelineStatus", () => {
       github: {
         ...baseConfig.github,
         syncedSecrets: { cloudflare: true },
-        labelsSynced: true,
+        syncedLabels: true,
       },
       cloudflare: undefined,
     });

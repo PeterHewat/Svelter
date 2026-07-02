@@ -4,8 +4,8 @@
  * Resolves web Playwright E2E mode for CI (`ui_only` vs full tasks suite).
  */
 import { getTasksE2EConfigIssues } from "../apps/web/tests/helpers/e2e-auth-config.ts";
-import { verifyClerkE2ESecrets } from "./lib/e2e-secrets.ts";
 import { readClerkPublishableKey } from "./lib/clerk-web-env.ts";
+import { verifyClerkE2ESecrets } from "./lib/e2e-secrets.ts";
 import { readEnvFile } from "./lib/env-file.ts";
 
 const requireFull = process.env.REQUIRE_FULL_WEB_E2E === "true";

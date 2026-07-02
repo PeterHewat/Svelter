@@ -1,21 +1,21 @@
 /* eslint-disable no-console -- CLI */
 import { isPlaceholderEnvValue } from "../../packages/config/env-placeholders";
-import { isClerkSecretKey } from "./clerk-instance";
 import {
   CLERK_CONVEX_WEBHOOK_PATH,
   CLERK_USER_WEBHOOK_EVENTS,
   ensureClerkSvixApp,
 } from "./clerk-convex-webhook";
+import { isClerkSecretKey } from "./clerk-instance";
 import { readConvexUrlFromWebEnv } from "./clerk-web-env";
 import { getConvexEnvVar, setConvexEnvVar } from "./convex-env";
 import { isConvexLinked } from "./convex-link";
 import { readConvexUrlFromRootEnv } from "./convex-url";
-import { upsertEnvKeys, readEnvFile } from "./env-file";
-import { printManualAction, exitWithManualAction } from "./manual-action";
+import { readEnvFile, upsertEnvKeys } from "./env-file";
+import { normalizeEnvPaste } from "./env-paste";
+import { exitWithManualAction, printManualAction } from "./manual-action";
 import { openUrlInBrowser } from "./open-url";
 import { CLERK_WEBHOOKS } from "./platform-urls";
 import { maskSecret, promptSecret } from "./prompt";
-import { normalizeEnvPaste } from "./env-paste";
 import { convexSiteUrlFromCloudUrl } from "./sync-anon-auth";
 
 const WEB_ENV = "apps/web/.env.local";

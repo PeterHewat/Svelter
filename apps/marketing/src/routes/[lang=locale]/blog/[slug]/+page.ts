@@ -1,6 +1,6 @@
-import { error } from "@sveltejs/kit";
 import { localeEntries } from "$lib/i18n";
 import { getAllPosts, getPost } from "$lib/posts";
+import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
 
 export function entries() {

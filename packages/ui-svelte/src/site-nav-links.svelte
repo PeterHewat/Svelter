@@ -7,12 +7,12 @@
     positionNavIndicator,
     subscribeNavIndicator,
   } from "@repo/utils";
-  import { createNavHighlightPersistence } from "@repo/utils/nav-highlight";
   import {
     siteNavIndicatorClass,
     siteNavLinkClass,
     siteNavLinksClass,
   } from "@repo/utils/chrome";
+  import { createNavHighlightPersistence } from "@repo/utils/nav-highlight";
 
   export type SiteNavLink = {
     href: string;
@@ -36,6 +36,11 @@
   let indicatorReady = $state(false);
   let dismissing = $state(false);
   let lastActiveEl = $state<HTMLElement | null>(null);
+  let lastLabelsKey = $state("");
+
+  function linksLabelsKey(): string {
+    return links.map((link) => link.label).join("\0");
+  }
 
   function activeLinkEl(): HTMLElement | null {
     if (!track) return null;
@@ -90,12 +95,22 @@
   $effect(() => {
     for (const link of links) {
       void link.active;
+      void link.label;
     }
 
     if (dismissing || !track || !indicator) return;
 
     const nextEl = activeLinkEl();
-    if (nextEl === lastActiveEl) return;
+    const labelsKey = linksLabelsKey();
+    const labelsChanged = labelsKey !== lastLabelsKey;
+    lastLabelsKey = labelsKey;
+
+    if (nextEl === lastActiveEl) {
+      if (nextEl && indicatorReady && labelsChanged) {
+        syncToActive({ instant: true });
+      }
+      return;
+    }
 
     const prevEl = lastActiveEl;
     lastActiveEl = nextEl;

@@ -1,8 +1,8 @@
 /* eslint-disable no-console -- CLI wizard */
 import { bunWorkspaceCliInstallHint, ghInstallHint } from "./cli-install-hints";
 import { isWranglerAuthenticated } from "./cloudflare-auth";
-import { promptConfirm } from "./prompt";
 import { isGhAuthenticated, isGhInstalled } from "./gh-secrets";
+import { promptConfirm } from "./prompt";
 import { readSpawnPipe } from "./spawn-io";
 
 /** Status of one external CLI used during setup. */

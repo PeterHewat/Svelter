@@ -1,5 +1,5 @@
-import { getContext, setContext } from "svelte";
 import { createMarketingT, type Locale, type MarketingT } from "$lib/i18n";
+import { getContext, setContext } from "svelte";
 
 const MARKETING_CONTEXT = Symbol("marketing-context");
 

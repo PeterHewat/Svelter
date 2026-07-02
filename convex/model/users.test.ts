@@ -1,6 +1,6 @@
+import type { UserIdentity } from "convex/server";
 import { expect, test } from "vitest";
 import type { Doc } from "../_generated/dataModel";
-import type { UserIdentity } from "convex/server";
 import {
   formatUserDisplayName,
   isGuestUser,

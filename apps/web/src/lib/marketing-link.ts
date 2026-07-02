@@ -1,9 +1,9 @@
 import { resolveMarketingSiteOrigin } from "@repo/config/cross-app-origin";
-import type { Locale } from "@repo/utils/i18n";
 import {
   appendCrossAppPrefs,
   readResolvedCrossAppTheme,
 } from "@repo/utils/cross-app-prefs";
+import type { Locale } from "@repo/utils/i18n";
 
 export type MarketingSiteHrefOptions = {
   /** Resolved theme for cross-app navigation (`light` / `dark`). */

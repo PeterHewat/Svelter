@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
+import type { GitHubRepo } from "./repo-identity";
 import {
   isAdoptedTemplateRepo,
   removeSetupJsonFromGitignore,
   SETUP_JSON_GITIGNORE_ENTRY,
 } from "./setup-gitignore";
-import type { GitHubRepo } from "./repo-identity";
 
 const upstream: GitHubRepo = {
   org: "PeterHewat",

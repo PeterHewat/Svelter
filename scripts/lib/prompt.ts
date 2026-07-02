@@ -1,7 +1,7 @@
 /* eslint-disable no-console -- CLI prompts */
+import { stdin as input, stdout as output } from "node:process";
 import * as readline from "node:readline";
 import * as readlinePromises from "node:readline/promises";
-import { stdin as input, stdout as output } from "node:process";
 
 /**
  * Returns whether secret prompts can use muted TTY input (hide echo + clear line).

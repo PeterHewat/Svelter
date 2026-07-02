@@ -1,6 +1,6 @@
-import adapter from "@sveltejs/adapter-static";
-import { bakedApexMarketingOrigin } from "@repo/config/validate-domain";
 import { marketingDevOrigin } from "@repo/config/dev-ports";
+import { bakedApexMarketingOrigin } from "@repo/config/validate-domain";
+import adapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
 const apexMarketingOrigin = bakedApexMarketingOrigin(

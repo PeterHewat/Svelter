@@ -1,6 +1,6 @@
-import type { z } from "zod";
 import { parseFrontmatter } from "$lib/frontmatter";
 import { renderMarkdown } from "$lib/markdown";
+import type { z } from "zod";
 
 function slugFromPath(path: string): string {
   const match = path.match(/\/([^/]+)\.md$/);

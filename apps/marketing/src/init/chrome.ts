@@ -1,7 +1,7 @@
 import { wireLocaleLinks, wireLocaleMenus } from "./locale-links";
 import { wireNavActive } from "./nav-active";
-import { syncProductAppLinks } from "./product-links";
 import { wirePricingBilling } from "./pricing";
+import { syncProductAppLinks } from "./product-links";
 import { wireRevealInView } from "./reveal";
 import { wireTestimonialCarousel } from "./testimonial";
 import {

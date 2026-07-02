@@ -1,9 +1,9 @@
-import { t as translate, useI18nStore } from "@repo/utils/i18n";
 import {
   ensureLocaleLoaded,
   getLocaleDataVersion,
   subscribeLocaleData,
 } from "$lib/locale-loader";
+import { t as translate, useI18nStore } from "@repo/utils/i18n";
 
 /**
  * Reactive i18n for Svelte components — re-renders when the locale or its dictionary changes.

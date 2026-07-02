@@ -16,8 +16,8 @@ import {
 } from "./cloudflare-api";
 import { resolveCloudflareApiToken } from "./cloudflare-auth";
 import { importClerkDnsRecordsToCloudflare } from "./cloudflare-dns";
-import { CLOUDFLARE_DASHBOARD, cloudflareZoneDnsUrl } from "./platform-urls";
 import { printManualAction, requireManualAction } from "./manual-action";
+import { CLOUDFLARE_DASHBOARD, cloudflareZoneDnsUrl } from "./platform-urls";
 
 export type ResolveClerkDnsRecordsResult = {
   records: BindDnsRecord[];
@@ -241,7 +241,7 @@ export async function pollSyncClerkBindZoneDuringDeploy(
         return true;
       }
     }
-    await Bun.sleep(intervalMs);
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
 
   return false;

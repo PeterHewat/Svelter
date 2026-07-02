@@ -12,12 +12,12 @@ import {
   listGhRepoSecrets,
 } from "./gh-secrets";
 import { requireManualAction } from "./manual-action";
-import { canAutomateGh, type SetupCliContext } from "./setup-cli";
 import { githubEnvironmentsUrl, githubSecretsUrl } from "./platform-urls";
 import { promptConfirm } from "./prompt";
 import type { SetupBootstrapOptions } from "./setup-args";
-import { logSetupStackSection } from "./setup-stack-labels";
+import { canAutomateGh, type SetupCliContext } from "./setup-cli";
 import { markGithubSecretsSynced, type SetupConfig } from "./setup-config";
+import { logSetupStackSection } from "./setup-stack-labels";
 
 const WEB_ENV = "apps/web/.env.local";
 

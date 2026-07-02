@@ -1,7 +1,7 @@
-import { ConvexError } from "convex/values";
-import type { MutationCtx, QueryCtx } from "../_generated/server";
-import type { Doc } from "../_generated/dataModel";
 import type { UserIdentity } from "convex/server";
+import { ConvexError } from "convex/values";
+import type { Doc } from "../_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "../_generated/server";
 import {
   getOrCreateUserFromIdentity,
   getUserByToken,

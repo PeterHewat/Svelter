@@ -5,10 +5,10 @@ import {
   clerkProductionOrigins,
   deriveProductionHostnames,
   deriveStagingHostnames,
+  PAGES_STAGING_BRANCH,
   pagesOrigin,
   pagesProductionHostname,
   pagesStagingHostname,
-  PAGES_STAGING_BRANCH,
 } from "./hostnames";
 
 describe("deriveProductionHostnames", () => {

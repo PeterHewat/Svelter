@@ -23,7 +23,7 @@ Setup configures **two stacks**. Staging (`staging.*.pages.dev` on merge to `mai
 | **Happy path, no apex**                         | Complete when dev CI + Cloudflare flags are set | **Incomplete** until production secrets sync — setup exits 0 but prints production follow-ups; re-run when ready for `release-*`     |
 | **Troublesome path** (ACTION REQUIRED / exit 1) | Incomplete until CI + Cloudflare sync           | Incomplete — fix blocking steps and re-run                                                                                           |
 
-**Development pipeline complete** when `github.syncedSecrets.repo`, `github.syncedSecrets.cloudflare`, `github.labelsSynced`, and `cloudflare.synced` are all true — setup **exits 1** otherwise. **Production pipeline** is reported separately; when incomplete, setup exits 0 after development is ready but lists what to finish on the next `bun run setup`.
+**Development pipeline complete** when `github.syncedSecrets.repo`, `github.syncedSecrets.cloudflare`, `github.syncedLabels`, and `cloudflare.synced` are all true — setup **exits 1** otherwise. **Production pipeline** is reported separately; when incomplete, setup exits 0 after development is ready but lists what to finish on the next `bun run setup`.
 
 ## Wizard behavior
 
@@ -53,7 +53,9 @@ Created on first `bun run setup`. Stores product identity, Cloudflare Pages proj
   "github": {
     "org": "acme",
     "repo": "my-app",
-    "labelsSynced": true,
+    "syncedLabels": true,
+    "syncedMergeSettings": true,
+    "syncedBranchRules": true,
     "syncedSecrets": {
       "repo": true,
       "production": true,
@@ -71,7 +73,9 @@ Created on first `bun run setup`. Stores product identity, Cloudflare Pages proj
 }
 ```
 
-- `github.labelsSynced` — issue/PR labels created via `gh label create` (one-time).
+- `github.syncedLabels` — issue/PR labels created via `gh label create` (one-time).
+- `github.syncedMergeSettings` — squash-only merge settings via `gh api` (one-time; adopted repos only).
+- `github.syncedBranchRules` — `main` branch ruleset (linear history, PRs, `CI required`) via `gh api` when the plan allows (one-time; adopted repos only).
 - `github.syncedSecrets.repo` — repository secrets for PR CI / E2E (dev Convex + Clerk).
 - `github.syncedSecrets.cloudflare` — repository secrets for Cloudflare Pages deploy workflows.
 - `github.syncedSecrets.production` — GitHub **production** environment secrets for `release-*` releases.
@@ -108,16 +112,16 @@ Also writes `packages/config/product.ts`, rebrands `README.md` when adopting the
 | Apex domain              | Optional in identity wizard (Enter to skip). Prints a **Cloudflare-first DNS** checklist when set. Re-run setup to add a domain later.                                                                                                                                                                                                                                 |
 | DNS at registrar         | When apex is set: setup creates the Cloudflare zone (API or **Domains → Add a domain**), creates **Pages CNAMEs** (proxied apex + www), syncs Clerk CNAMEs from the **Clerk Domains API** (`.svelter/clerk-{apex}.zone` BIND fallback), attaches Pages domains, then **pauses** with generic registrar nameserver steps until you confirm (`cloudflare.dnsConfigured`) |
 | E2E test user            | Wizard defaults `e2e.test@{apex}` when apex is set, else `e2e.test@example.com`; creates user via Clerk API and writes `E2E_USER_EMAIL`                                                                                                                                                                                                                                |
-| Org GitHub policies      | Branch protection, required reviewers — outside setup                                                                                                                                                                                                                                                                                                                  |
+| Org GitHub policies      | Org-wide rulesets or policies that override repository settings — outside setup                                                                                                                                                                                                                                                                                        |
 
 ### Feasibility summary
 
-| Category    | Examples                                                                                                                                                                                                                                                       |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Script**  | `PRODUCT_NAME`, `PRODUCT_TAGLINE`, `.env.local`, `convex env set`, deploy keys, `gh secret set`, `gh label create`, Pages domains via API, Clerk DNS import to Cloudflare, Clerk JWT template + origins + webhook prep + Google OAuth enable/credentials patch |
-| **Guided**  | Clerk CLI `env pull` or paste keys, inline Convex link, `wrangler login` or Cloudflare API token paste, DNS, E2E user, **Google Cloud OAuth client** (JavaScript origins + redirect URI)                                                                       |
-| **Manual**  | Account signup, registrar nameserver change (when apex is set), Clerk email/password toggle (if E2E needs it), `release-*` release approval, org GitHub policies, Google Cloud project/consent screen                                                          |
-| **Blocked** | Clerk setup without CLI login or dashboard access                                                                                                                                                                                                              |
+| Category    | Examples                                                                                                                                                                                                                                                                                                                                                          |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Script**  | `PRODUCT_NAME`, `PRODUCT_TAGLINE`, `.env.local`, `convex env set`, deploy keys, `gh secret set`, `gh label create`, GitHub merge settings + `main` ruleset (`github.syncedMergeSettings`, `github.syncedBranchRules`), Pages domains via API, Clerk DNS import to Cloudflare, Clerk JWT template + origins + webhook prep + Google OAuth enable/credentials patch |
+| **Guided**  | Clerk CLI `env pull` or paste keys, inline Convex link, `wrangler login` or Cloudflare API token paste, DNS, E2E user, **Google Cloud OAuth client** (JavaScript origins + redirect URI)                                                                                                                                                                          |
+| **Manual**  | Account signup, registrar nameserver change (when apex is set), Clerk email/password toggle (if E2E needs it), `release-*` release approval, org-wide GitHub policy overrides, Google Cloud project/consent screen                                                                                                                                                |
+| **Blocked** | Clerk setup without CLI login or dashboard access                                                                                                                                                                                                                                                                                                                 |
 
 ---
 
@@ -222,13 +226,16 @@ Setup also generates `ANON_AUTH_ISSUER`, `ANON_AUTH_JWKS`, and `ANON_AUTH_PRIVAT
 
 ### GitHub
 
-| Step            | URL                                                                            |
-| --------------- | ------------------------------------------------------------------------------ |
-| Actions secrets | [Repository secrets](https://github.com/{org}/{repo}/settings/secrets/actions) |
-| Environments    | [Environments](https://github.com/{org}/{repo}/settings/environments)          |
-| CLI auth        | `gh auth login -s repo,workflow` (setup requests both scopes)                  |
+| Step            | URL                                                                                                |
+| --------------- | -------------------------------------------------------------------------------------------------- |
+| Actions secrets | [Repository secrets](https://github.com/{org}/{repo}/settings/secrets/actions)                     |
+| Environments    | [Environments](https://github.com/{org}/{repo}/settings/environments)                              |
+| CLI auth        | `gh auth login -s repo,workflow` (setup requests both scopes)                                      |
+| Branch rules    | [Rulesets](https://github.com/{org}/{repo}/settings/rules) — setup creates `main` on adopted repos |
 
 Setup creates the **`production`** environment via `gh api` when your token has `repo` + `workflow`. If creation fails with Forbidden, confirm scopes with `gh auth status` and run `gh auth refresh -h github.com -s repo,workflow`.
+
+On repos created from this template (not `PeterHewat/Svelter`), setup also configures **Pull Requests** (squash merge only, auto-merge, delete head branches, suggest updating branches) and a repository **ruleset** named `main` on the default branch: linear history, pull request required, status check **`CI required`**. Requires repository **admin** access; failures print a manual checklist and do not block the development pipeline. Policy definitions: [`packages/config/github-repo-policy.ts`](../packages/config/github-repo-policy.ts). See [ci-cd.md](./ci-cd.md#branch-protection).
 
 ---
 

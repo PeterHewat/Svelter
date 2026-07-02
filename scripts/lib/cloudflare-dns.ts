@@ -1,10 +1,10 @@
+import type { BindDnsRecord } from "./clerk-dns-zone";
 import {
   CloudflareApiError,
   cloudflareFetch,
   isCloudflareAlreadyExistsError,
   type CloudflareZone,
 } from "./cloudflare-api";
-import type { BindDnsRecord } from "./clerk-dns-zone";
 
 type CloudflareDnsRecord = {
   id: string;

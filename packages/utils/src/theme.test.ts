@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { clearPersistedStorage, getLocalStorageOrMemory } from "./storage";
 import {
   applyThemeToDOM,
   getSystemTheme,
@@ -9,7 +10,6 @@ import {
   type ResolvedTheme,
   type ThemeMode,
 } from "./theme";
-import { clearPersistedStorage, getLocalStorageOrMemory } from "./storage";
 
 // Mock matchMedia
 const mockMatchMedia = (matches: boolean) => {

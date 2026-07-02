@@ -1,4 +1,3 @@
-import type { Component } from "svelte";
 import About from "$lib/components/about.svelte";
 import CtaBand from "$lib/components/cta-band.svelte";
 import Faq from "$lib/components/faq.svelte";
@@ -8,6 +7,7 @@ import MetricsStrip from "$lib/components/metrics-strip.svelte";
 import PricingTable from "$lib/components/pricing-table.svelte";
 import Testimonial from "$lib/components/testimonial.svelte";
 import type { MarketingSectionKey } from "$lib/marketing-content";
+import type { Component } from "svelte";
 
 type HomepageSection = {
   key: MarketingSectionKey;

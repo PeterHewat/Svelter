@@ -6,8 +6,8 @@ import {
   readClerkPublishableKey,
   readConvexUrlFromWebEnv,
 } from "./clerk-web-env";
-import { isConvexLinked } from "./convex-link";
 import { getConvexEnvVar, setConvexEnvVar } from "./convex-env";
+import { isConvexLinked } from "./convex-link";
 import { readConvexUrlFromRootEnv } from "./convex-url";
 import { readEnvFile, upsertEnvKeys } from "./env-file";
 

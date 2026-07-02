@@ -1,21 +1,21 @@
-import { execSync } from "node:child_process";
 import {
   createRepoAliases,
   dedupeWebVite,
   marketingAliasKeys,
 } from "@repo/config/aliases";
 import {
-  bakedApexMarketingOrigin,
-  bakedApexProductOrigin,
-} from "@repo/config/validate-domain";
-import {
   MARKETING_DEV_PORT,
   MARKETING_PREVIEW_PORT,
 } from "@repo/config/dev-ports";
 import { resolveGithubRepoUrl } from "@repo/config/github-repo";
-import tailwindcss from "@tailwindcss/vite";
+import {
+  bakedApexMarketingOrigin,
+  bakedApexProductOrigin,
+} from "@repo/config/validate-domain";
 import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
 import { buildSync } from "esbuild";
+import { execSync } from "node:child_process";
 import { resolve } from "node:path";
 import { defineConfig, type Plugin } from "vite";
 

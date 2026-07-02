@@ -1,5 +1,5 @@
-import { localeFromPath, rememberLocaleNavState, writeLocale } from "./locale";
 import { hasHashIntent } from "./hash-intent";
+import { localeFromPath, rememberLocaleNavState, writeLocale } from "./locale";
 
 export function wireLocaleLinks() {
   document.querySelectorAll("[data-locale-link]").forEach(function (el) {

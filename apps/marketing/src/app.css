@@ -216,6 +216,15 @@ html.light {
         opacity 0.55s ease-out,
         transform 0.55s ease-out;
     }
+
+    html.js [data-reveal][data-reveal-fade]:not(.is-visible) {
+      transform: none;
+    }
+
+    html.js [data-reveal][data-reveal-fade].is-visible {
+      transform: none;
+      transition: opacity 0.55s ease-out;
+    }
   }
 
   .prose-marketing blockquote {
@@ -246,6 +255,10 @@ html.light {
 
   .pricing-table-root:has(.billing-annual:checked) .billing-toggle-thumb {
     transform: translateX(100%);
+  }
+
+  .pricing-table-root.billing-restoring .billing-toggle-thumb {
+    transition: none;
   }
 
   .pricing-table-root .billing-label {

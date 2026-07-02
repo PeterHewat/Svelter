@@ -1,9 +1,9 @@
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import { api, internal } from "./_generated/api";
+import { modules } from "./_test.setup";
 import { ANONYMOUS_TASK_LIMIT, SIGNED_IN_TASK_LIMIT } from "./lib/constants";
 import schema from "./schema";
-import { modules } from "./_test.setup";
 
 const anonUser = { subject: "anon_guest_test" };
 const clerkUser = {

@@ -1,4 +1,6 @@
 import { hasApexDomain } from "../../packages/config/validate-domain";
+import { githubRulesetsUrl } from "./platform-urls";
+import { shouldRebrandFromTemplate, type GitHubRepo } from "./repo-identity";
 import type { SetupConfig } from "./setup-config";
 
 export type SetupPipelineStatus = {
@@ -7,6 +9,50 @@ export type SetupPipelineStatus = {
   developmentMissing: string[];
   productionMissing: string[];
 };
+
+export type SetupFollowUp = {
+  summary: string;
+  steps: string[];
+};
+
+/**
+ * Optional setup steps that did not complete — surfaced again at the end of `bun run setup`.
+ *
+ * @param config - Persisted setup config (`.svelter/setup.json`)
+ */
+export function assessSetupFollowUps(
+  config: SetupConfig | null,
+): SetupFollowUp[] {
+  const followUps: SetupFollowUp[] = [];
+  const github = config?.github;
+  if (!github) {
+    return followUps;
+  }
+
+  const repo: GitHubRepo = {
+    org: github.org,
+    repo: github.repo,
+    repoUrl: `https://github.com/${github.org}/${github.repo}`,
+  };
+
+  if (!shouldRebrandFromTemplate(repo)) {
+    return followUps;
+  }
+
+  if (github.syncedMergeSettings && !github.syncedBranchRules) {
+    followUps.push({
+      summary:
+        "GitHub branch ruleset — not applied via API; on private Free, rules are not enforced until Team/Enterprise, Pro, or public",
+      steps: [
+        `Rulesets: ${githubRulesetsUrl(repo)}`,
+        "Re-run `bun run setup` after upgrading or making the repository public",
+        "See docs/ci-cd.md#branch-protection",
+      ],
+    });
+  }
+
+  return followUps;
+}
 
 /**
  * Assesses whether setup fulfilled the development and production pipeline tiers.
@@ -34,7 +80,7 @@ export function assessSetupPipelineStatus(
         "Cloudflare deploy secrets on GitHub — re-run `bun run setup`",
       );
     }
-    if (!config.github.labelsSynced) {
+    if (!config.github.syncedLabels) {
       developmentMissing.push(
         "GitHub issue/PR labels — re-run `bun run setup`",
       );

@@ -1,11 +1,11 @@
 /* eslint-disable no-console -- CLI wizard */
-import { resolveCloudflareApiToken } from "./cloudflare-auth";
+import type { BindDnsRecord } from "./clerk-dns-zone";
 import { findZoneByName } from "./cloudflare-api";
+import { resolveCloudflareApiToken } from "./cloudflare-auth";
 import {
   syncClerkDnsRecordsToCloudflare,
   type ResolveClerkDnsRecordsResult,
 } from "./sync-clerk-cloudflare-dns";
-import type { BindDnsRecord } from "./clerk-dns-zone";
 
 /** Clerk `deploy status --mode agent` lifecycle state. */
 export type ClerkDeployStatusState =

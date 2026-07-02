@@ -1,5 +1,5 @@
-import { marketingDevOrigin } from "@repo/config/dev-ports";
 import { defineConfig, devices } from "@playwright/test";
+import { marketingDevOrigin } from "@repo/config/dev-ports";
 
 const isCI = !!process.env.CI;
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? marketingDevOrigin;

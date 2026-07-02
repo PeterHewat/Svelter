@@ -31,7 +31,11 @@ export type SetupConfig = {
     org: string;
     repo: string;
     /** Issue/PR labels synced via `gh label create` (one-time). */
-    labelsSynced?: boolean;
+    syncedLabels?: boolean;
+    /** Squash-only merge settings synced via `gh api` (one-time). */
+    syncedMergeSettings?: boolean;
+    /** `main` branch ruleset synced via `gh api` when the plan allows (one-time). */
+    syncedBranchRules?: boolean;
     syncedSecrets?: GitHubSyncedSecrets;
   } | null;
   /** When true, setup replaces MIT `LICENSE` with the proprietary stub. */
@@ -107,7 +111,9 @@ export function buildSetupConfig(
       ? {
           org: github.org,
           repo: github.repo,
-          labelsSynced: existing?.github?.labelsSynced,
+          syncedLabels: existing?.github?.syncedLabels,
+          syncedMergeSettings: existing?.github?.syncedMergeSettings,
+          syncedBranchRules: existing?.github?.syncedBranchRules,
           syncedSecrets: existing?.github?.syncedSecrets,
         }
       : null,
@@ -160,7 +166,39 @@ export function markGithubLabelsSynced(root: string): void {
   }
   writeSetupConfig(root, {
     ...config,
-    github: { ...config.github, labelsSynced: true },
+    github: { ...config.github, syncedLabels: true },
+  });
+}
+
+/**
+ * Records that GitHub merge settings were synced by setup.
+ *
+ * @param root - Repository root
+ */
+export function markGithubMergeSettingsSynced(root: string): void {
+  const config = readSetupConfig(root);
+  if (!config?.github) {
+    return;
+  }
+  writeSetupConfig(root, {
+    ...config,
+    github: { ...config.github, syncedMergeSettings: true },
+  });
+}
+
+/**
+ * Records that the GitHub `main` branch ruleset was synced by setup.
+ *
+ * @param root - Repository root
+ */
+export function markGithubBranchRulesSynced(root: string): void {
+  const config = readSetupConfig(root);
+  if (!config?.github) {
+    return;
+  }
+  writeSetupConfig(root, {
+    ...config,
+    github: { ...config.github, syncedBranchRules: true },
   });
 }
 
