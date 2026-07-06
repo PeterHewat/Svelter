@@ -1,0 +1,32 @@
+/**
+ * Theme change animation (web + marketing).
+ * Import **after** `tailwindcss` in each app global stylesheet.
+ *
+ * Theme toggles use the View Transitions API (`document.startViewTransition`)
+ * so the whole page cross-fades in sync. Per-element CSS transitions cannot
+ * stay coherent when semantic tokens change on `<html>`.
+ */
+:root {
+  --theme-transition-duration: 250ms;
+  --theme-transition-easing: ease-in-out;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: var(--theme-transition-duration);
+    animation-timing-function: var(--theme-transition-easing);
+  }
+
+  .theme-panel-layout-transition {
+    transition-property: width;
+    transition-duration: 300ms;
+    transition-timing-function: ease-in-out;
+  }
+
+  .theme-main-layout-transition {
+    transition-property: flex-basis, width;
+    transition-duration: 300ms;
+    transition-timing-function: ease-in-out;
+  }
+}

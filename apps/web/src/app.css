@@ -1,9 +1,11 @@
 @import "@repo/tokens/theme.css";
 @import "tailwindcss";
 @import "@repo/tokens/site-nav.css";
+@import "@repo/tokens/theme-transition.css";
 
 @source "../../../packages/ui-svelte/src/site-nav-links.svelte";
 @source "../../../packages/ui-svelte/src/site-logo.svelte";
+@source "../../../packages/ui-svelte/src/icon-chrome.ts";
 @source "../../../packages/utils/src/chrome.ts";
 @source "../../../packages/utils/src/focus.ts";
 
@@ -24,6 +26,8 @@
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
 }
 
 body {
@@ -42,20 +46,5 @@ html {
 
   button.rounded-full:focus-visible {
     @apply rounded-full;
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  html.theme-transition body,
-  html.theme-transition main,
-  html.theme-transition header,
-  html.theme-transition nav,
-  html.theme-transition button,
-  html.theme-transition [role="button"],
-  html.theme-transition select {
-    transition:
-      background-color 0.25s ease-in-out,
-      color 0.25s ease-in-out,
-      border-color 0.25s ease-in-out;
   }
 }

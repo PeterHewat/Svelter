@@ -7,7 +7,18 @@ import { getLocalStorageOrMemory } from "./storage";
  * Add new locales here as they are supported.
  */
 export type Locale =
-  "en" | "es" | "fr" | "de" | "pt" | "it" | "nl" | "pl" | "ru";
+  | "en"
+  | "es"
+  | "fr"
+  | "de"
+  | "pt"
+  | "it"
+  | "nl"
+  | "pl"
+  | "ru"
+  | "zh"
+  | "ja"
+  | "ko";
 
 /**
  * Default locale used when no preference is set.
@@ -27,6 +38,9 @@ export const SUPPORTED_LOCALES: Record<Locale, string> = {
   nl: "Nederlands",
   pl: "Polski",
   ru: "Русский",
+  zh: "中文",
+  ja: "日本語",
+  ko: "한국어",
 };
 
 /**

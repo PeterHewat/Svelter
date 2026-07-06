@@ -19,7 +19,7 @@
     "e2e": "playwright test"
   },
   "dependencies": {
-    "@clerk/ui": "^1.24.1",
+    "@clerk/ui": "^1.24.2",
     "@repo/config": "workspace:*",
     "@repo/tokens": "workspace:*",
     "@repo/ui-svelte": "workspace:*",
@@ -29,12 +29,12 @@
     "svelte-clerk": "^1.1.10"
   },
   "devDependencies": {
-    "@clerk/testing": "^2.2.2",
+    "@clerk/testing": "^2.2.3",
     "@playwright/test": "^1.61.1",
     "@repo/test-utils": "workspace:*",
     "@sveltejs/adapter-static": "^3.0.10",
-    "@sveltejs/kit": "^2.69.0",
-    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@sveltejs/kit": "^2.69.1",
+    "@sveltejs/vite-plugin-svelte": "^7.1.4",
     "@tailwindcss/vite": "^4.3.2",
     "rollup-plugin-visualizer": "^7.0.1",
     "svelte": "^5.56.4",

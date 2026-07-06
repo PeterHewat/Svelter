@@ -75,6 +75,10 @@ export default defineConfig({
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: isCI ? "off" : "retain-on-failure",
+    // Theme toggles skip View Transitions when reduced motion is preferred.
+    contextOptions: {
+      reducedMotion: "reduce",
+    },
   },
   projects: uiOnly
     ? [{ name: "ui", use: { ...devices["Desktop Chrome"] } }]

@@ -26,6 +26,16 @@ interface ThemeState {
   updateResolvedTheme: () => void;
 }
 
+/** Options for {@link applyThemeToDOM}. */
+export interface ApplyThemeOptions {
+  /** Cross-fade the page when the View Transitions API is available. */
+  animate?: boolean;
+}
+
+type DocumentWithViewTransition = Document & {
+  startViewTransition?: (updateCallback: () => void) => unknown;
+};
+
 /**
  * Get the system's preferred color scheme.
  *
@@ -93,20 +103,48 @@ export function themeToggleAriaLabel(
 }
 
 /**
+ * Whether the user prefers reduced motion.
+ *
+ * @returns `true` when motion should be minimized
+ */
+export function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+/**
  * Apply theme to the document root element.
  * Adds/removes the `dark` class on the `<html>` element.
  *
  * @param theme - The theme to apply
+ * @param options - Pass `animate: true` for user-initiated theme changes
  */
-export function applyThemeToDOM(theme: ResolvedTheme): void {
+export function applyThemeToDOM(
+  theme: ResolvedTheme,
+  options: ApplyThemeOptions = {},
+): void {
   if (typeof document === "undefined") return;
 
-  const root = document.documentElement;
-  if (theme === "dark") {
-    root.classList.add("dark");
-  } else {
-    root.classList.remove("dark");
+  const { animate = false } = options;
+
+  const apply = () => {
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  };
+
+  if (animate && !prefersReducedMotion()) {
+    const doc = document as DocumentWithViewTransition;
+    if (typeof doc.startViewTransition === "function") {
+      doc.startViewTransition(apply);
+      return;
+    }
   }
+
+  apply();
 }
 
 /**
@@ -132,14 +170,16 @@ export const useThemeStore = create<ThemeState>()(
 
       setMode: (mode: ThemeMode) => {
         const resolvedTheme = resolveTheme(mode);
-        applyThemeToDOM(resolvedTheme);
+        applyThemeToDOM(resolvedTheme, { animate: true });
         set({ mode, resolvedTheme });
       },
 
       updateResolvedTheme: () => {
-        const { mode } = get();
+        const { mode, resolvedTheme: previous } = get();
         const resolvedTheme = resolveTheme(mode);
-        applyThemeToDOM(resolvedTheme);
+        applyThemeToDOM(resolvedTheme, {
+          animate: resolvedTheme !== previous,
+        });
         set({ resolvedTheme });
       },
     }),

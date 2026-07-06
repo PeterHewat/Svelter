@@ -170,8 +170,13 @@ describe("i18n utilities", () => {
     });
 
     it("returns default locale if browser language not supported", () => {
-      vi.stubGlobal("navigator", { language: "ja-JP" });
+      vi.stubGlobal("navigator", { language: "sv-SE" });
       expect(getBrowserLocale()).toBe("en");
+    });
+
+    it("returns Japanese when browser language is ja-JP", () => {
+      vi.stubGlobal("navigator", { language: "ja-JP" });
+      expect(getBrowserLocale()).toBe("ja");
     });
 
     it("returns default locale if navigator undefined", () => {

@@ -1,13 +1,13 @@
-import { focusRing } from "./focus";
+import { focusRing, iconButtonFocusRing } from "./focus";
 import { cn, type ClassValue } from "./index";
 
 /** Fixed site header shell (web + marketing). */
 export const siteHeaderClass =
   "border-border bg-background/80 fixed top-0 right-0 left-0 z-50 w-full border-b backdrop-blur-sm";
 
-/** Primary nav row inside the site header. */
+/** Primary nav row inside the site header (64px — matches logo height). */
 export const siteNavClass =
-  "flex w-full items-center justify-between gap-2 px-6 py-3";
+  "flex h-16 w-full items-center justify-between gap-2 px-6 py-0";
 
 /** Main content offset for the fixed header. */
 export const siteMainClass = "flex-1 pt-20";
@@ -38,23 +38,49 @@ export const iconSlotClass =
 
 /**
  * Border icon button used in the site chrome (theme, auth, GitHub).
+ * Icons inherit {@link iconButtonMutedClass} by default and full foreground on hover.
  *
  * @param extra - Additional Tailwind classes
  */
 export function iconButtonClass(...extra: ClassValue[]): string {
   return cn(
-    "border-border bg-background text-foreground inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border",
-    "hover:bg-secondary hover:text-secondary-foreground",
+    iconButtonMutedClass,
+    "border-border bg-background inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border",
+    "hover:bg-secondary hover:text-foreground",
+    "focus-visible:text-foreground",
     "disabled:cursor-not-allowed disabled:opacity-50",
     "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
     ...extra,
   );
 }
 
+/** Muted icon/text on chrome icon buttons (pair with hover/active utilities on the shell). */
+export const iconButtonMutedClass = "text-muted-foreground";
+
+/** Selected/open chrome icon button (panel toggles). */
+export const iconButtonActiveClass =
+  "bg-primary/10 text-foreground ring-2 ring-ring";
+
+/**
+ * Destructive chrome icon button (delete) — muted by default, red on hover/focus.
+ *
+ * @param extra - Additional Tailwind classes
+ */
+export function iconButtonDestructiveClass(...extra: ClassValue[]): string {
+  return iconButtonClass(
+    "hover:text-destructive",
+    "focus-visible:text-destructive",
+    ...extra,
+  );
+}
+
 /** Shared language switcher shell (border + hover). */
 const languageSwitcherShellClass = cn(
-  "border-border bg-background text-foreground inline-flex items-center rounded-full border",
-  "hover:bg-secondary hover:text-secondary-foreground",
+  "border-border bg-background inline-flex items-center rounded-full border",
+  iconButtonMutedClass,
+  "hover:bg-secondary hover:text-foreground",
+  "open:text-foreground",
+  "focus-within:text-foreground",
 );
 
 /** Language switcher shell wrapping a native `<select>`. */
@@ -120,3 +146,5 @@ export const languageSwitcherMenuItemClass = cn(
   languageSwitcherMenuLinkClass,
   "border-0 bg-transparent font-inherit text-left",
 );
+
+export { iconButtonFocusRing };

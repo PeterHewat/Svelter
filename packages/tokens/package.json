@@ -5,10 +5,12 @@
   "description": "Shared CSS design tokens for web and marketing",
   "exports": {
     "./theme.css": "./theme.css",
-    "./site-nav.css": "./site-nav.css"
+    "./site-nav.css": "./site-nav.css",
+    "./theme-transition.css": "./theme-transition.css"
   },
   "files": [
     "theme.css",
-    "site-nav.css"
+    "site-nav.css",
+    "theme-transition.css"
   ]
 }

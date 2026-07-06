@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
  * Page Object Model for the home page.
@@ -35,7 +35,14 @@ export class HomePage {
   }
 
   async toggleTheme(): Promise<void> {
+    const wasDark = await this.isDarkMode();
     await this.themeToggle.click();
+    const html = this.page.locator("html");
+    if (wasDark) {
+      await expect(html).not.toHaveClass(/dark/, { timeout: 2_000 });
+    } else {
+      await expect(html).toHaveClass(/dark/, { timeout: 2_000 });
+    }
   }
 
   async isDarkMode(): Promise<boolean> {

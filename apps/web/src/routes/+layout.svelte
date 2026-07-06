@@ -51,9 +51,6 @@
       });
     }
     initializeTheme();
-    requestAnimationFrame(() => {
-      document.documentElement.classList.add("theme-transition");
-    });
   });
 </script>
 

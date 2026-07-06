@@ -40,8 +40,14 @@ export function writeThemeMode(mode) {
   );
 }
 
-export function enableThemeTransition() {
-  document.documentElement.classList.add("theme-transition");
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function runThemeToggleUpdate(next) {
+  writeThemeMode(next);
+  applyThemeFromMode(next);
+  updateToggleLabels();
 }
 
 export function initTheme() {
@@ -49,12 +55,20 @@ export function initTheme() {
 }
 
 export function toggleTheme() {
-  enableThemeTransition();
   const resolved = resolveTheme(readThemeMode());
   const next = resolved === "dark" ? "light" : "dark";
-  writeThemeMode(next);
-  applyThemeFromMode(next);
-  updateToggleLabels();
+
+  if (
+    !prefersReducedMotion() &&
+    typeof document.startViewTransition === "function"
+  ) {
+    document.startViewTransition(function () {
+      runThemeToggleUpdate(next);
+    });
+    return;
+  }
+
+  runThemeToggleUpdate(next);
 }
 
 export function updateToggleLabels() {

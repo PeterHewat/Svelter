@@ -57,7 +57,7 @@
 
 <header class={siteHeaderClass}>
   <nav
-    class="flex w-full items-center gap-2 px-4 py-3 sm:px-6"
+    class="flex h-16 w-full items-center gap-2 px-4 py-0 sm:px-6"
     aria-label={t("nav.main")}
   >
     <div class="flex min-w-0 items-center gap-3">

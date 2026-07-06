@@ -14,10 +14,13 @@ const localeLoaders: Record<
   es: () => import("./locales/es"),
   fr: () => import("./locales/fr"),
   it: () => import("./locales/it"),
+  ja: () => import("./locales/ja"),
+  ko: () => import("./locales/ko"),
   nl: () => import("./locales/nl"),
   pl: () => import("./locales/pl"),
   pt: () => import("./locales/pt"),
   ru: () => import("./locales/ru"),
+  zh: () => import("./locales/zh"),
 };
 
 const loadedLocales = new Set<Locale>(["en"]);

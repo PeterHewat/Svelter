@@ -9,6 +9,9 @@ export const SUPPORTED_LOCALES = [
   "nl",
   "pl",
   "ru",
+  "zh",
+  "ja",
+  "ko",
 ];
 
 export const THEME_KEY = "theme";

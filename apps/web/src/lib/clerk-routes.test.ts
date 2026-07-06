@@ -8,6 +8,7 @@ import {
 describe("needsClerkForRoute", () => {
   it("returns true for /tasks, /user, and /login", () => {
     expect(needsClerkForRoute("/tasks", new URLSearchParams())).toBe(true);
+    expect(needsClerkForRoute("/tasks/abc", new URLSearchParams())).toBe(true);
     expect(needsClerkForRoute("/user", new URLSearchParams())).toBe(true);
     expect(needsClerkForRoute("/login", new URLSearchParams())).toBe(true);
   });

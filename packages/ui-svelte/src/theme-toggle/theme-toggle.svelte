@@ -7,7 +7,9 @@
     useThemeStore,
     type ResolvedTheme,
   } from "@repo/utils/theme";
-  import { onMount } from "svelte";
+  import { chromeIconSizeClasses } from "../icon-chrome";
+  import MoonIcon from "./moon-icon.svelte";
+  import SunIcon from "./sun-icon.svelte";
 
   interface Props {
     class?: string;
@@ -28,10 +30,9 @@
   const mergedLabels = $derived({ ...defaultLabels, ...labels });
 
   const store = useThemeStore;
-  let resolvedTheme = $state<ResolvedTheme>("light");
+  let resolvedTheme = $state<ResolvedTheme>(store.getState().resolvedTheme);
 
-  onMount(() => {
-    resolvedTheme = store.getState().resolvedTheme;
+  $effect(() => {
     return store.subscribe((state) => {
       resolvedTheme = state.resolvedTheme;
     });
@@ -58,11 +59,7 @@
     lg: "h-12 w-12 text-lg",
   };
 
-  const iconSizeClasses = {
-    sm: "h-4 w-4",
-    md: "h-5 w-5",
-    lg: "h-6 w-6",
-  };
+  const iconSizeClasses = chromeIconSizeClasses;
 
   function toggle() {
     store.getState().setMode(nextMode);
@@ -76,24 +73,9 @@
   aria-label={targetAriaLabel}
   title={targetLabel}
 >
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class={cn("text-muted-foreground shrink-0", iconSizeClasses[size])}
-    aria-hidden="true"
-  >
-    {#if nextMode === "light"}
-      <circle cx="12" cy="12" r="4" />
-      <path
-        d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
-      />
-    {:else}
-      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-    {/if}
-  </svg>
+  {#if nextMode === "light"}
+    <SunIcon class={iconSizeClasses[size]} />
+  {:else}
+    <MoonIcon class={iconSizeClasses[size]} />
+  {/if}
 </button>
