@@ -68,12 +68,19 @@ describe("i18n Integration", () => {
     });
 
     it("falls back to default locale for unsupported browser locale", () => {
-      // Mock navigator.language to unsupported locale
-      vi.stubGlobal("navigator", { language: "ja-JP" });
+      vi.stubGlobal("navigator", { language: "sv-SE" });
 
       initializeI18n();
 
       expect(useI18nStore.getState().locale).toBe(DEFAULT_LOCALE);
+    });
+
+    it("detects Japanese browser locale", () => {
+      vi.stubGlobal("navigator", { language: "ja-JP" });
+
+      initializeI18n();
+
+      expect(useI18nStore.getState().locale).toBe("ja");
     });
 
     it("respects stored preference over browser locale", () => {
@@ -229,8 +236,13 @@ describe("i18n Integration", () => {
     });
 
     it("returns default locale for unsupported language", () => {
-      vi.stubGlobal("navigator", { language: "ja-JP" });
+      vi.stubGlobal("navigator", { language: "sv-SE" });
       expect(getBrowserLocale()).toBe(DEFAULT_LOCALE);
+    });
+
+    it("returns Japanese from navigator.language", () => {
+      vi.stubGlobal("navigator", { language: "ja-JP" });
+      expect(getBrowserLocale()).toBe("ja");
     });
 
     it("returns default locale when navigator is undefined", () => {

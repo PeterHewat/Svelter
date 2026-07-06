@@ -4,11 +4,7 @@ import { wirePricingBilling } from "./pricing";
 import { syncProductAppLinks } from "./product-links";
 import { wireRevealInView } from "./reveal";
 import { wireTestimonialCarousel } from "./testimonial";
-import {
-  enableThemeTransition,
-  toggleTheme,
-  updateToggleLabels,
-} from "./theme";
+import { toggleTheme, updateToggleLabels } from "./theme";
 
 export function wireChrome() {
   updateToggleLabels();
@@ -29,5 +25,4 @@ export function wireChrome() {
   wirePricingBilling();
   wireTestimonialCarousel();
   syncProductAppLinks();
-  requestAnimationFrame(enableThemeTransition);
 }

@@ -15,6 +15,9 @@
     type Locale,
   } from "@repo/utils/i18n";
   import { onMount } from "svelte";
+  import { chromeIconSizeClasses } from "../icon-chrome";
+  import CheckIcon from "./check-icon.svelte";
+  import I18nIcon from "./i18n-icon.svelte";
 
   interface Props {
     class?: string;
@@ -31,11 +34,7 @@
 
   const wrapperSizeClasses = languageSwitcherSizes;
 
-  const iconSizeClasses = {
-    sm: "h-4 w-4",
-    md: "h-5 w-5",
-    lg: "h-6 w-6",
-  };
+  const iconSizeClasses = chromeIconSizeClasses;
 
   const store = useI18nStore;
   let locale = $state(store.getState().locale);
@@ -95,21 +94,7 @@
     aria-label={ariaLabel}
     title={ariaLabel}
   >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class={cn("text-muted-foreground shrink-0", iconSizeClasses[size])}
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-      <path d="M2 12h20" />
-    </svg>
+    <I18nIcon class={iconSizeClasses[size]} />
   </summary>
   <ul class={languageSwitcherMenuClass} role="list">
     {#each Object.keys(SUPPORTED_LOCALES) as loc (loc)}
@@ -122,18 +107,7 @@
         >
           <span class={languageSwitcherMenuCheckSlotClass} aria-hidden="true">
             {#if loc === locale}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="h-4 w-4"
-              >
-                <path d="M20 6 9 17l-5-5" />
-              </svg>
+              <CheckIcon />
             {/if}
           </span>
           {SUPPORTED_LOCALES[loc as Locale]}

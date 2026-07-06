@@ -16,7 +16,14 @@
     siteNavLinkClass,
     siteNavLinksClass,
   } from "@repo/utils/chrome";
-  import { SiteLogo } from "@repo/ui-svelte";
+  import {
+    CheckIcon,
+    I18nIcon,
+    MenuIcon,
+    SignInIcon,
+    SiteLogo,
+    SunIcon,
+  } from "@repo/ui-svelte";
   import ProductAppLink from "$lib/components/product-app-link.svelte";
   import { MARKETING_LOCALES, SUPPORTED_LOCALES } from "$lib/i18n";
   import { useMarketingLang, useMarketingT } from "$lib/marketing-context";
@@ -66,7 +73,7 @@
 
 <header class={siteHeaderClass}>
   <nav
-    class="flex w-full items-center gap-2 px-4 py-3 sm:px-6"
+    class="flex h-16 w-full items-center gap-2 px-4 py-0 sm:px-6"
     aria-label={t("nav.main")}
   >
     <div class="flex min-w-0 items-center gap-2 sm:gap-3">
@@ -88,21 +95,7 @@
           )}
           aria-label={t("nav.menu")}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="text-muted-foreground h-5 w-5 shrink-0"
-            aria-hidden="true"
-          >
-            <path d="M4 5h16" />
-            <path d="M4 12h16" />
-            <path d="M4 19h16" />
-          </svg>
+          <MenuIcon />
         </summary>
         <ul class={languageSwitcherMenuClass} role="list">
           {#each navLinks as link (link.href)}
@@ -160,21 +153,7 @@
           aria-label={t("language.select")}
           title={t("language.select")}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="text-muted-foreground h-5 w-5 shrink-0"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-            <path d="M2 12h20" />
-          </svg>
+          <I18nIcon />
         </summary>
         <ul class={languageSwitcherMenuClass} role="list">
           {#each MARKETING_LOCALES as locale (locale)}
@@ -192,18 +171,7 @@
                   aria-hidden="true"
                 >
                   {#if locale === lang}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="h-4 w-4"
-                    >
-                      <path d="M20 6 9 17l-5-5" />
-                    </svg>
+                    <CheckIcon />
                   {/if}
                 </span>
                 {SUPPORTED_LOCALES[locale]}
@@ -225,23 +193,7 @@
         aria-label={t("theme.toggle")}
         title={t("theme.toggle")}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="text-muted-foreground h-5 w-5 shrink-0"
-          aria-hidden="true"
-          data-theme-toggle-icon
-        >
-          <circle cx="12" cy="12" r="4" />
-          <path
-            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
-          />
-        </svg>
+        <SunIcon themeToggleIcon />
       </button>
 
       <div class={iconSlotClass}>
@@ -251,21 +203,7 @@
           aria-label={t("nav.signIn")}
           title={t("nav.signIn")}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="text-muted-foreground h-5 w-5 shrink-0"
-            aria-hidden="true"
-          >
-            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-            <polyline points="10 17 15 12 10 7" />
-            <line x1="15" x2="3" y1="12" y2="12" />
-          </svg>
+          <SignInIcon />
         </ProductAppLink>
       </div>
     </div>

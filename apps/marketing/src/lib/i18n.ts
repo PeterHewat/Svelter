@@ -10,10 +10,13 @@ import en from "./locales/en";
 import es from "./locales/es";
 import fr from "./locales/fr";
 import it from "./locales/it";
+import ja from "./locales/ja";
+import ko from "./locales/ko";
 import nl from "./locales/nl";
 import pl from "./locales/pl";
 import pt from "./locales/pt";
 import ru from "./locales/ru";
+import zh from "./locales/zh";
 
 export type MarketingTranslationKey = FlattenKeys<typeof en>;
 
@@ -42,6 +45,9 @@ export function ensureMarketingI18n(): void {
   registerTranslations("nl", nl);
   registerTranslations("pl", pl);
   registerTranslations("ru", ru);
+  registerTranslations("zh", zh);
+  registerTranslations("ja", ja);
+  registerTranslations("ko", ko);
   registered = true;
 }
 

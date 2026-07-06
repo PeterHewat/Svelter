@@ -1,5 +1,5 @@
 /** Routes and query params that require the deferred Clerk shell. */
-const CLERK_ROUTES = ["/tasks", "/user", "/login"] as const;
+const CLERK_ROUTE_PREFIXES = ["/tasks", "/user", "/login"] as const;
 
 /**
  * @returns True when the URL includes `?auth=login`
@@ -45,7 +45,8 @@ export function needsClerkForRoute(
   searchParams: URLSearchParams,
 ): boolean {
   return (
-    (CLERK_ROUTES as readonly string[]).includes(pathname) ||
-    hasAuthLoginParam(searchParams)
+    CLERK_ROUTE_PREFIXES.some(
+      (route) => pathname === route || pathname.startsWith(`${route}/`),
+    ) || hasAuthLoginParam(searchParams)
   );
 }
