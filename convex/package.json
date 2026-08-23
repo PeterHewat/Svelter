@@ -14,11 +14,11 @@
   },
   "dependencies": {
     "convex": "^1.42.1",
-    "jose": "^6.2.3",
+    "jose": "^6.2.9",
     "standardwebhooks": "^1.0.0"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
-    "convex-test": "^0.0.54"
+    "convex-test": "^0.0.56"
   }
 }
