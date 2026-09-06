@@ -15,7 +15,7 @@
   "dependencies": {
     "convex": "^1.42.1",
     "jose": "^6.2.3",
-    "standardwebhooks": "^1.0.0"
+    "standardwebhooks": "^1.1.1"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
