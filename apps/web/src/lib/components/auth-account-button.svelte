@@ -30,7 +30,7 @@
 <div
   class={cn(
     iconSlotClass,
-    "rounded-full focus-within:ring-ring focus-within:ring-2",
+    "focus-within:ring-ring rounded-full focus-within:ring-2",
   )}
 >
   <div
