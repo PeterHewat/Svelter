@@ -119,7 +119,7 @@
         </ProductAppLink>
       </div>
 
-      <div class={cn("hidden nav:flex", siteNavLinksClass)} data-nav-links>
+      <div class={cn("nav:flex hidden", siteNavLinksClass)} data-nav-links>
         {#each navLinks as link (link.href)}
           <a {...headerNavLinkAttrs(link)} class={siteNavLinkClass}>
             {link.label}
@@ -133,7 +133,7 @@
       </div>
     </div>
 
-    <div class="hidden grow justify-center nav:flex">
+    <div class="nav:flex hidden grow justify-center">
       <ProductAppLink {lang} class={primaryCtaClass}>
         {t("nav.dashboard")}
       </ProductAppLink>

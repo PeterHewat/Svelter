@@ -29,7 +29,7 @@
 
     <Reveal class="marketing-media mt-14" delay={150}>
       <ProductFrame
-        class="shadow-black/5 shadow-2xl"
+        class="shadow-2xl shadow-black/5"
         screenshotAlt={t("home.heroScreenshotAlt")}
       />
     </Reveal>

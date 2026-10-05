@@ -74,8 +74,8 @@
         class={cn(
           "auth-user-button-overlay absolute inset-0 z-20 flex items-center justify-center",
           avatarReady.ready
-            ? "visible pointer-events-auto"
-            : "invisible pointer-events-none",
+            ? "pointer-events-auto visible"
+            : "pointer-events-none invisible",
         )}
       >
         <UserButton />
