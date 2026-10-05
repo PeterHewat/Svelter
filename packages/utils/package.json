@@ -70,12 +70,12 @@
   },
   "dependencies": {
     "@repo/env-core": "workspace:*",
-    "tailwind-merge": "^3.6.0",
+    "tailwind-merge": "^3.7.0",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@repo/test-utils": "workspace:*",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.1",
     "happy-dom": "^20.10.6"
   }
 }
