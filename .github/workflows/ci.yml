@@ -51,7 +51,7 @@ jobs:
       - uses: ./.github/actions/setup-bun
 
       - name: Run security audit
-        run: bun audit --audit-level=high
+        run: bun run audit
 
       - name: Scan for secrets
         uses: gitleaks/gitleaks-action@v3
