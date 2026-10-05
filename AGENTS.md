@@ -18,6 +18,7 @@
 - Prefer `@repo/utils/*` subpaths (`/env`, `/theme`, `/i18n`, …) over the root barrel
 - Server state: `convex-svelte` `useQuery` / `useConvexClient().mutation` — not `useEffect` + `fetch`
 - Root `package.json` `overrides`: keep [docs/dependency-overrides.md](docs/dependency-overrides.md) in sync when pins change
+- **Convex usage:** a Convex plan's included quota (database I/O, storage, function calls) is shared by every project on the same team, and counts what scripts read and write as well as what the app does. A `convex import`, a seed, a backfill, a migration or clearing a table can use hundreds of MB of database I/O. Before running one against a deployment, estimate its I/O, say it, and run it once; never repeat it to measure its cost. Scripts that reload data send only what changed, and functions a script calls in a loop never scan a whole table. Keep large static data on the CDN, not in Convex, unless the server needs it. Usage: Convex dashboard → Team settings → Usage (it lags by hours).
 
 ## Tailwind v4
 
