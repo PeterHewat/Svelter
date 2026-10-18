@@ -71,7 +71,7 @@
   "dependencies": {
     "@repo/env-core": "workspace:*",
     "tailwind-merge": "^3.6.0",
-    "zustand": "^5.0.14"
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@repo/test-utils": "workspace:*",
