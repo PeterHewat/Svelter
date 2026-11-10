@@ -14,7 +14,6 @@
   },
   "scripts": {
     "typecheck": "svelte-check --tsconfig ./tsconfig.json",
-    "lint": "eslint .",
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests"
   },

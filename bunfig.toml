@@ -1,0 +1,24 @@
+# Formatting for `bun fmt` (Prettier-compatible options, Svelte built in). .gitignore is also honoured.
+[fmt]
+sortTailwindcss = true
+ignorePatterns = [
+  "bun.lock",
+  "**/_generated/**",
+  "apps/marketing/static/init.js",
+  ".agents/skills/convex/**",
+  ".agents/skills/convex-*/**",
+  "skills-lock.json",
+  "**/*.min.js",
+  "**/*.min.css",
+  ".vscode/**",
+  ".idea/**",
+  ".next/**",
+  "out/**",
+  ".convex/**",
+  "package-lock.json",
+  "pnpm-lock.yaml",
+  "yarn.lock",
+  "**/*.log",
+  # Written by the gitleaks step in CI before the format check.
+  "results.sarif",
+]

@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { formatProductTs } from "./prettier-file";
+import { formatProductTs } from "./format-file";
 
 /**
  * Reads `PRODUCT_TAGLINE` from `packages/config/product.ts`.

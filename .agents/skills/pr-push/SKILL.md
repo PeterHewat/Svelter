@@ -21,10 +21,10 @@ Examples: [examples.md](examples.md).
 - **Staged index for commits** — commit only what is already staged. Do not run `git add` unless the user explicitly asks.
 - **Stage before you run** — everything that belongs in the PR must be staged before invoking this skill. Unstaged work on the branch is not committed and not described.
 - Do not push to `main`. Work lands on a feature branch and enters `main` via squash merge.
-- **Verify before ship** — run the [Verify gate](#verify-gate) after preflight confirms work to ship. Check-only: no `format:fix`, no `eslint --fix`, no E2E. Playwright E2E runs on staging after merge to `main`, not in this skill.
+- **Verify before ship** — run the [Verify gate](#verify-gate) after preflight confirms work to ship. No `oxlint --fix`, no E2E. Playwright E2E runs on staging after merge to `main`, not in this skill.
 - **Verify / check failures — stop, do not repair.** If the verify gate fails, report the command output and **stop**. Do not edit files, run formatters or linters, restage, retry checks, or continue to commit/push/PR. The user fixes and re-invokes the skill.
 - **Errors — report and stop.** If any step fails (git, `gh`, tests, checks, or other commands run during this skill), explain what went wrong and stop. Do not edit files, run formatters, retry with fixes, or continue to commit/push/PR.
-- **Pre-commit / hook failures — stop, do not repair.** If `git commit` fails because of a pre-commit hook (e.g. lint-staged, ESLint, Prettier, tests), report the hook output and **stop**. Do not edit files, run formatters or linters, run `git add`, retry the commit, use `--no-verify`, or continue to push/PR. Do not propose a fix plan — repairing hook failures is outside this skill unless the user explicitly asks.
+- **Pre-commit / hook failures — stop, do not repair.** If `git commit` fails because of a pre-commit hook (e.g. `bun fmt --staged`, oxlint, tests), report the hook output and **stop**. Do not edit files, run formatters or linters, run `git add`, retry the commit, use `--no-verify`, or continue to push/PR. Do not propose a fix plan — repairing hook failures is outside this skill unless the user explicitly asks.
 - Never include "Made with Cursor" (or similar Cursor attribution) in the PR body. Cursor may inject it on `gh pr create`; re-apply the drafted description with `gh pr edit` after create (see [Push and publish PR](#push-and-publish-pr)).
 - No test-plan section in the PR body — squash-merge release notes use title and body; keep copy release-note-ready.
 
@@ -125,7 +125,7 @@ Do not run sync again before `check` / `verify`. For path-scoped gates below, st
 
 Run **`bun run verify`** (`check` + workspace tests + scripts tests) when any of these apply:
 
-- Root tooling or CI: `scripts/**`, `.github/**`, `.husky/**`, root `package.json`, `bun.lock`, ESLint/TS/Prettier configs, `.env.example` files
+- Root tooling or CI: `scripts/**`, `.github/**`, `.githooks/**`, root `package.json`, `bun.lock`, `.oxlintrc.json`, `bunfig.toml`, TS configs, `.env.example` files
 - Shared packages: `packages/ui-svelte/**`, `packages/utils/**`, `packages/test-utils/**`, `packages/tokens/**`, `packages/config/**`, `packages/env-core/**`
 - Changes span **two or more** of: `convex/**`, `apps/web/**`, `apps/marketing/**`
 - Changed-path list is empty (first push / unknown diff — do not false-green)

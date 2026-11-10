@@ -111,7 +111,7 @@ function buildChecks(root: string): Check[] {
     detail: !runningUnderBun
       ? "not running under Bun"
       : bunOk
-        ? `bun ${Bun.version} (want ${wantedBun ?? ">=1.3.14"})`
+        ? `bun ${Bun.version} (want ${wantedBun ?? ">=1.4.4"})`
         : `bun ${Bun.version} — want ${wantedBun} from .bun-version`,
     remediation: !runningUnderBun
       ? "Install Bun from https://bun.sh and re-run `bun run setup`"

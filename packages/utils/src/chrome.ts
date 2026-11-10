@@ -49,7 +49,7 @@ export function iconButtonClass(...extra: ClassValue[]): string {
     "hover:bg-secondary hover:text-foreground",
     "focus-visible:text-foreground",
     "disabled:cursor-not-allowed disabled:opacity-50",
-    "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    "focus-visible:ring-ring focus:outline-none focus-visible:ring-2",
     ...extra,
   );
 }
@@ -144,7 +144,7 @@ export const languageSwitcherMenuLinkClass = cn(
 /** Locale menu row for `<button>` items (matches link styling). */
 export const languageSwitcherMenuItemClass = cn(
   languageSwitcherMenuLinkClass,
-  "border-0 bg-transparent font-inherit text-left",
+  "font-inherit border-0 bg-transparent text-left",
 );
 
 export { iconButtonFocusRing };
