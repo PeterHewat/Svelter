@@ -1,0 +1,14 @@
+# Formatting for `bun fmt` (Prettier-compatible options, Svelte built in). .gitignore is also honoured.
+[fmt]
+sortTailwindcss = true
+ignorePatterns = [
+  "bun.lock",
+  "**/_generated/**",
+  "apps/marketing/static/init.js",
+  ".agents/skills/convex/**",
+  ".agents/skills/convex-*/**",
+  "skills-lock.json",
+  "**/*.min.js",
+  "**/*.min.css",
+  ".vscode/**",
+]

@@ -2,9 +2,9 @@
 
 Conventions for humans and agents working in this repo. For onboarding, see [docs/getting-started.md](docs/getting-started.md). For CI, releases, and E2E, see [docs/ci-cd.md](docs/ci-cd.md).
 
-## Git hooks (Husky)
+## Git hooks
 
-After `bun install`, Husky runs **lint-staged** on commit: ESLint with `--fix` and Prettier on staged files. Bypass with `git commit --no-verify` if needed; CI still enforces full-repo checks.
+`bun install` points Git at `.githooks/`. On commit, `bun fmt --staged` formats and re-stages the staged files, then oxlint checks the staged scripts. Bypass with `git commit --no-verify` if needed; CI still enforces full-repo checks.
 
 ## Branching and pull requests
 
@@ -46,6 +46,6 @@ Pull requests run **unit tests** only (lint, typecheck, build). **Playwright E2E
 
 Follow [AGENTS.md](AGENTS.md) and [docs/spec/](docs/spec/) for feature work.
 
-- After editing a few files: `bunx prettier --write <path> …`
-- Fast verify (code files touched): `bun run check` after formatting touched paths (`bun run lint` for `scripts/**` only); scoped tests per package path; full `bun run verify` per AGENTS.md § Verify gate (see file-type rules there)
-- Docs-only minimum: `bunx prettier --write` on every touched path (see AGENTS.md § Verify gate)
+- After editing a few files: `bun fmt <path> …`
+- Fast verify (code files touched): `bun run check` (it formats first) (`bun run lint` for `scripts/**` only); scoped tests per package path; full `bun run verify` per AGENTS.md § Verify gate (see file-type rules there)
+- Docs-only minimum: `bun fmt` on every touched path (see AGENTS.md § Verify gate)

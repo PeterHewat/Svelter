@@ -15,20 +15,6 @@ updates:
       include: "scope"
     # Group minor and major updates (will update package.json)
     groups:
-      typescript-eslint:
-        patterns:
-          - "@typescript-eslint/*"
-        update-types:
-          - "major"
-          - "minor"
-      eslint:
-        patterns:
-          - "eslint*"
-          - "eslint-config-prettier"
-          - "eslint-plugin-*"
-        update-types:
-          - "major"
-          - "minor"
       svelte:
         patterns:
           - "svelte*"

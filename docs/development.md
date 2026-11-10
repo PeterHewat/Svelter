@@ -6,7 +6,7 @@ Extended rules for Cursor, Claude Code, and Copilot (trimmed summary in [AGENTS.
 
 ### Formatting
 
-Prettier (`.prettierrc.json`) is the source of truth. Agents: `bunx prettier --write <paths>` on every touched path before ending the turn (including Markdown and JSON). Humans: format-on-save in `.vscode/settings.json`; CI uses `prettier --check` via `bun run format`.
+`bun fmt` is the formatter, configured in the `[fmt]` section of `bunfig.toml` (Prettier-compatible options; Svelte and Tailwind class sorting are built in; `.gitignore` is honoured). Nobody formats by hand: `bun run check` formats the tree first and the pre-commit hook formats staged files. CI runs `bun fmt --check` via `bun run format`.
 
 ### Verify gate (full)
 
@@ -48,9 +48,9 @@ bun run dev:web               # Web dev :3000, preview :4000
 bun run dev:marketing         # Marketing dev :3001, preview :4001
 
 # Lint / format
-bun run lint                  # ESLint (repo root)
-bun run format                # Prettier check
-bun run format:fix            # Prettier write
+bun run lint                  # oxlint (repo root, .oxlintrc.json)
+bun run format                # bun fmt --check
+bun run format:fix            # bun fmt
 
 # Codegen / typecheck
 bun run codegen               # generate Convex (when linked), assert artifacts

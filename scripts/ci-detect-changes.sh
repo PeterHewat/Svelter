@@ -25,12 +25,12 @@ for file in $CHANGED_FILES; do
     apps/web/*) web=true ;;
     apps/marketing/*) marketing=true ;;
     convex/*) convex=true ;;
-    scripts/* | .github/actions/* | .husky/*) config=true ;;
+    scripts/* | .github/actions/* | .githooks/*) config=true ;;
     *.env.example | apps/*/.env.example | .env.example) config=true ;;
-    package.json | bun.lock | eslint.config.js | tsconfig.json | tsconfig.* | .github/workflows/* | .github/dependabot.yml | .github/release.yml | .github/CODEOWNERS | .github/pull_request_template.md | .github/actions/*)
+    package.json | bun.lock | bunfig.toml | .oxlintrc.json | tsconfig.json | tsconfig.* | .github/workflows/* | .github/dependabot.yml | .github/release.yml | .github/CODEOWNERS | .github/pull_request_template.md | .github/actions/*)
       config=true
       ;;
-    .prettierrc.json | .prettierignore | .gitignore | .bun-version | .node-version | .vscode/settings.json)
+    .gitignore | .bun-version | .node-version | .vscode/settings.json)
       config=true
       ;;
   esac

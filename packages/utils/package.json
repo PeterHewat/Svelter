@@ -62,8 +62,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
+    "typecheck": "bun check --no-script",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:coverage": "vitest run --coverage"

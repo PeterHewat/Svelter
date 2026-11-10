@@ -17,7 +17,7 @@
     }
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun check --no-script",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   }

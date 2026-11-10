@@ -5,22 +5,19 @@ import { resolve } from "node:path";
 export const PRODUCT_TS_REL = "packages/config/product.ts";
 
 /**
- * Runs Prettier on one or more repo-relative paths (best effort; ignores failures).
+ * Runs `bun fmt` on one or more repo-relative paths (best effort; ignores failures).
  *
  * @param root - Repository root
  * @param relativePaths - Paths relative to `root`
  */
-export function formatPathsWithPrettier(
-  root: string,
-  relativePaths: string[],
-): void {
+export function formatPaths(root: string, relativePaths: string[]): void {
   if (relativePaths.length === 0) {
     return;
   }
   const absolutePaths = relativePaths.map((relativePath) =>
     resolve(root, relativePath),
   );
-  spawnSync("bunx", ["prettier", "--write", ...absolutePaths], {
+  spawnSync("bun", ["fmt", "--no-script", ...absolutePaths], {
     cwd: root,
     stdio: "ignore",
   });
@@ -32,5 +29,5 @@ export function formatPathsWithPrettier(
  * @param root - Repository root
  */
 export function formatProductTs(root: string): void {
-  formatPathsWithPrettier(root, [PRODUCT_TS_REL]);
+  formatPaths(root, [PRODUCT_TS_REL]);
 }

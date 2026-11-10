@@ -47,7 +47,7 @@ Create **`production`** under **Settings → Environments** and add prod credent
 
 Job definitions live in [ci.yml](../.github/workflows/ci.yml). Use **CI required** as the merge gate; other jobs may show **Success (skipped)** when paths or secrets do not apply.
 
-**Docs-only PRs:** only **CI checks** runs Prettier; lint/typecheck/build are skipped.
+**Docs-only PRs:** only **CI checks** runs `bun fmt --check`; lint/typecheck/build are skipped.
 
 **`CONVEX_DEPLOY_KEY` (repository):** `convex/_generated/` is not committed. The **checks** job runs `bun run check` (codegen + lint + typecheck). Other jobs that build or test the web app or Convex backend run `bun scripts/generate-convex.ts` and **fail** if the repository deploy key is missing. Use a **dev or preview** deploy key at repository level; keep the **production** key in the GitHub **`production`** environment only ([repository secrets](#repository-secrets) · [setup wizard](./getting-started.md#2-setup-wizard-bun-run-setup)).
 

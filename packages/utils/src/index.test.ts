@@ -62,13 +62,13 @@ describe("cn", () => {
 
   it("handles complex Tailwind class combinations", () => {
     const result = cn(
-      "px-4 py-2 bg-blue-500 text-white",
+      "bg-blue-500 px-4 py-2 text-white",
       "hover:bg-blue-600",
       { "opacity-50": true, "cursor-not-allowed": true },
       "px-6", // Should override px-4
     );
     expect(result).toBe(
-      "py-2 bg-blue-500 text-white hover:bg-blue-600 opacity-50 cursor-not-allowed px-6",
+      "bg-blue-500 py-2 text-white hover:bg-blue-600 opacity-50 cursor-not-allowed px-6",
     );
   });
 });

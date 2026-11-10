@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "oxc"],
+  "categories": { "correctness": "error" },
+  "rules": {
+    "no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+    ],
+    "typescript/no-explicit-any": "error",
+    "no-console": "warn"
+  },
+  "overrides": [
+    {
+      "files": ["convex/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@repo/*"],
+                "message": "Convex must not import workspace packages (ADR-002). Use convex/lib/ and keep server code in convex/."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "**/_generated/**",
+    ".agents/skills/**",
+    "apps/marketing/static/init.js",
+    "**/.svelte-kit/**",
+    "**/build/**",
+    "**/coverage/**"
+  ]
+}

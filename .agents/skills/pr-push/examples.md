@@ -71,7 +71,7 @@ Stay on supported Vitest 3.x with matching coverage packages across workspaces.
 
 ## Pre-commit hook failure — stop
 
-`git commit` fails because lint-staged / ESLint rejects a staged file.
+`git commit` fails because the pre-commit hook (`bun fmt --staged` / oxlint) rejects a staged file.
 
 **Wrong:** Fix lint, run `git add`, retry commit, push, open PR.
 

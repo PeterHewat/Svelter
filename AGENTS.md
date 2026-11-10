@@ -64,12 +64,12 @@ Committed symlinks: `.claude` → `.agents`, `CLAUDE.md` → `AGENTS.md`. Setup 
 
 Before ending a turn, run what applies to your edits.
 
-On touched `.ts` / `.js` / `.svelte` paths: `bunx organize-imports-cli`, `bunx eslint --fix`, then `bunx prettier --write` (not `bun run format`, which is check-only).
+On touched `.ts` / `.js` / `.svelte` paths: `bunx organize-imports-cli <paths>`. Don't format by hand. `bun run check` formats the tree with `bun fmt` before it lints, the pre-commit hook in `.githooks/` formats and lints staged files, and CI fails on anything unformatted. `bunx oxlint --fix <paths>` applies the safe lint fixes. Formatting lives in `bunfig.toml` `[fmt]`, lint rules in `.oxlintrc.json`; there is no ESLint or Prettier package.
 
 | Change                           | Command                                          |
 | -------------------------------- | ------------------------------------------------ |
 | `apps/marketing/src/content/**`  | above + `bun run --filter @repo/marketing build` |
-| Docs / Markdown only (elsewhere) | `bunx prettier --write <touched paths>`          |
+| Docs / Markdown only (elsewhere) | None                                             |
 | `scripts/**` only                | above + `bun run lint`                           |
 | Any `.ts` / `.js` / `.svelte`    | above + `bun run check`                          |
 | Task complete or broad changes   | `bun run verify`                                 |
@@ -84,14 +84,14 @@ On touched `.ts` / `.js` / `.svelte` paths: `bunx organize-imports-cli`, `bunx e
 
 The agent shell is not an interactive terminal. Commands that exit immediately when a human runs them may still hang here (cold `bunx`/`npx`, missing TTY, auth/browser prompts, sandbox network, dev servers that never exit). **Never leave background shells running** — treat a silent or backgrounded run as failure unless output already arrived.
 
-| Situation                                                                                      | Budget                                                   | Behavior                                                                              |
-| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Instant probe (`--help`, `--version`, `which`, read-only `--json`)                             | **≤5s**                                                  | One attempt per command string per task; no retry loops                               |
-| Repo command with known runtime (`bun run lint`, `bun test <file>`, Prettier on touched paths) | Tool default                                             | Run once; on hang, stop — do not background and poll                                  |
-| Slow but bounded (`bun run check`, `bun run verify`, builds)                                   | Set `block_until_ms` with buffer; still no infinite poll | If it exceeds budget with no output, stop and report                                  |
-| Interactive or auth (`login`, `deploy`, OAuth, prompts, pagers)                                | —                                                        | **Do not run** — ask the user to run and paste output                                 |
-| Long-running servers (`dev`, `watch`, `convex dev`)                                            | —                                                        | **Do not run** unless the user asked; use existing terminals or ask the user          |
-| Missing credentials / blocked sandbox                                                          | —                                                        | Ask the user to run locally; do not install extra packages or probe undocumented APIs |
+| Situation                                                                                       | Budget                                                   | Behavior                                                                              |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Instant probe (`--help`, `--version`, `which`, read-only `--json`)                              | **≤5s**                                                  | One attempt per command string per task; no retry loops                               |
+| Repo command with known runtime (`bun run lint`, `bun test <file>`, `bun fmt` on touched paths) | Tool default                                             | Run once; on hang, stop — do not background and poll                                  |
+| Slow but bounded (`bun run check`, `bun run verify`, builds)                                    | Set `block_until_ms` with buffer; still no infinite poll | If it exceeds budget with no output, stop and report                                  |
+| Interactive or auth (`login`, `deploy`, OAuth, prompts, pagers)                                 | —                                                        | **Do not run** — ask the user to run and paste output                                 |
+| Long-running servers (`dev`, `watch`, `convex dev`)                                             | —                                                        | **Do not run** unless the user asked; use existing terminals or ask the user          |
+| Missing credentials / blocked sandbox                                                           | —                                                        | Ask the user to run locally; do not install extra packages or probe undocumented APIs |
 
 **Before probing any CLI:** check `docs/`, `scripts/`, repo wrappers (`bun run setup`, `scripts/lib/*`), and package source (`opensrc`) — exploration is not a reason to spawn shells.
 

@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { applyLicenseFromConfig } from "./license-identity";
-import { formatProductTs } from "./prettier-file";
+import { formatProductTs } from "./format-file";
 import { applyReadmeIdentity } from "./readme-identity";
 import {
   parseGitHubRemote,

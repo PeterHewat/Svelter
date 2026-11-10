@@ -17,7 +17,7 @@
     "./convex-svelte-setup": "./src/mocks/convex-svelte-setup.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "bun check --no-script"
   },
   "peerDependencies": {
     "vitest": ">=4.1.10"

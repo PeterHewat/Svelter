@@ -21,14 +21,14 @@ Teams scaling monorepos often adopt **Turborepo** (pipeline + remote cache) or *
 
 **Do** invest in Bun-native orchestration and CI efficiency:
 
-| Area                   | Approach                                                                                                                                                                                                             |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Local tasks            | Root scripts (`dev`, `generate`, `test`, `lint`, …) and `bun run --filter @repo/*`                                                                                                                                   |
-| TypeScript build graph | `tsconfig.json` references + `tsc -b` / `typecheck` (see [monorepo-structure.md](../monorepo-structure.md#typecheck-vs-build))                                                                                       |
-| Affected work in CI    | Path rules in [scripts/lib/monorepo-paths.sh](../../scripts/lib/monorepo-paths.sh) (sourced by [ci-detect-changes.sh](../../scripts/ci-detect-changes.sh)); extend when new shared packages appear                   |
-| CI install time        | `.github/actions/setup-bun` caches `node_modules` + Bun install cache (key includes `bun-revision` + `bun.lock`); `HUSKY=0` and `--ignore-scripts` in CI; fewer jobs (checks, web, marketing share one install each) |
-| Boundaries             | Document in [ADR-002](./002-package-boundary-authoring.md); enforce with ESLint/import rules as the repo matures—not via Nx module boundaries                                                                        |
-| Per-surface tests      | Prefer explicit scripts (`test:web`, package-level `test`) over a single growing `bun run --filter '*' test` as workspaces multiply                                                                                  |
+| Area                   | Approach                                                                                                                                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Local tasks            | Root scripts (`dev`, `generate`, `test`, `lint`, …) and `bun run --filter @repo/*`                                                                                                                     |
+| TypeScript build graph | `tsconfig.json` references + `tsc -b` / `typecheck` (see [monorepo-structure.md](../monorepo-structure.md#typecheck-vs-build))                                                                         |
+| Affected work in CI    | Path rules in [scripts/lib/monorepo-paths.sh](../../scripts/lib/monorepo-paths.sh) (sourced by [ci-detect-changes.sh](../../scripts/ci-detect-changes.sh)); extend when new shared packages appear     |
+| CI install time        | `.github/actions/setup-bun` caches `node_modules` + Bun install cache (key includes `bun-revision` + `bun.lock`); `--ignore-scripts` in CI; fewer jobs (checks, web, marketing share one install each) |
+| Boundaries             | Document in [ADR-002](./002-package-boundary-authoring.md); enforce with oxlint `no-restricted-imports` rules as the repo matures—not via Nx module boundaries                                         |
+| Per-surface tests      | Prefer explicit scripts (`test:web`, package-level `test`) over a single growing `bun run --filter '*' test` as workspaces multiply                                                                    |
 
 Adopters may add Turborepo or Nx in their fork; supersede this ADR if they do.
 
@@ -59,7 +59,7 @@ Adopters may add Turborepo or Nx in their fork; supersede this ADR if they do.
 
 - Workspace count or CI wall-clock time grows enough that install + test duplication dominates (e.g. routinely many minutes on every PR)
 - Path-based `detect-changes` repeatedly misses rebuilds or runs too much
-- The team needs **enforced** module boundaries beyond ADR-002 and ESLint
+- The team needs **enforced** module boundaries beyond ADR-002 and oxlint
 - Multiple developers ask for **remote caching** or **affected** commands as the primary dev/CI interface
 
 Then evaluate Turborepo (caching + pipelines) or Nx (graph + boundaries)—or keep Bun-native and extend path rules, composite actions, and install caching in [ci-cd.md](../ci-cd.md) and [ci.yml](../../.github/workflows/ci.yml).

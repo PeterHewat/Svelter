@@ -107,7 +107,7 @@ Run **`bun run dev:convex`** or **`bun run codegen`** before the first `typechec
 
 - `bun scripts/generate.ts` — routes always; Convex only when linked (root `.env.local` or `CONVEX_DEPLOY_KEY`)
 - Gitignored in `.gitignore`
-- ESLint ignores `convex/_generated/`; Prettier ignores both paths (see `.prettierignore`)
+- oxlint (`.oxlintrc.json`) and `bun fmt` (`bunfig.toml`) both ignore generated paths
 - **CI:** jobs that need Convex require repository `CONVEX_DEPLOY_KEY` and run `bun scripts/generate-convex.ts` (see [ci-cd.md](./ci-cd.md#ci-behavior)). Production deploy key lives in GitHub **`production`** environment only ([environments.md](./environments.md)).
 
 ## Starter growth thresholds
