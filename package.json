@@ -5,9 +5,9 @@
   "author": "Peter Hewat <peter.hewat@gmail.com>",
   "license": "MIT",
   "private": true,
-  "packageManager": "bun@1.3.14",
+  "packageManager": "bun@1.4.4",
   "engines": {
-    "bun": ">=1.3.14",
+    "bun": ">=1.4.4",
     "node": ">=24.0.0"
   },
   "type": "module",
@@ -71,19 +71,19 @@
     "js-cookie": "^3.0.8"
   },
   "devDependencies": {
-    "@types/bun": "^1.4.2",
+    "@types/bun": "^1.4.4",
     "@types/node": "^26.6.4",
     "@vitest/coverage-v8": "^4.1.11",
     "clerk": "^1.5.0",
     "convex": "^1.46.0",
     "esbuild": "^0.28.2",
-    "happy-dom": "^20.14.5",
+    "happy-dom": "^21.0.4",
     "jose": "^6.2.12",
     "opensrc": "^0.7.3",
     "oxlint": "^1.93.0",
     "typescript": "~6.0.3",
     "vite": "^8.3.2",
     "vitest": "^4.1.11",
-    "wrangler": "^4.147.0"
+    "wrangler": "^4.160.0"
   }
 }
