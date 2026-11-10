@@ -11,4 +11,14 @@ ignorePatterns = [
   "**/*.min.js",
   "**/*.min.css",
   ".vscode/**",
+  ".idea/**",
+  ".next/**",
+  "out/**",
+  ".convex/**",
+  "package-lock.json",
+  "pnpm-lock.yaml",
+  "yarn.lock",
+  "**/*.log",
+  # Written by the gitleaks step in CI before the format check.
+  "results.sarif",
 ]
